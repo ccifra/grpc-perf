@@ -1,0 +1,91 @@
+#----------------------------------------------------------------------
+#----------------------------------------------------------------------
+cmake_minimum_required(VERSION 3.5.1)
+
+project(labview-query-server C CXX)
+
+if(NOT MSVC)
+  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11")
+else()
+  add_definitions(-D_WIN32_WINNT=0x600 -bigobj)
+endif()
+
+find_package(Threads REQUIRED)
+
+#----------------------------------------------------------------------
+# Include the gRPC's cmake build
+#----------------------------------------------------------------------
+add_subdirectory(third_party/grpc ${CMAKE_CURRENT_BINARY_DIR}/grpc EXCLUDE_FROM_ALL)
+
+#----------------------------------------------------------------------
+# Use the grpc targets directly from this build.
+#----------------------------------------------------------------------
+set(_PROTOBUF_LIBPROTOBUF libprotobuf)
+set(_REFLECTION grpc++_reflection)
+if(CMAKE_CROSSCOMPILING)
+  find_program(_PROTOBUF_PROTOC protoc)
+else()
+  set(_PROTOBUF_PROTOC $<TARGET_FILE:protobuf::protoc>)
+endif()
+set(_GRPC_GRPCPP grpc++)
+if(CMAKE_CROSSCOMPILING)
+  find_program(_GRPC_CPP_PLUGIN_EXECUTABLE grpc_cpp_plugin)
+else()
+  set(_GRPC_CPP_PLUGIN_EXECUTABLE $<TARGET_FILE:grpc_cpp_plugin>)
+endif()
+
+#----------------------------------------------------------------------
+# Proto file
+#----------------------------------------------------------------------
+get_filename_component(niscope_proto "niScope.proto" ABSOLUTE)
+get_filename_component(niscope_proto_path "${niscope_proto}" PATH)
+
+#----------------------------------------------------------------------
+# Generated sources
+#----------------------------------------------------------------------
+set(niscope_proto_srcs "${CMAKE_CURRENT_BINARY_DIR}/niScope.pb.cc")
+set(niscope_proto_hdrs "${CMAKE_CURRENT_BINARY_DIR}/niScope.pb.h")
+set(niscope_grpc_srcs "${CMAKE_CURRENT_BINARY_DIR}/niScope.grpc.pb.cc")
+set(niscope_grpc_hdrs "${CMAKE_CURRENT_BINARY_DIR}/niScope.grpc.pb.h")
+add_custom_command(
+  OUTPUT "${niscope_proto_srcs}" "${niscope_proto_hdrs}" "${niscope_grpc_srcs}" "${niscope_grpc_hdrs}"
+  COMMAND ${_PROTOBUF_PROTOC}
+  ARGS --grpc_out "${CMAKE_CURRENT_BINARY_DIR}"
+    --cpp_out "${CMAKE_CURRENT_BINARY_DIR}"
+    -I "${niscope_proto_path}"
+    --plugin=protoc-gen-grpc="${_GRPC_CPP_PLUGIN_EXECUTABLE}"
+    "${niscope_proto}"
+  DEPENDS "${niscope_proto}")
+
+#----------------------------------------------------------------------
+# Include generated *.pb.h files
+#----------------------------------------------------------------------
+include_directories("${CMAKE_CURRENT_BINARY_DIR}" "./src" $ENV{IVIROOTDIR64}/Include)
+
+#----------------------------------------------------------------------
+# NIScope gRPC Server
+#----------------------------------------------------------------------
+add_executable(niscope_server
+  src/niscope_server.cc
+  ${niscope_proto_srcs}
+  ${niscope_grpc_srcs}
+  )
+target_link_libraries(niscope_server
+   ${_REFLECTION}
+   ${_GRPC_GRPCPP}
+   ${_PROTOBUF_LIBPROTOBUF}
+   $(IVIROOTDIR64)/Lib_x64/msc/niscope.lib
+   )
+
+#----------------------------------------------------------------------
+# Example C++ application to talk to the niscope gRPC service
+#----------------------------------------------------------------------
+add_executable(example_client
+  "src/example_client.cc"
+  ${niscope_proto_srcs}
+  ${niscope_grpc_srcs}
+  )
+target_link_libraries(example_client
+   ${_REFLECTION}
+   ${_GRPC_GRPCPP}
+   ${_PROTOBUF_LIBPROTOBUF})
