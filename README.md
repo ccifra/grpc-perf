@@ -1,10 +1,4 @@
-# Example gRPC Service for LabVIEW
-
-This repo contains an example / pattern to use to implement a gRPC server / client for LabVIEW.
-query_server.proto defines a simple query service that can be used for a variety of purposes.  
-
-You can either use the service as defined to implement a generic server via gPRC or use the implementation
-as a pattern to implement a gRPC service of your design.
+# Experimental remote gRPC interface for niScope
 
 the project support Windows and Linux for both the client and server.
 
@@ -91,20 +85,7 @@ Build
 > make
 ```
 
-## Creating a LabVIEW Server
-
-Copy the QueryServer_Template.vi to a new name of your choosing.  RPC methods are handled by LabVIEW user events.
-The template consumes all of the events and processes them in the event case.  You can choose to handle the events in
-any manner of your choosing.
-
-## Using the LabVIEW Client API
-
-Coming Soon
-
 ## Example
-
-There is an example server ExampleQueryServer.vi and a corresponding C++ client (example_client).
-When you build the C++ libraries the example client will also be built.
 
 ## SSL/TLS Support
 

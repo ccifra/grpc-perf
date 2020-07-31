@@ -1,0 +1,888 @@
+{
+    "functions": [
+        {
+            "name": "niScope_Read",
+            "parameters": [
+                {
+                    "cname": "wfm",
+                    "nettype": "ViReal64[]"
+                },
+                {
+                    "cname": "wfmInfo",
+                    "nettype": "[Out] ScopeWaveformInfo[]"
+                }
+            ]
+        },
+        {
+            "name": "niScope_ReadMeasurement",
+            "parameters": [
+                {
+                    "cname": "result",
+                    "nettype": "ViReal64[]"
+                }
+            ]
+        },
+        {
+            "name": "niScope_FetchMeasurement",
+            "parameters": [
+                {
+                    "cname": "result",
+                    "nettype": "ViReal64[]"
+                }
+            ]
+        },
+        {
+            "name": "niScope_FetchMeasurementStats",
+            "parameters": [
+                {
+                    "cname": "result",
+                    "nettype": "ViReal64[]"
+                },
+                {
+                    "cname": "mean",
+                    "nettype": "ViReal64[]"
+                },
+                {
+                    "cname": "stdev",
+                    "nettype": "ViReal64[]"
+                },
+                {
+                    "cname": "min",
+                    "nettype": "ViReal64[]"
+                },
+                {
+                    "cname": "max",
+                    "nettype": "ViReal64[]"
+                },
+                {
+                    "cname": "numInStats",
+                    "nettype": "ViInt32[]"
+                }
+            ]
+        },
+        {
+            "name": "niScope_Fetch",
+            "parameters": [
+                {
+                    "cname": "wfm",
+                    "nettype": "ViReal64[]"
+                },
+                {
+                    "cname": "wfmInfo",
+                    "nettype": "[Out] ScopeWaveformInfo[]"
+                }
+            ]
+        },
+        {
+            "name": "niScope_FetchBinary8",
+            "parameters": [
+                {
+                    "cname": "wfm",
+                    "nettype": "ViInt8[]"
+                },
+                {
+                    "cname": "wfmInfo",
+                    "nettype": "[Out] ScopeWaveformInfo[]"
+                }
+            ]
+        },
+        {
+            "name": "niScope_FetchBinary16",
+            "parameters": [
+                {
+                    "cname": "wfm",
+                    "nettype": "ViInt16[]"
+                },
+                {
+                    "cname": "wfmInfo",
+                    "nettype": "[Out] ScopeWaveformInfo[]"
+                }
+            ]
+        },
+        {
+            "name": "niScope_FetchBinary32",
+            "parameters": [
+                {
+                    "cname": "wfm",
+                    "nettype": "ViInt32[]"
+                },
+                {
+                    "cname": "wfmInfo",
+                    "nettype": "[Out] ScopeWaveformInfo[]"
+                }
+            ]
+        },
+        {
+            "name": "niScope_FetchComplex",
+            "parameters": [
+                {
+                    "cname": "wfm",
+                    "nettype": "[Out] ComplexDouble[]"
+                },
+                {
+                    "cname": "wfmInfo",
+                    "nettype": "[Out] ScopeWaveformInfo[]"
+                }
+            ]
+        },
+        {
+            "name": "niScope_FetchComplexBinary16",
+            "parameters": [
+                {
+                    "cname": "wfm",
+                    "nettype": "[Out] ComplexInt16[]"
+                },
+                {
+                    "cname": "wfmInfo",
+                    "nettype": "[Out] ScopeWaveformInfo[]"
+                }
+            ]
+        },
+        {
+            "name": "niScope_FetchArrayMeasurement",
+            "parameters": [
+                {
+                    "cname": "measWfm",
+                    "nettype": "ViReal64[]"
+                },
+                {
+                    "cname": "measWfmInfo",
+                    "nettype": "[Out] ScopeWaveformInfo[]"
+                }
+            ]
+        },
+        {
+            "name": "niScope_CachedFetch",
+            "parameters": [
+                {
+                    "cname": "wfmInfo",
+                    "nettype": "[Out] ScopeWaveformInfo[]"
+                }
+            ]
+        },
+        {
+            "name": "niScope_GetScalingCoefficients",
+            "parameters": [
+                {
+                    "cname": "coefficientInfo",
+                    "nettype": "[Out] ScopeCoefficientInfo[]"
+                }
+            ]
+        },
+        {
+            "name": "niScope_GetNormalizationCoefficients",
+            "parameters": [
+                {
+                    "cname": "coefficientInfo",
+                    "nettype": "[Out] ScopeCoefficientInfo[]"
+                }
+            ]
+        },
+        {
+            "name": "niScope_GetEqualizationFilterCoefficients",
+            "parameters": [
+                {
+                    "cname": "coefficients",
+                    "nettype": "ViReal64[]"
+                }
+            ]
+        },
+        {
+            "name": "niScope_ConfigureEqualizationFilterCoefficients",
+            "netname": "ConfigureEqualizationFilterCoefficients",
+            "parameters": [
+                {
+                    "cname": "coefficients",
+                    "ctype": "ViReal64",
+                    "indirection": {
+                        "depth": 1,
+                        "type": "pointer"
+                    },
+                    "nettype": "ViReal64[]",
+                    "raw": "ViReal64* coefficients"
+                }
+            ]
+        },
+        {
+            "name": "niScope_LVGenericRead",
+            "generate": false
+        },
+        {
+            "name": "niScope_FetchPeakArrayTime32Ampl16",
+            "generate": false
+        },
+        {
+            "name": "niScope_DirectDMAFetchBinary",
+            "generate": false
+        },
+        {
+            "name": "niScope_LVGenericMultiFetchSelfAlloc",
+            "generate": false
+        },
+        {
+            "name": "niScope_LVGenericFetchCluster",
+            "generate": false
+        },
+        {
+            "name": "niScope_LVGenericReadCluster",
+            "generate": false
+        },
+        {
+            "name": "niScope_LVDirectDMAFetchBinary",
+            "generate": false
+        },
+        {
+            "name": "niScope_LVGenericMultiFetchSelfAlloc",
+            "generate": false
+        },
+        {
+            "name": "niScope_LVGenericMultiFetchCluster",
+            "generate": false
+        },
+        {
+            "name": "niScope_LVGenericMultiReadCluster",
+            "generate": false
+        },
+        {
+            "name": "niScope_ParseNumberOfChannels",
+            "netname": "ParseNumberOfChannels",
+            "parameters": [
+                {
+                    "cname": "vi",
+                    "ctype": "ViSession",
+                    "nettype": "ViSession",
+                    "raw": "ViSession vi"
+                },
+                {
+                    "cname": "channel",
+                    "ctype": "ViConstString",
+                    "nettype": "ViConstString",
+                    "raw": "ViConstString channel"
+                },
+                {
+                    "cname": "numChannels",
+                    "ctype": "ViUInt32",
+                    "indirection": {
+                        "depth": 1,
+                        "type": "pointer"
+                    },
+                    "nettype": "out ViUInt32",
+                    "raw": "ViUInt32* writerHandle"
+                }
+            ]
+        },
+        {
+            "name": "NISCOPE_VAL_MAX_TIME_INFINITE",
+            "dataType": "UINT",
+            "netname": "",
+            "parameters": [],
+            "generate": false
+        },
+        {
+            "name": "NISCOPE_VAL_CAL_POSITIVE",
+            "dataType": "NUMBER",
+            "netname": "",
+            "parameters": [],
+            "generate": false
+        },
+        {
+            "name": "NISCOPE_VAL_CAL_UNROUTE_SIGNAL",
+            "dataType": "NUMBER",
+            "netname": "",
+            "parameters": [],
+            "generate": false
+        },
+        {
+            "name": "lineMappingInfo",
+            "generate": false,
+            "netname": "",
+            "parameters": [],
+            "value": {
+                "lineDefinitions": {
+                    "Channel0": {
+                        "nettype": "string",
+                        "value": "0",
+                        "description": "channel 0"
+                    },
+                    "Channel1": {
+                        "nettype": "string",
+                        "value": "1",
+                        "description": "channel 1"
+                    },
+                    "Channel2": {
+                        "nettype": "string",
+                        "value": "2",
+                        "description": "channel 2"
+                    },
+                    "Channel3": {
+                        "nettype": "string",
+                        "value": "3",
+                        "description": "channel 3"
+                    },
+                    "Channel4": {
+                        "nettype": "string",
+                        "value": "4",
+                        "description": "channel 4"
+                    },
+                    "Channel5": {
+                        "nettype": "string",
+                        "value": "5",
+                        "description": "channel 5"
+                    },
+                    "Channel6": {
+                        "nettype": "string",
+                        "value": "6",
+                        "description": "channel 6"
+                    },
+                    "Channel7": {
+                        "nettype": "string",
+                        "value": "7",
+                        "description": "channel 7"
+                    },
+                    "SwTrigFunc": {
+                        "description": "the software trigger",
+                        "overrideName": "SoftwareTriggerFunction"
+                    },
+                    "ClkOut": {
+                        "description": "CLK OUT",
+                        "overrideName": "ClockOut"
+                    },
+                    "ClkIn": {
+                        "description": "CLK IN",
+                        "overrideName": "ClockIn"
+                    },
+                    "PxiClk": {
+                        "description": "PXI CLK",
+                        "overrideName": "PxiClock"
+                    },
+                    "PxieDstarA": {
+                        "description": "PXIe DSTAR A",
+                        "overrideName": "PxieDStarA"
+                    },
+                    "PxiStar": {
+                        "description": "PXI STAR"
+                    },
+                    "NoSource": {
+                        "description": "no source"
+                    }
+                },
+                "dotNETClassLineMap": {
+                    "ScopeTriggerSource": {
+                        "values": [
+                            "Channel0",
+                            "Channel1",
+                            "Channel2",
+                            "Channel3",
+                            "Channel4",
+                            "Channel5",
+                            "Channel6",
+                            "Channel7",
+                            "NISCOPE_VAL_AUX_0_PFI_0",
+                            "NISCOPE_VAL_AUX_0_PFI_1",
+                            "NISCOPE_VAL_AUX_0_PFI_2",
+                            "NISCOPE_VAL_AUX_0_PFI_3",
+                            "NISCOPE_VAL_AUX_0_PFI_4",
+                            "NISCOPE_VAL_AUX_0_PFI_5",
+                            "NISCOPE_VAL_AUX_0_PFI_6",
+                            "NISCOPE_VAL_AUX_0_PFI_7",
+                            "NISCOPE_VAL_EXTERNAL",
+                            "NISCOPE_VAL_IMMEDIATE",
+                            "NISCOPE_VAL_PFI_0",
+                            "NISCOPE_VAL_PFI_1",
+                            "NISCOPE_VAL_PFI_2",
+                            "NISCOPE_VAL_PXI_STAR",
+                            "NISCOPE_VAL_RTSI_0",
+                            "NISCOPE_VAL_RTSI_1",
+                            "NISCOPE_VAL_RTSI_2",
+                            "NISCOPE_VAL_RTSI_3",
+                            "NISCOPE_VAL_RTSI_4",
+                            "NISCOPE_VAL_RTSI_5",
+                            "NISCOPE_VAL_RTSI_6",
+                            "NISCOPE_VAL_RTSI_7",
+                            "NISCOPE_VAL_SW_TRIG_FUNC"
+                        ],
+                        "seealso": [
+                            "NationalInstruments.ModularInstruments.NIScope.ScopeTrigger.Source",
+                            "NationalInstruments.ModularInstruments.NIScope.ScopeExportedSignals"
+                        ],
+                        "description": "the source terminal for <see cref=\"NationalInstruments.ModularInstruments.NIScope.ScopeTrigger.Source\" crefType=\"PartiallyQualified\"/>"
+                    },
+                    "ScopeAdvanceTriggerExportedOutputTerminal": {
+                        "values": [
+                            "NISCOPE_VAL_AUX_0_PFI_0",
+                            "NISCOPE_VAL_AUX_0_PFI_1",
+                            "NISCOPE_VAL_AUX_0_PFI_2",
+                            "NISCOPE_VAL_AUX_0_PFI_3",
+                            "NISCOPE_VAL_AUX_0_PFI_4",
+                            "NISCOPE_VAL_AUX_0_PFI_5",
+                            "NISCOPE_VAL_AUX_0_PFI_6",
+                            "NISCOPE_VAL_AUX_0_PFI_7",
+                            "NISCOPE_VAL_CLK_OUT",
+                            "NISCOPE_VAL_NO_SOURCE",
+                            "NISCOPE_VAL_PFI_0",
+                            "NISCOPE_VAL_PFI_1",
+                            "NISCOPE_VAL_PFI_2",
+                            "NISCOPE_VAL_PXI_STAR",
+                            "NISCOPE_VAL_RTSI_0",
+                            "NISCOPE_VAL_RTSI_1",
+                            "NISCOPE_VAL_RTSI_2",
+                            "NISCOPE_VAL_RTSI_3",
+                            "NISCOPE_VAL_RTSI_4",
+                            "NISCOPE_VAL_RTSI_5",
+                            "NISCOPE_VAL_RTSI_6",
+                            "NISCOPE_VAL_RTSI_7"
+                        ],
+                        "seealso": [
+                            "NationalInstruments.ModularInstruments.NIScope.ScopeExportedSignals",
+                            "NationalInstruments.ModularInstruments.NIScope.ScopeExportedSignals.AdvanceTriggerOutputTerminal"
+                        ],
+                        "description": "the output terminal for <see cref=\"NationalInstruments.ModularInstruments.NIScope.ScopeAdvanceTrigger\"/>"
+                    },
+                    "ScopeEndOfAcquisitionEventOutputTerminal": {
+                        "values": [
+                            "NISCOPE_VAL_AUX_0_PFI_0",
+                            "NISCOPE_VAL_AUX_0_PFI_1",
+                            "NISCOPE_VAL_AUX_0_PFI_2",
+                            "NISCOPE_VAL_AUX_0_PFI_3",
+                            "NISCOPE_VAL_AUX_0_PFI_4",
+                            "NISCOPE_VAL_AUX_0_PFI_5",
+                            "NISCOPE_VAL_AUX_0_PFI_6",
+                            "NISCOPE_VAL_AUX_0_PFI_7",
+                            "NISCOPE_VAL_CLK_OUT",
+                            "NISCOPE_VAL_NO_SOURCE",
+                            "NISCOPE_VAL_PFI_0",
+                            "NISCOPE_VAL_PFI_1",
+                            "NISCOPE_VAL_PFI_2",
+                            "NISCOPE_VAL_PXI_STAR",
+                            "NISCOPE_VAL_RTSI_0",
+                            "NISCOPE_VAL_RTSI_1",
+                            "NISCOPE_VAL_RTSI_2",
+                            "NISCOPE_VAL_RTSI_3",
+                            "NISCOPE_VAL_RTSI_4",
+                            "NISCOPE_VAL_RTSI_5",
+                            "NISCOPE_VAL_RTSI_6",
+                            "NISCOPE_VAL_RTSI_7"
+                        ],
+                        "seealso": [
+                            "NationalInstruments.ModularInstruments.NIScope.ScopeExportedSignals",
+                            "NationalInstruments.ModularInstruments.NIScope.ScopeExportedSignals.EndOfAcquisitionEventOutputTerminal"
+                        ],
+                        "description": "the output terminal for <see cref=\"NationalInstruments.ModularInstruments.NIScope.ScopeExportedSignals.EndOfAcquisitionEventOutputTerminal\" crefType=\"PartiallyQualified\"/>"
+                    },
+                    "ScopeEndOfRecordEventOutputTerminal": {
+                        "values": [
+                            "NISCOPE_VAL_AUX_0_PFI_0",
+                            "NISCOPE_VAL_AUX_0_PFI_1",
+                            "NISCOPE_VAL_AUX_0_PFI_2",
+                            "NISCOPE_VAL_AUX_0_PFI_3",
+                            "NISCOPE_VAL_AUX_0_PFI_4",
+                            "NISCOPE_VAL_AUX_0_PFI_5",
+                            "NISCOPE_VAL_AUX_0_PFI_6",
+                            "NISCOPE_VAL_AUX_0_PFI_7",
+                            "NISCOPE_VAL_CLK_OUT",
+                            "NISCOPE_VAL_NO_SOURCE",
+                            "NISCOPE_VAL_PFI_0",
+                            "NISCOPE_VAL_PFI_1",
+                            "NISCOPE_VAL_PFI_2",
+                            "NISCOPE_VAL_PXI_STAR",
+                            "NISCOPE_VAL_RTSI_0",
+                            "NISCOPE_VAL_RTSI_1",
+                            "NISCOPE_VAL_RTSI_2",
+                            "NISCOPE_VAL_RTSI_3",
+                            "NISCOPE_VAL_RTSI_4",
+                            "NISCOPE_VAL_RTSI_5",
+                            "NISCOPE_VAL_RTSI_6",
+                            "NISCOPE_VAL_RTSI_7"
+                        ],
+                        "seealso": [
+                            "NationalInstruments.ModularInstruments.NIScope.ScopeExportedSignals",
+                            "NationalInstruments.ModularInstruments.NIScope.ScopeExportedSignals.EndOfRecordEventOutputTerminal"
+                        ],
+                        "description": "the end of record event output terminal for <see cref=\"NationalInstruments.ModularInstruments.NIScope.ScopeExportedSignals.EndOfRecordEventOutputTerminal\" crefType=\"PartiallyQualified\"/>"
+                    },
+                    "ScopeFiveVoltsOutOutputTerminal": {
+                        "values": [
+                            "NISCOPE_VAL_AUX_0_PFI_0",
+                            "NISCOPE_VAL_AUX_0_PFI_1",
+                            "NISCOPE_VAL_AUX_0_PFI_2",
+                            "NISCOPE_VAL_AUX_0_PFI_3",
+                            "NISCOPE_VAL_AUX_0_PFI_4",
+                            "NISCOPE_VAL_AUX_0_PFI_5",
+                            "NISCOPE_VAL_AUX_0_PFI_6",
+                            "NISCOPE_VAL_AUX_0_PFI_7",
+                            "NISCOPE_VAL_CLK_OUT",
+                            "NISCOPE_VAL_NO_SOURCE",
+                            "NISCOPE_VAL_PFI_0",
+                            "NISCOPE_VAL_PFI_1",
+                            "NISCOPE_VAL_PFI_2",
+                            "NISCOPE_VAL_PXI_STAR",
+                            "NISCOPE_VAL_RTSI_0",
+                            "NISCOPE_VAL_RTSI_1",
+                            "NISCOPE_VAL_RTSI_2",
+                            "NISCOPE_VAL_RTSI_3",
+                            "NISCOPE_VAL_RTSI_4",
+                            "NISCOPE_VAL_RTSI_5",
+                            "NISCOPE_VAL_RTSI_6",
+                            "NISCOPE_VAL_RTSI_7"
+                        ],
+                        "seealso": [
+                            "NationalInstruments.ModularInstruments.NIScope.ScopeExportedSignals",
+                            "NationalInstruments.ModularInstruments.NIScope.ScopeExportedSignals.FiveVoltOutputTerminal"
+                        ],
+                        "description": "the output terminal for <see cref=\"NationalInstruments.ModularInstruments.NIScope.ScopeExportedSignals.FiveVoltOutputTerminal\" crefType=\"PartiallyQualified\"/>"
+                    },
+                    "ScopeReadyForAdvanceEventOutputTerminal": {
+                        "values": [
+                            "NISCOPE_VAL_AUX_0_PFI_0",
+                            "NISCOPE_VAL_AUX_0_PFI_1",
+                            "NISCOPE_VAL_AUX_0_PFI_2",
+                            "NISCOPE_VAL_AUX_0_PFI_3",
+                            "NISCOPE_VAL_AUX_0_PFI_4",
+                            "NISCOPE_VAL_AUX_0_PFI_5",
+                            "NISCOPE_VAL_AUX_0_PFI_6",
+                            "NISCOPE_VAL_AUX_0_PFI_7",
+                            "NISCOPE_VAL_CLK_OUT",
+                            "NISCOPE_VAL_NO_SOURCE",
+                            "NISCOPE_VAL_PFI_0",
+                            "NISCOPE_VAL_PFI_1",
+                            "NISCOPE_VAL_PFI_2",
+                            "NISCOPE_VAL_PXI_STAR",
+                            "NISCOPE_VAL_RTSI_0",
+                            "NISCOPE_VAL_RTSI_1",
+                            "NISCOPE_VAL_RTSI_2",
+                            "NISCOPE_VAL_RTSI_3",
+                            "NISCOPE_VAL_RTSI_4",
+                            "NISCOPE_VAL_RTSI_5",
+                            "NISCOPE_VAL_RTSI_6",
+                            "NISCOPE_VAL_RTSI_7"
+                        ],
+                        "seealso": [
+                            "NationalInstruments.ModularInstruments.NIScope.ScopeExportedSignals",
+                            "NationalInstruments.ModularInstruments.NIScope.ScopeExportedSignals.ReadyForAdvanceEventOutputTerminal"
+                        ],
+                        "description": "the output terminal for <see cref=\"NationalInstruments.ModularInstruments.NIScope.ScopeExportedSignals.ReadyForAdvanceEventOutputTerminal\" crefType=\"PartiallyQualified\"/>"
+                    },
+                    "ScopeReadyForReferenceEventOutputTerminal": {
+                        "values": [
+                            "NISCOPE_VAL_AUX_0_PFI_0",
+                            "NISCOPE_VAL_AUX_0_PFI_1",
+                            "NISCOPE_VAL_AUX_0_PFI_2",
+                            "NISCOPE_VAL_AUX_0_PFI_3",
+                            "NISCOPE_VAL_AUX_0_PFI_4",
+                            "NISCOPE_VAL_AUX_0_PFI_5",
+                            "NISCOPE_VAL_AUX_0_PFI_6",
+                            "NISCOPE_VAL_AUX_0_PFI_7",
+                            "NISCOPE_VAL_CLK_OUT",
+                            "NISCOPE_VAL_NO_SOURCE",
+                            "NISCOPE_VAL_PFI_0",
+                            "NISCOPE_VAL_PFI_1",
+                            "NISCOPE_VAL_PFI_2",
+                            "NISCOPE_VAL_PXI_STAR",
+                            "NISCOPE_VAL_RTSI_0",
+                            "NISCOPE_VAL_RTSI_1",
+                            "NISCOPE_VAL_RTSI_2",
+                            "NISCOPE_VAL_RTSI_3",
+                            "NISCOPE_VAL_RTSI_4",
+                            "NISCOPE_VAL_RTSI_5",
+                            "NISCOPE_VAL_RTSI_6",
+                            "NISCOPE_VAL_RTSI_7"
+                        ],
+                        "seealso": [
+                            "NationalInstruments.ModularInstruments.NIScope.ScopeExportedSignals",
+                            "NationalInstruments.ModularInstruments.NIScope.ScopeExportedSignals.ReadyForReferenceEventOutputTerminal"
+                        ],
+                        "description": "the output terminal for <see cref=\"NationalInstruments.ModularInstruments.NIScope.ScopeExportedSignals.ReadyForReferenceEventOutputTerminal\" crefType=\"PartiallyQualified\"/>"
+                    },
+                    "ScopeReadyForStartEventOutputTerminal": {
+                        "values": [
+                            "NISCOPE_VAL_AUX_0_PFI_0",
+                            "NISCOPE_VAL_AUX_0_PFI_1",
+                            "NISCOPE_VAL_AUX_0_PFI_2",
+                            "NISCOPE_VAL_AUX_0_PFI_3",
+                            "NISCOPE_VAL_AUX_0_PFI_4",
+                            "NISCOPE_VAL_AUX_0_PFI_5",
+                            "NISCOPE_VAL_AUX_0_PFI_6",
+                            "NISCOPE_VAL_AUX_0_PFI_7",
+                            "NISCOPE_VAL_CLK_OUT",
+                            "NISCOPE_VAL_NO_SOURCE",
+                            "NISCOPE_VAL_PFI_0",
+                            "NISCOPE_VAL_PFI_1",
+                            "NISCOPE_VAL_PFI_2",
+                            "NISCOPE_VAL_PXI_STAR",
+                            "NISCOPE_VAL_RTSI_0",
+                            "NISCOPE_VAL_RTSI_1",
+                            "NISCOPE_VAL_RTSI_2",
+                            "NISCOPE_VAL_RTSI_3",
+                            "NISCOPE_VAL_RTSI_4",
+                            "NISCOPE_VAL_RTSI_5",
+                            "NISCOPE_VAL_RTSI_6",
+                            "NISCOPE_VAL_RTSI_7"
+                        ],
+                        "seealso": [
+                            "NationalInstruments.ModularInstruments.NIScope.ScopeExportedSignals",
+                            "NationalInstruments.ModularInstruments.NIScope.ScopeExportedSignals.ReadyForStartEventOutputTerminal"
+                        ],
+                        "description": "the output terminal for <see cref=\"NationalInstruments.ModularInstruments.NIScope.ScopeExportedSignals.ReadyForStartEventOutputTerminal\" crefType=\"PartiallyQualified\"/>"
+                    },
+                    "ScopeReferenceTriggerExportedOutputTerminal": {
+                        "values": [
+                            "NISCOPE_VAL_AUX_0_PFI_0",
+                            "NISCOPE_VAL_AUX_0_PFI_1",
+                            "NISCOPE_VAL_AUX_0_PFI_2",
+                            "NISCOPE_VAL_AUX_0_PFI_3",
+                            "NISCOPE_VAL_AUX_0_PFI_4",
+                            "NISCOPE_VAL_AUX_0_PFI_5",
+                            "NISCOPE_VAL_AUX_0_PFI_6",
+                            "NISCOPE_VAL_AUX_0_PFI_7",
+                            "NISCOPE_VAL_CLK_OUT",
+                            "NISCOPE_VAL_NO_SOURCE",
+                            "NISCOPE_VAL_PFI_0",
+                            "NISCOPE_VAL_PFI_1",
+                            "NISCOPE_VAL_PFI_2",
+                            "NISCOPE_VAL_PXI_STAR",
+                            "NISCOPE_VAL_RTSI_0",
+                            "NISCOPE_VAL_RTSI_1",
+                            "NISCOPE_VAL_RTSI_2",
+                            "NISCOPE_VAL_RTSI_3",
+                            "NISCOPE_VAL_RTSI_4",
+                            "NISCOPE_VAL_RTSI_5",
+                            "NISCOPE_VAL_RTSI_6",
+                            "NISCOPE_VAL_RTSI_7"
+                        ],
+                        "seealso": [
+                            "NationalInstruments.ModularInstruments.NIScope.ScopeExportedSignals",
+                            "NationalInstruments.ModularInstruments.NIScope.ScopeExportedSignals.ReferenceTriggerOutputTerminal"
+                        ],
+                        "description": "the reference trigger output terminal for <see cref=\"NationalInstruments.ModularInstruments.NIScope.ScopeExportedSignals.ReferenceTriggerOutputTerminal\" crefType=\"PartiallyQualified\"/>"
+                    },
+                    "ScopeSampleClockExportedOutputTerminal": {
+                        "values": [
+                            "NISCOPE_VAL_AUX_0_PFI_0",
+                            "NISCOPE_VAL_AUX_0_PFI_1",
+                            "NISCOPE_VAL_AUX_0_PFI_2",
+                            "NISCOPE_VAL_AUX_0_PFI_3",
+                            "NISCOPE_VAL_AUX_0_PFI_4",
+                            "NISCOPE_VAL_AUX_0_PFI_5",
+                            "NISCOPE_VAL_AUX_0_PFI_6",
+                            "NISCOPE_VAL_AUX_0_PFI_7",
+                            "NISCOPE_VAL_CLK_OUT",
+                            "NISCOPE_VAL_NO_SOURCE",
+                            "NISCOPE_VAL_PFI_0",
+                            "NISCOPE_VAL_PFI_1",
+                            "NISCOPE_VAL_PFI_2",
+                            "NISCOPE_VAL_PXI_STAR",
+                            "NISCOPE_VAL_RTSI_0",
+                            "NISCOPE_VAL_RTSI_1",
+                            "NISCOPE_VAL_RTSI_2",
+                            "NISCOPE_VAL_RTSI_3",
+                            "NISCOPE_VAL_RTSI_4",
+                            "NISCOPE_VAL_RTSI_5",
+                            "NISCOPE_VAL_RTSI_6",
+                            "NISCOPE_VAL_RTSI_7"
+                        ],
+                        "seealso": [
+                            "NationalInstruments.ModularInstruments.NIScope.ScopeExportedSignals",
+                            "NationalInstruments.ModularInstruments.NIScope.ScopeExportedSignals.SampleClockOutputTerminal"
+                        ],
+                        "description": "the output terminal for <see cref=\"NationalInstruments.ModularInstruments.NIScope.ScopeExportedSignals.SampleClockOutputTerminal\" crefType=\"PartiallyQualified\"/>"
+                    },
+                    "ScopeStartTriggerExportedOutputTerminal": {
+                        "values": [
+                            "NISCOPE_VAL_AUX_0_PFI_0",
+                            "NISCOPE_VAL_AUX_0_PFI_1",
+                            "NISCOPE_VAL_AUX_0_PFI_2",
+                            "NISCOPE_VAL_AUX_0_PFI_3",
+                            "NISCOPE_VAL_AUX_0_PFI_4",
+                            "NISCOPE_VAL_AUX_0_PFI_5",
+                            "NISCOPE_VAL_AUX_0_PFI_6",
+                            "NISCOPE_VAL_AUX_0_PFI_7",
+                            "NISCOPE_VAL_CLK_OUT",
+                            "NISCOPE_VAL_NO_SOURCE",
+                            "NISCOPE_VAL_PFI_0",
+                            "NISCOPE_VAL_PFI_1",
+                            "NISCOPE_VAL_PFI_2",
+                            "NISCOPE_VAL_PXI_STAR",
+                            "NISCOPE_VAL_RTSI_0",
+                            "NISCOPE_VAL_RTSI_1",
+                            "NISCOPE_VAL_RTSI_2",
+                            "NISCOPE_VAL_RTSI_3",
+                            "NISCOPE_VAL_RTSI_4",
+                            "NISCOPE_VAL_RTSI_5",
+                            "NISCOPE_VAL_RTSI_6",
+                            "NISCOPE_VAL_RTSI_7"
+                        ],
+                        "seealso": [
+                            "NationalInstruments.ModularInstruments.NIScope.ScopeExportedSignals",
+                            "NationalInstruments.ModularInstruments.NIScope.ScopeExportedSignals.StartTriggerOutputTerminal"
+                        ],
+                        "description": "the start trigger exported output terminal for <see cref=\"NationalInstruments.ModularInstruments.NIScope.ScopeExportedSignals.StartTriggerOutputTerminal\" crefType=\"PartiallyQualified\"/>"
+                    },
+                    "ScopeInputClockSource": {
+                        "values": [
+                            "NISCOPE_VAL_AUX_0_CLK_IN",
+                            "NISCOPE_VAL_CLK_IN",
+                            "NISCOPE_VAL_EXTERNAL",
+                            "NISCOPE_VAL_NO_SOURCE",
+                            "NISCOPE_VAL_PFI_0",
+                            "NISCOPE_VAL_PFI_1",
+                            "NISCOPE_VAL_PFI_2",
+                            "NISCOPE_VAL_PXI_CLK",
+                            "NISCOPE_VAL_RTSI_CLOCK"
+                        ],
+                        "seealso": [
+
+                            "NationalInstruments.ModularInstruments.NIScope.ScopeTiming",
+                            "NationalInstruments.ModularInstruments.NIScope.ScopeTiming.ReferenceClockSource"
+                        ],
+                        "description": "the source terminal for <see cref=\"NationalInstruments.ModularInstruments.NIScope.ScopeTiming.ReferenceClockSource\" crefType=\"PartiallyQualified\"/>"
+                    },
+                    "ScopeOutputClockSource": {
+                        "values": [
+                            "NISCOPE_VAL_AUX_0_CLK_OUT",
+                            "NISCOPE_VAL_CLK_OUT",
+                            "NISCOPE_VAL_NO_SOURCE",
+                            "NISCOPE_VAL_PFI_0",
+                            "NISCOPE_VAL_PFI_1",
+                            "NISCOPE_VAL_PFI_2",
+                            "NISCOPE_VAL_RTSI_0",
+                            "NISCOPE_VAL_RTSI_1",
+                            "NISCOPE_VAL_RTSI_2",
+                            "NISCOPE_VAL_RTSI_3",
+                            "NISCOPE_VAL_RTSI_4",
+                            "NISCOPE_VAL_RTSI_5",
+                            "NISCOPE_VAL_RTSI_6",
+                            "NISCOPE_VAL_RTSI_7",
+                            "NISCOPE_VAL_RTSI_CLOCK"
+                        ],
+                        "seealso": [
+                            "NationalInstruments.ModularInstruments.NIScope.ScopeExportedSignals",
+                            "NationalInstruments.ModularInstruments.NIScope.ScopeExportedSignals.ReferenceClockOutputTerminal"
+                        ],
+                        "description": "the output terminal for <see cref=\"NationalInstruments.ModularInstruments.NIScope.ScopeExportedSignals.ReferenceClockOutputTerminal\" crefType=\"PartiallyQualified\"/>"
+                    },
+                    "ScopeClockSynchronizationPulseSource": {
+                        "values": [
+                            "NISCOPE_VAL_NO_SOURCE",
+                            "NISCOPE_VAL_PFI_0",
+                            "NISCOPE_VAL_PFI_1",
+                            "NISCOPE_VAL_PFI_2",
+                            "NISCOPE_VAL_RTSI_0",
+                            "NISCOPE_VAL_RTSI_1",
+                            "NISCOPE_VAL_RTSI_2",
+                            "NISCOPE_VAL_RTSI_3",
+                            "NISCOPE_VAL_RTSI_4",
+                            "NISCOPE_VAL_RTSI_5",
+                            "NISCOPE_VAL_RTSI_6",
+                            "NISCOPE_VAL_RTSI_7"
+                        ],
+                        "remarks": "This line should be the same for all devices to be synchronized.",
+                        "description": "the line on which the sample clock is sent or received"
+                    },
+                    "ScopeAdvanceTriggerSource": {
+                        "values": [
+                            "NISCOPE_VAL_IMMEDIATE",
+                            "NISCOPE_VAL_PFI_0",
+                            "NISCOPE_VAL_PFI_1",
+                            "NISCOPE_VAL_PFI_2",
+                            "NISCOPE_VAL_PXI_STAR",
+                            "NISCOPE_VAL_RTSI_0",
+                            "NISCOPE_VAL_RTSI_1",
+                            "NISCOPE_VAL_RTSI_2",
+                            "NISCOPE_VAL_RTSI_3",
+                            "NISCOPE_VAL_RTSI_4",
+                            "NISCOPE_VAL_RTSI_5",
+                            "NISCOPE_VAL_RTSI_6",
+                            "NISCOPE_VAL_RTSI_7",
+                            "NISCOPE_VAL_SW_TRIG_FUNC"
+                        ],
+                        "seealso": [
+                            "NationalInstruments.ModularInstruments.NIScope.ScopeDigitalEdgeAdvanceTrigger",
+                            "NationalInstruments.ModularInstruments.NIScope.ScopeDigitalEdgeAdvanceTrigger.Source"
+                        ],
+                        "description": "the source terminal for <see cref=\"NationalInstruments.ModularInstruments.NIScope.ScopeDigitalEdgeAdvanceTrigger\"/>"
+                    },
+                    "ScopeArmReferenceTriggerSource": {
+                        "values": [
+                            "NISCOPE_VAL_IMMEDIATE",
+                            "NISCOPE_VAL_PFI_0",
+                            "NISCOPE_VAL_PFI_1",
+                            "NISCOPE_VAL_PFI_2",
+                            "NISCOPE_VAL_PXI_STAR",
+                            "NISCOPE_VAL_RTSI_0",
+                            "NISCOPE_VAL_RTSI_1",
+                            "NISCOPE_VAL_RTSI_2",
+                            "NISCOPE_VAL_RTSI_3",
+                            "NISCOPE_VAL_RTSI_4",
+                            "NISCOPE_VAL_RTSI_5",
+                            "NISCOPE_VAL_RTSI_6",
+                            "NISCOPE_VAL_RTSI_7",
+                            "NISCOPE_VAL_SW_TRIG_FUNC"
+                        ],
+                        "seealso": [
+                            "NationalInstruments.ModularInstruments.NIScope.ScopeDigitalEdgeArmReferenceTrigger",
+                            "NationalInstruments.ModularInstruments.NIScope.ScopeDigitalEdgeArmReferenceTrigger.Source"
+                        ],
+                        "description": "the source terminal for <see cref=\"NationalInstruments.ModularInstruments.NIScope.ScopeDigitalEdgeArmReferenceTrigger\"/>"
+                    },
+                    "ScopeDigitalEdgeStartTriggerSource": {
+                        "values": [
+                            "NISCOPE_VAL_IMMEDIATE",
+                            "NISCOPE_VAL_PFI_0",
+                            "NISCOPE_VAL_PFI_1",
+                            "NISCOPE_VAL_PFI_2",
+                            "NISCOPE_VAL_PXI_STAR",
+                            "NISCOPE_VAL_RTSI_0",
+                            "NISCOPE_VAL_RTSI_1",
+                            "NISCOPE_VAL_RTSI_2",
+                            "NISCOPE_VAL_RTSI_3",
+                            "NISCOPE_VAL_RTSI_4",
+                            "NISCOPE_VAL_RTSI_5",
+                            "NISCOPE_VAL_RTSI_6",
+                            "NISCOPE_VAL_RTSI_7",
+                            "NISCOPE_VAL_SW_TRIG_FUNC"
+                        ],
+                        "seealso": [
+                            "NationalInstruments.ModularInstruments.NIScope.ScopeDigitalEdgeStartTrigger",
+                            "NationalInstruments.ModularInstruments.NIScope.ScopeDigitalEdgeStartTrigger.Source"
+                        ],
+                        "description": "the source terminal for  <see cref=\"NationalInstruments.ModularInstruments.NIScope.ScopeDigitalEdgeStartTrigger\"/>"
+                    },
+                    "ScopeSampleClockTimebaseSource": {
+                        "values": [
+                            "NISCOPE_VAL_CLK_IN",
+                            "NISCOPE_VAL_NO_SOURCE",
+                            "NISCOPE_VAL_PFI_0",
+                            "NISCOPE_VAL_PFI_1",
+                            "NISCOPE_VAL_PFI_2",
+                            "NISCOPE_VAL_PXI_STAR",
+                            "NISCOPE_VAL_PXIE_DSTAR_A"
+                        ],
+                        "seealso": [
+                            "NationalInstruments.ModularInstruments.NIScope.ScopeTiming.SampleClockTimebaseSource",
+                            "NationalInstruments.ModularInstruments.NIScope.ScopeTiming"
+                        ],
+                        "description": "the source terminal for <see cref=\"NationalInstruments.ModularInstruments.NIScope.ScopeTiming.SampleClockTimebaseSource\" crefType=\"PartiallyQualified\"/>"
+                    }
+                }
+            }
+        },
+        {
+            "name": "niScope_ImportAttributeConfigurationBuffer",
+            "parameters": [
+                {
+                    "cname": "configuration",
+                    "nettype": "byte[]"
+                }
+            ]
+        },
+        {
+            "name": "niScope_ExportAttributeConfigurationBuffer",
+            "parameters": [
+                {
+                    "cname": "configuration",
+                    "nettype": "byte[]"
+                }
+            ]
+        }
+    ]
+}
