@@ -46,6 +46,7 @@ service niScopeService {
     rpc Abort(AbortParameters) returns (AbortResult) {};
     rpc Commit(CommitParameters) returns (CommitResult) {};
     rpc Read(ReadParameters) returns (ReadResult) {};
+    rpc ReadContinuously(ReadContinuouslyParameters) returns (stream ReadContinuouslyResult) {};
     rpc Fetch(FetchParameters) returns (FetchResult) {};
     rpc FetchBinary8(FetchBinary8Parameters) returns (FetchBinary8Result) {};
     rpc FetchBinary16(FetchBinary16Parameters) returns (FetchBinary16Result) {};
@@ -579,6 +580,18 @@ message ReadResult {
   int32 status = 1;
   repeated double wfm = 5;
   repeated ScopeWaveformInfo wfmInfo = 2;
+}
+
+message ReadContinuouslyParameters {
+  ViSession vi = 1;
+  string channelList = 2;
+  double timeout = 3;
+  int32 numSamples = 4;
+}
+    
+message ReadContinuouslyResult {
+  int32 status = 1;
+  repeated double wfm = 5;
 }
 
 message FetchParameters {

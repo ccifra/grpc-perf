@@ -28,7 +28,7 @@ public:
     int ConfigureHorizontalTiming(ViSession session, double minSampleRate, int numPoints, double refPosition, int numRecords, bool enforceRealtime);
     int AutoSetup(ViSession session);
     int Read(ViSession session, std::string channels, double timeout, int numSamples, double* samples, ScopeWaveformInfo* waveformInfo);
-
+    std::unique_ptr<grpc::ClientReader<niScope::ReadContinuouslyResult>> ReadContinuously(grpc::ClientContext* context, ViSession session, std::string channels, double timeout, int numSamples);
 private:
     unique_ptr<niScopeService::Stub> m_Stub;
 };
@@ -126,6 +126,21 @@ int NIScope::Read(ViSession session, std::string channels, double timeout, int n
     memcpy(samples, reply.wfm().data(), numSamples * sizeof(double));
     //*waveformInfo = reply.wfminfo()[0];
     return reply.status();
+}
+
+//---------------------------------------------------------------------
+//---------------------------------------------------------------------
+std::unique_ptr<grpc::ClientReader<niScope::ReadContinuouslyResult>> NIScope::ReadContinuously(grpc::ClientContext* context, ViSession session, std::string channels, double timeout, int numSamples)
+{    
+    ReadContinuouslyParameters request;
+    auto requestSession = new ViSession;
+    requestSession->set_id(session.id());
+    request.set_allocated_vi(requestSession);
+    request.set_channellist(channels.c_str());
+    request.set_timeout(timeout);
+    request.set_numsamples(numSamples);
+
+    return m_Stub->ReadContinuously(context, request);
 }
 
 //---------------------------------------------------------------------
@@ -249,13 +264,43 @@ int main(int argc, char **argv)
     result = client.ConfigureHorizontalTiming(session, 50000000, 1000, 50, 1, true);
     result = client.AutoSetup(session);
 
-    double samples[1000];
+    double* samples = new double[100000];
     ScopeWaveformInfo info[1];
     result = client.Read(session, (char*)"0", 5.0, 1000, samples, info);
-
     cout << "First 10 samples: " << std::endl;
+
+
     for (int x = 0; x < 10; ++x)
     {
-        cout << "    " << samples[x] << std::endl;
+        cout << "    " << samples[x] << std::endl << std::endl;
+    }
+
+    {
+        auto start = std::chrono::steady_clock::now();
+        for (int x=0; x<1000; ++x)
+        {
+            result = client.Read(session, (char*)"0", 5.0, 100000, samples, info);
+        }
+        auto end = std::chrono::steady_clock::now();
+        cout << "Read 1000 waveforms one at a time" << std::endl;
+        auto elapsed = std::chrono::duration_cast<std::chrono::microseconds>(end - start);
+        std::cout << "It took me " << elapsed.count() << " microseconds." << std::endl << std::endl;
+    }
+
+    {
+        int index = 1;
+        auto start = std::chrono::steady_clock::now();
+        grpc::ClientContext context;
+        auto readResult = client.ReadContinuously(&context, session, (char*)"0", 5.0, 100000);
+        
+        ReadContinuouslyResult cresult;
+        while(readResult->Read(&cresult))
+        {
+            index += 1;
+        }
+        auto end = std::chrono::steady_clock::now();
+        cout << "Read " << index << " Continous waveforms" << std::endl;
+        auto elapsed = std::chrono::duration_cast<std::chrono::microseconds>(end - start);
+        std::cout << "It took me " << elapsed.count() << " microseconds." << std::endl;
     }
 }

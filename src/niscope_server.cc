@@ -65,6 +65,22 @@ Status NIScopeServer::Read(ServerContext* context, const niScope::ReadParameters
 
 //---------------------------------------------------------------------
 //---------------------------------------------------------------------
+Status NIScopeServer::ReadContinuously(ServerContext* context, const niScope::ReadContinuouslyParameters* request, grpc::ServerWriter<niScope::ReadContinuouslyResult>* writer)
+{			
+	niScope::ReadContinuouslyResult response;
+	response.mutable_wfm()->Reserve(request->numsamples());
+	response.mutable_wfm()->Resize(request->numsamples(), 0.0);
+	niScope_wfmInfo* info = new niScope_wfmInfo[1];
+	for (int x=0; x<1000; ++x)
+	{
+		auto status = niScope_Read(request->vi().id(), request->channellist().c_str(), request->timeout(), request->numsamples(), response.mutable_wfm()->mutable_data(), info);
+		writer->Write(response);
+	}
+	return Status::OK;
+}
+
+//---------------------------------------------------------------------
+//---------------------------------------------------------------------
 string GetServerAddress(int argc, char** argv)
 {
     string target_str = "0.0.0.0:50051";

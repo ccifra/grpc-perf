@@ -37,4 +37,5 @@ public:
     Status AutoSetup(ServerContext* context, const niScope::AutoSetupParameters* request, niScope::AutoSetupResult* response);
     Status ConfigureHorizontalTiming(ServerContext* context, const niScope::ConfigureHorizontalTimingParameters* request, niScope::ConfigureHorizontalTimingResult* response);
     Status Read(ServerContext* context, const niScope::ReadParameters* request, niScope::ReadResult* response);
+    Status ReadContinuously(ServerContext* context, const niScope::ReadContinuouslyParameters* request, grpc::ServerWriter<niScope::ReadContinuouslyResult>* writer);
 };
