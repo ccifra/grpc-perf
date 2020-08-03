@@ -261,34 +261,23 @@ int main(int argc, char **argv)
 
     ViSession session;
     auto result = client.InitWithOptions((char*)resourceName, false, false, options, &session);
-    result = client.ConfigureHorizontalTiming(session, 50000000, 1000, 50, 1, true);
+    result = client.ConfigureHorizontalTiming(session, 100000000, 100000, 50, 1, true);
     result = client.AutoSetup(session);
 
-    double* samples = new double[100000];
+    double* samples = new double[1000000];
     ScopeWaveformInfo info[1];
-    result = client.Read(session, (char*)"0", 5.0, 1000, samples, info);
+    result = client.Read(session, (char*)"0", 5.0, 400000, samples, info);
     cout << "First 10 samples: " << std::endl;
 
 
     for (int x = 0; x < 10; ++x)
     {
-        cout << "    " << samples[x] << std::endl << std::endl;
+        cout << "    " << samples[x] << std::endl;
     }
 
+    std::cout << "Reading 1000 waveforms from stream." << std::endl;
     {
-        auto start = std::chrono::steady_clock::now();
-        for (int x=0; x<1000; ++x)
-        {
-            result = client.Read(session, (char*)"0", 5.0, 100000, samples, info);
-        }
-        auto end = std::chrono::steady_clock::now();
-        cout << "Read 1000 waveforms one at a time" << std::endl;
-        auto elapsed = std::chrono::duration_cast<std::chrono::microseconds>(end - start);
-        std::cout << "It took me " << elapsed.count() << " microseconds." << std::endl << std::endl;
-    }
-
-    {
-        int index = 1;
+        int index = 0;
         auto start = std::chrono::steady_clock::now();
         grpc::ClientContext context;
         auto readResult = client.ReadContinuously(&context, session, (char*)"0", 5.0, 100000);
