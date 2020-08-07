@@ -20,6 +20,15 @@ using namespace std;
 
 //---------------------------------------------------------------------
 //---------------------------------------------------------------------
+Status NIScopeServer::Init(ServerContext* context, const niScope::InitParameters* request, niScope::InitResult* response)
+{
+	response->set_status(request->id());
+	return Status::OK;	
+}
+
+
+//---------------------------------------------------------------------
+//---------------------------------------------------------------------
 Status NIScopeServer::InitWithOptions(ServerContext* context, const niScope::InitWithOptionsParameters* request, niScope::InitWithOptionsResult* response)
 {	
 	response->set_status(0);

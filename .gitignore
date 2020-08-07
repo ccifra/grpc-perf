@@ -12,10 +12,13 @@ _deps
 gens
 
 build
+third_party
+grpc
 .vs
 .vscode
 
 example_client
+niscope_server
 
 *.pb.cc
 *.pb.h

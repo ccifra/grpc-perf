@@ -247,15 +247,23 @@ message ComplexI16 {
     bytes imaginary = 2;
 }
 
+//message InitParameters {
+//  string resourceName = 1;
+//  bool IDQuery = 2;
+//   bool resetDevice = 3;
+// }
+    
+// message InitResult {
+//   int32 status = 1;
+//   ViSession vi = 2;
+// }
+
 message InitParameters {
-  string resourceName = 1;
-  bool IDQuery = 2;
-  bool resetDevice = 3;
+  int32 id = 1;
 }
     
 message InitResult {
   int32 status = 1;
-  ViSession vi = 2;
 }
 
 message InitWithOptionsParameters {

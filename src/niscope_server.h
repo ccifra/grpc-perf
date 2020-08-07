@@ -12,7 +12,7 @@
 #include <grpcpp/grpcpp.h>
 #include <grpcpp/health_check_service_interface.h>
 #include <grpcpp/ext/proto_server_reflection_plugin.h>
-#include <niscope.grpc.pb.h>
+#include <niScope.grpc.pb.h>
 #include <condition_variable>
 
 using grpc::Server;
@@ -33,6 +33,7 @@ using namespace std;
 class NIScopeServer final : public niScope::niScopeService::Service
 {
 public:
+    Status Init(ServerContext* context, const niScope::InitParameters*, niScope::InitResult* response);
     Status InitWithOptions(ServerContext* context, const niScope::InitWithOptionsParameters* request, niScope::InitWithOptionsResult* response);
     Status AutoSetup(ServerContext* context, const niScope::AutoSetupParameters* request, niScope::AutoSetupResult* response);
     Status ConfigureHorizontalTiming(ServerContext* context, const niScope::ConfigureHorizontalTimingParameters* request, niScope::ConfigureHorizontalTimingResult* response);

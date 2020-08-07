@@ -24,6 +24,7 @@ public:
     NIScope(shared_ptr<Channel> channel);
 
 public:
+    int Init(int id);
     int InitWithOptions(std::string resourceName, bool idQuery, bool resetDevice, std::string options, ViSession* session);
     int ConfigureHorizontalTiming(ViSession session, double minSampleRate, int numPoints, double refPosition, int numRecords, bool enforceRealtime);
     int AutoSetup(ViSession session);
@@ -38,6 +39,23 @@ private:
 NIScope::NIScope(shared_ptr<Channel> channel)
     : m_Stub(niScopeService::NewStub(channel))
 {        
+}
+
+//---------------------------------------------------------------------
+//---------------------------------------------------------------------
+int NIScope::Init(int id)
+{
+    InitParameters request;
+    request.set_id(id);
+
+    ClientContext context;
+    InitResult reply;
+    Status status = m_Stub->Init(&context, request, &reply);
+    if (!status.ok())
+    {
+        cout << status.error_code() << ": " << status.error_message() << endl;
+    }
+    return reply.status();
 }
 
 //---------------------------------------------------------------------
@@ -271,6 +289,18 @@ int main(int argc, char **argv)
     for (int x = 0; x < 10; ++x)
     {
         cout << "    " << samples[x] << std::endl;
+    }
+
+    std::cout << "Calling Init 50000 times." << std::endl;
+    {        
+        auto start = std::chrono::steady_clock::now();
+        for (int x=0; x<50000; ++x)
+        {
+            client.Init(42);
+        }
+        auto end = std::chrono::steady_clock::now();
+        auto elapsed = std::chrono::duration_cast<std::chrono::microseconds>(end - start);
+        std::cout << "It took " << elapsed.count() << " microseconds." << std::endl;
     }
 
     std::cout << "Reading 10000 waveforms from stream." << std::endl;
