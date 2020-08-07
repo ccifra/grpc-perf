@@ -266,21 +266,19 @@ int main(int argc, char **argv)
 
     double* samples = new double[1000000];
     ScopeWaveformInfo info[1];
-    result = client.Read(session, (char*)"0", 5.0, 400000, samples, info);
+    result = client.Read(session, (char*)"0", 5.0, 100000, samples, info);
     cout << "First 10 samples: " << std::endl;
-
-
     for (int x = 0; x < 10; ++x)
     {
         cout << "    " << samples[x] << std::endl;
     }
 
-    std::cout << "Reading 1000 waveforms from stream." << std::endl;
+    std::cout << "Reading 10000 waveforms from stream." << std::endl;
     {
         int index = 0;
         auto start = std::chrono::steady_clock::now();
         grpc::ClientContext context;
-        auto readResult = client.ReadContinuously(&context, session, (char*)"0", 5.0, 100000);
+        auto readResult = client.ReadContinuously(&context, session, (char*)"0", 5.0, 200000);
         
         ReadContinuouslyResult cresult;
         while(readResult->Read(&cresult))

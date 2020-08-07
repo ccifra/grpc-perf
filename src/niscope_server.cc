@@ -4,7 +4,6 @@
 #include <sstream>
 #include <fstream>
 #include <iostream>
-#include <niscope.h>
 #include <niscope_server.h>
 
 //---------------------------------------------------------------------
@@ -23,13 +22,11 @@ using namespace std;
 //---------------------------------------------------------------------
 Status NIScopeServer::InitWithOptions(ServerContext* context, const niScope::InitWithOptionsParameters* request, niScope::InitWithOptionsResult* response)
 {	
-	ViSession vi;
-	auto status = niScope_InitWithOptions((char*)request->resourcename().c_str(), request->idquery(), request->resetdevice(), request->optionstring().c_str(), &vi);
-	response->set_status(status);
+	response->set_status(0);
 	niScope::ViSession* session = new niScope::ViSession();
-	session->set_id(vi);
+	session->set_id(1);
 	response->set_allocated_newvi(session);
-	response->set_status(status);
+	response->set_status(0);
 	return Status::OK;
 }
 
@@ -37,8 +34,7 @@ Status NIScopeServer::InitWithOptions(ServerContext* context, const niScope::Ini
 //---------------------------------------------------------------------
 Status NIScopeServer::AutoSetup(ServerContext* context, const niScope::AutoSetupParameters* request, niScope::AutoSetupResult* response)
 {
-	auto status = niScope_AutoSetup(request->vi().id());
-	response->set_status(status);
+	response->set_status(0);
 	return Status::OK;
 }
 
@@ -46,8 +42,7 @@ Status NIScopeServer::AutoSetup(ServerContext* context, const niScope::AutoSetup
 //---------------------------------------------------------------------
 Status NIScopeServer::ConfigureHorizontalTiming(ServerContext* context, const niScope::ConfigureHorizontalTimingParameters* request, niScope::ConfigureHorizontalTimingResult* response)
 {	
-	auto status = niScope_ConfigureHorizontalTiming(request->vi().id(), request->minsamplerate(), request->minnumpts(), request->refposition(), request->numrecords(), request->enforcerealtime());
-	response->set_status(status);
+	response->set_status(0);
 	return Status::OK;
 }
 
@@ -57,9 +52,7 @@ Status NIScopeServer::Read(ServerContext* context, const niScope::ReadParameters
 {	
 	response->mutable_wfm()->Reserve(request->numsamples());
 	response->mutable_wfm()->Resize(request->numsamples(), 0.0);
-	niScope_wfmInfo* info = new niScope_wfmInfo[1];
-	auto status = niScope_Read(request->vi().id(), request->channellist().c_str(), request->timeout(), request->numsamples(), response->mutable_wfm()->mutable_data(), info);
-	response->set_status(status);
+	response->set_status(0);
 	return Status::OK;
 }
 
@@ -70,10 +63,9 @@ Status NIScopeServer::ReadContinuously(ServerContext* context, const niScope::Re
 	niScope::ReadContinuouslyResult response;
 	response.mutable_wfm()->Reserve(request->numsamples());
 	response.mutable_wfm()->Resize(request->numsamples(), 0.0);
-	niScope_wfmInfo* info = new niScope_wfmInfo[1];
-	for (int x=0; x<1000; ++x)
+	cout << "Writing " << request->numsamples() << " 10000 times";
+	for (int x=0; x<10000; ++x)
 	{
-		auto status = niScope_Read(request->vi().id(), request->channellist().c_str(), request->timeout(), request->numsamples(), response.mutable_wfm()->mutable_data(), info);
 		writer->Write(response);
 	}
 	return Status::OK;

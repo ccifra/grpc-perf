@@ -60,7 +60,7 @@ add_custom_command(
 #----------------------------------------------------------------------
 # Include generated *.pb.h files
 #----------------------------------------------------------------------
-include_directories("${CMAKE_CURRENT_BINARY_DIR}" "./src" $ENV{IVIROOTDIR64}/Include)
+include_directories("${CMAKE_CURRENT_BINARY_DIR}" "./src")
 
 #----------------------------------------------------------------------
 # NIScope gRPC Server
@@ -74,7 +74,6 @@ target_link_libraries(niscope_server
    ${_REFLECTION}
    ${_GRPC_GRPCPP}
    ${_PROTOBUF_LIBPROTOBUF}
-   $(IVIROOTDIR64)/Lib_x64/msc/niscope.lib
    )
 
 #----------------------------------------------------------------------
