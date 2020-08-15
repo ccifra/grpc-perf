@@ -5,6 +5,7 @@
 #include <fstream>
 #include <iostream>
 #include <niscope_server.h>
+#include <thread>
 
 //---------------------------------------------------------------------
 //---------------------------------------------------------------------
@@ -72,8 +73,8 @@ Status NIScopeServer::ReadContinuously(ServerContext* context, const niScope::Re
 	niScope::ReadContinuouslyResult response;
 	response.mutable_wfm()->Reserve(request->numsamples());
 	response.mutable_wfm()->Resize(request->numsamples(), 0.0);
-	cout << "Writing " << request->numsamples() << " 10000 times";
-	for (int x=0; x<10000; ++x)
+	cout << "Writing " << request->numsamples() << " 100000 times" << endl;
+	for (int x=0; x<100000; ++x)
 	{
 		writer->Write(response);
 	}
@@ -189,9 +190,9 @@ std::shared_ptr<grpc::ServerCredentials> CreateCredentials(int argc, char **argv
 
 //---------------------------------------------------------------------
 //---------------------------------------------------------------------
-void RunServer(int argc, char **argv)
+void RunServer(int argc, char **argv, const char* saddress)
 {
-	auto server_address = GetServerAddress(argc, argv);
+	auto server_address = saddress; //GetServerAddress(argc, argv);
 	auto creds = CreateCredentials(argc, argv);
 
 	NIScopeServer service;
@@ -199,6 +200,7 @@ void RunServer(int argc, char **argv)
 	grpc::reflection::InitProtoReflectionServerBuilderPlugin();
 
 	ServerBuilder builder;
+	builder.SetDefaultCompressionAlgorithm(GRPC_COMPRESS_NONE);
 	// Listen on the given address without any authentication mechanism.
 	builder.AddListeningPort(server_address, creds);
 	// Register "service" as the instance through which we'll communicate with
@@ -214,6 +216,13 @@ void RunServer(int argc, char **argv)
 //---------------------------------------------------------------------
 int main(int argc, char **argv)
 {
-	RunServer(argc, argv);
+	auto thread1 = new std::thread(RunServer, argc, argv, "0.0.0.0:50051");
+	auto thread2 = new std::thread(RunServer, argc, argv, "0.0.0.0:50052");
+	auto thread3 = new std::thread(RunServer, argc, argv, "0.0.0.0:50053");
+	auto thread4 = new std::thread(RunServer, argc, argv, "0.0.0.0:50054");
+	thread1->join();
+	thread2->join();
+	thread3->join();
+	thread4->join();
 	return 0;
 }

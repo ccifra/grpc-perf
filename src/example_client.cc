@@ -7,6 +7,7 @@
 #include <sstream>
 #include <fstream>
 #include <iostream>
+#include <thread>
 
 //---------------------------------------------------------------------
 //---------------------------------------------------------------------
@@ -265,8 +266,95 @@ shared_ptr<grpc::ChannelCredentials> CreateCredentials(int argc, char **argv)
     return creds;
 }
 
-//---------------------------------------------------------------------
-//---------------------------------------------------------------------
+static NIScope* client1;
+static NIScope* client2;
+static NIScope* client3;
+static NIScope* client4;
+
+
+static void ReadSamples(NIScope* client, int numSamples)
+{    
+    ViSession session;
+    int index = 0;
+    grpc::ClientContext context;
+    auto readResult = client->ReadContinuously(&context, session, (char*)"0", 5.0, numSamples);
+    ReadContinuouslyResult cresult;
+    while(readResult->Read(&cresult))
+    {
+        cresult.wfm().size();
+        index += 1;
+    }
+}
+
+void PerformMessagePerformanceTest(NIScope& client)
+{
+    cout << "Start Messages per second test" << endl;
+
+    auto start = std::chrono::steady_clock::now();
+    for (int x=0; x<50000; ++x)
+    {
+        client.Init(42);
+    }
+    auto end = std::chrono::steady_clock::now();
+    auto elapsed = std::chrono::duration_cast<std::chrono::microseconds>(end - start);
+
+    double msgsPerSecond = (50000.0 * 100000.0) / (double)elapsed.count();
+    std::cout << "Result: " << msgsPerSecond << " messages/s" << std::endl << std::endl;
+}
+
+void ReportMBPerSecond(std::chrono::_V2::steady_clock::time_point start, std::chrono::_V2::steady_clock::time_point end, int numSamples)
+{
+    int64_t elapsed = std::chrono::duration_cast<std::chrono::microseconds>(end - start).count();
+
+    double elapsedMiliseconds = elapsed / 1000.0;
+    double elapsedSeconds = elapsedMiliseconds / 1000.0;
+
+    double bytesPerSecond = (8.0 * (double)numSamples * 100000) / elapsedSeconds;
+    double kBytesPerSecond = bytesPerSecond / 1024.0;
+    double MBPerSecond = kBytesPerSecond / 1024.0;
+    cout << numSamples << " Samples: " << MBPerSecond << " MB/s, " << elapsed << " total microseconds" << endl;
+}
+
+void PerformStreamingTest(NIScope& client, int numSamples)
+{
+    auto start = std::chrono::steady_clock::now();
+    ReadSamples(&client, numSamples);
+    auto end = std::chrono::steady_clock::now();
+    ReportMBPerSecond(start, end, numSamples);
+}
+
+void PerformTwoStreamTest(NIScope& client, NIScope& client2, int numSamples)
+{
+    auto start = std::chrono::steady_clock::now();
+
+    auto thread1 = new std::thread(ReadSamples, &client, numSamples);
+    auto thread2 = new std::thread(ReadSamples, &client2, numSamples);
+
+    thread1->join();
+    thread2->join();
+
+    auto end = std::chrono::steady_clock::now();
+    ReportMBPerSecond(start, end, numSamples * 2);
+}
+
+void PerformFourStreamTest(NIScope& client, NIScope& client2, NIScope& client3, NIScope& client4, int numSamples)
+{
+    auto start = std::chrono::steady_clock::now();
+
+    auto thread1 = new std::thread(ReadSamples, &client, numSamples);
+    auto thread2 = new std::thread(ReadSamples, &client2, numSamples);
+    auto thread3 = new std::thread(ReadSamples, &client3, numSamples);
+    auto thread4 = new std::thread(ReadSamples, &client4, numSamples);
+
+    thread1->join();
+    thread2->join();
+    thread3->join();
+    thread4->join();
+
+    auto end = std::chrono::steady_clock::now();
+    ReportMBPerSecond(start, end, numSamples * 4);
+}
+
 int main(int argc, char **argv)
 {
     auto resourceName = "SimulatedScope7c632f66-e7c2-4fab-85a4-cd15c8be4130";
@@ -275,49 +363,38 @@ int main(int argc, char **argv)
     auto target_str = GetServerAddress(argc, argv);
     auto creds = CreateCredentials(argc, argv);
 
-    NIScope client(grpc::CreateChannel(target_str, creds));
+    client1 = new NIScope(grpc::CreateChannel("localhost:50051", creds));
 
     ViSession session;
-    auto result = client.InitWithOptions((char*)resourceName, false, false, options, &session);
-    result = client.ConfigureHorizontalTiming(session, 100000000, 100000, 50, 1, true);
-    result = client.AutoSetup(session);
+    auto result = client1->InitWithOptions((char*)resourceName, false, false, options, &session);
 
-    double* samples = new double[1000000];
-    ScopeWaveformInfo info[1];
-    result = client.Read(session, (char*)"0", 5.0, 100000, samples, info);
-    cout << "First 10 samples: " << std::endl;
-    for (int x = 0; x < 10; ++x)
-    {
-        cout << "    " << samples[x] << std::endl;
-    }
+    PerformMessagePerformanceTest(*client1);
 
-    std::cout << "Calling Init 50000 times." << std::endl;
-    {        
-        auto start = std::chrono::steady_clock::now();
-        for (int x=0; x<50000; ++x)
-        {
-            client.Init(42);
-        }
-        auto end = std::chrono::steady_clock::now();
-        auto elapsed = std::chrono::duration_cast<std::chrono::microseconds>(end - start);
-        std::cout << "It took " << elapsed.count() << " microseconds." << std::endl;
-    }
+    std::cout << "Start streaming tests" << endl;
+    PerformStreamingTest(*client1, 10);
+    PerformStreamingTest(*client1, 100);
+    PerformStreamingTest(*client1, 1000);
+    PerformStreamingTest(*client1, 10000);
+    PerformStreamingTest(*client1, 100000);
+    PerformStreamingTest(*client1, 200000);
 
-    std::cout << "Reading 10000 waveforms from stream." << std::endl;
-    {
-        int index = 0;
-        auto start = std::chrono::steady_clock::now();
-        grpc::ClientContext context;
-        auto readResult = client.ReadContinuously(&context, session, (char*)"0", 5.0, 200000);
-        
-        ReadContinuouslyResult cresult;
-        while(readResult->Read(&cresult))
-        {
-            index += 1;
-        }
-        auto end = std::chrono::steady_clock::now();
-        cout << "Read " << index << " Continous waveforms" << std::endl;
-        auto elapsed = std::chrono::duration_cast<std::chrono::microseconds>(end - start);
-        std::cout << "It took me " << elapsed.count() << " microseconds." << std::endl;
-    }
+    client2 = new NIScope(grpc::CreateChannel("localhost:50052", creds));
+    result = client2->InitWithOptions((char*)resourceName, false, false, options, &session);
+
+    std::cout << endl << "Start 2 stream streaming tests" << endl;
+    PerformTwoStreamTest(*client1, *client2, 1000);
+    PerformTwoStreamTest(*client1, *client2, 10000);
+    PerformTwoStreamTest(*client1, *client2, 100000);
+    PerformTwoStreamTest(*client1, *client2, 200000);
+
+    client3 = new NIScope(grpc::CreateChannel("localhost:50053", creds));
+    client4 = new NIScope(grpc::CreateChannel("localhost:50054", creds));
+    result = client3->InitWithOptions((char*)resourceName, false, false, options, &session);
+    result = client4->InitWithOptions((char*)resourceName, false, false, options, &session);
+
+    std::cout << endl << "Start 4 stream streaming tests" << endl;
+    PerformFourStreamTest(*client1, *client2, *client3, *client4, 1000);
+    PerformFourStreamTest(*client1, *client2, *client3, *client4, 10000);
+    PerformFourStreamTest(*client1, *client2, *client3, *client4, 100000);
+    PerformFourStreamTest(*client1, *client2, *client3, *client4, 200000);
 }
