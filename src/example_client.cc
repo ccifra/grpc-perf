@@ -30,6 +30,7 @@ public:
     int ConfigureHorizontalTiming(ViSession session, double minSampleRate, int numPoints, double refPosition, int numRecords, bool enforceRealtime);
     int AutoSetup(ViSession session);
     int Read(ViSession session, string channels, double timeout, int numSamples, double* samples, ScopeWaveformInfo* waveformInfo);
+    int TestWrite(int numSamples, double* samples);
     unique_ptr<grpc::ClientReader<niScope::ReadContinuouslyResult>> ReadContinuously(grpc::ClientContext* context, ViSession session, string channels, double timeout, int numSamples);
 private:
     unique_ptr<niScopeService::Stub> m_Stub;
@@ -144,6 +145,24 @@ int NIScope::Read(ViSession session, string channels, double timeout, int numSam
     }
     memcpy(samples, reply.wfm().data(), numSamples * sizeof(double));
     //*waveformInfo = reply.wfminfo()[0];
+    return reply.status();
+}
+
+//---------------------------------------------------------------------
+//---------------------------------------------------------------------
+int NIScope::TestWrite(int numSamples, double* samples)
+{   
+    TestWriteParameters request;
+    request.mutable_wfm()->Reserve(numSamples);
+    request.mutable_wfm()->Resize(numSamples, 0);
+
+    ClientContext context;
+    TestWriteResult reply;
+    auto status = m_Stub->TestWrite(&context, request, &reply);
+    if (!status.ok())
+    {
+        cout << status.error_code() << ": " << status.error_message() << endl;
+    }
     return reply.status();
 }
 
@@ -279,7 +298,6 @@ static void ReadSamples(NIScope* client, int numSamples)
     ViSession session;
     int index = 0;
     grpc::ClientContext context;
-    context.set_compression_algorithm(GRPC_COMPRESS_DEFLATE); 
     auto readResult = client->ReadContinuously(&context, session, (char*)"0", 5.0, numSamples);
     ReadContinuouslyResult cresult;
     while(readResult->Read(&cresult))
@@ -305,6 +323,52 @@ void PerformMessagePerformanceTest(NIScope& client)
     double msgsPerSecond = (50000.0 * 1000.0 * 1000.0) / (double)elapsed.count();
 
     cout << "Result: " << msgsPerSecond << " messages/s" << endl << endl;
+}
+
+//---------------------------------------------------------------------
+//---------------------------------------------------------------------
+void PerformReadTest(NIScope& client)
+{    
+    cout << "Start 3MB Read Test" << endl;
+
+    ViSession session;
+    ScopeWaveformInfo info;
+    int index = 0;
+    double* samples = new double[393216];
+
+    auto start = chrono::steady_clock::now();
+    for (int x=0; x<1000; ++x)
+    {
+        client.Read(session, "", 1000, 393216, samples, &info);
+    }
+    auto end = chrono::steady_clock::now();
+    auto elapsed = chrono::duration_cast<chrono::microseconds>(end - start);
+    double msgsPerSecond = (1000.0 * 1000.0 * 1000.0) / (double)elapsed.count();
+
+    cout << "Result: " << msgsPerSecond << " reads per second" << endl << endl;
+}
+
+//---------------------------------------------------------------------
+//---------------------------------------------------------------------
+void PerformWriteTest(NIScope& client)
+{    
+    cout << "Start 3MB Write Test" << endl;
+
+    ViSession session;
+    ScopeWaveformInfo info;
+    int index = 0;
+    double* samples = new double[393216];
+
+    auto start = chrono::steady_clock::now();
+    for (int x=0; x<1000; ++x)
+    {
+        client.TestWrite(393216, samples);
+    }
+    auto end = chrono::steady_clock::now();
+    auto elapsed = chrono::duration_cast<chrono::microseconds>(end - start);
+    double msgsPerSecond = (1000.0 * 1000.0 * 1000.0) / (double)elapsed.count();
+
+    cout << "Result: " << msgsPerSecond << " reads per second" << endl << endl;
 }
 
 //---------------------------------------------------------------------
@@ -381,6 +445,9 @@ int main(int argc, char **argv)
     auto result = client1->InitWithOptions((char*)resourceName, false, false, options, &session);
 
     PerformMessagePerformanceTest(*client1);
+
+    PerformReadTest(*client1);
+    PerformWriteTest(*client1);
 
     cout << "Start streaming tests" << endl;
     PerformStreamingTest(*client1, 10);

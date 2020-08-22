@@ -45,6 +45,7 @@ service niScopeService {
     rpc InitiateAcquisition(InitiateAcquisitionParameters) returns (InitiateAcquisitionResult) {};
     rpc Abort(AbortParameters) returns (AbortResult) {};
     rpc Commit(CommitParameters) returns (CommitResult) {};
+    rpc TestWrite(TestWriteParameters) returns (TestWriteResult) {};
     rpc Read(ReadParameters) returns (ReadResult) {};
     rpc ReadContinuously(ReadContinuouslyParameters) returns (stream ReadContinuouslyResult) {};
     rpc Fetch(FetchParameters) returns (FetchResult) {};
@@ -588,6 +589,15 @@ message ReadResult {
   int32 status = 1;
   repeated double wfm = 5;
   repeated ScopeWaveformInfo wfmInfo = 2;
+}
+
+message TestWriteParameters {
+  ViSession vi = 1;
+  repeated double wfm = 2;
+}
+    
+message TestWriteResult {
+  int32 status = 1;
 }
 
 message ReadContinuouslyParameters {

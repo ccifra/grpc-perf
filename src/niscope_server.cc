@@ -68,6 +68,14 @@ Status NIScopeServer::Read(ServerContext* context, const niScope::ReadParameters
 
 //---------------------------------------------------------------------
 //---------------------------------------------------------------------
+Status NIScopeServer::TestWrite(ServerContext* context, const niScope::TestWriteParameters* request, niScope::TestWriteResult* response)
+{
+	response->set_status(0);
+	return Status::OK;
+}
+
+//---------------------------------------------------------------------
+//---------------------------------------------------------------------
 Status NIScopeServer::ReadContinuously(ServerContext* context, const niScope::ReadContinuouslyParameters* request, grpc::ServerWriter<niScope::ReadContinuouslyResult>* writer)
 {			
 	niScope::ReadContinuouslyResult response;
@@ -203,6 +211,8 @@ void RunServer(int argc, char **argv, const char* saddress)
 	builder.SetDefaultCompressionAlgorithm(GRPC_COMPRESS_NONE);
 	// Listen on the given address without any authentication mechanism.
 	builder.AddListeningPort(server_address, creds);
+	builder.SetMaxMessageSize(4 * 1024 * 1024);
+	builder.SetMaxReceiveMessageSize(4 * 1024 * 1024);
 	// Register "service" as the instance through which we'll communicate with
 	// clients. In this case it corresponds to an *synchronous* service.
 	builder.RegisterService(&service);
