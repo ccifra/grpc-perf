@@ -1,6 +1,7 @@
 #----------------------------------------------------------------------
 #----------------------------------------------------------------------
 cmake_minimum_required(VERSION 3.5.1)
+cmake_policy(SET CMP0091 NEW)
 
 project(labview-query-server C CXX)
 
@@ -8,6 +9,7 @@ if(NOT MSVC)
   set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11")
 else()
   add_definitions(-D_WIN32_WINNT=0x600 -bigobj)
+  set(CMAKE_MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>")
 endif()
 
 find_package(Threads REQUIRED)
@@ -65,12 +67,12 @@ include_directories("${CMAKE_CURRENT_BINARY_DIR}" "./src")
 #----------------------------------------------------------------------
 # NIScope gRPC Server
 #----------------------------------------------------------------------
-add_executable(niscope_server
+add_executable(perftest_server
   src/niscope_server.cc
   ${niscope_proto_srcs}
   ${niscope_grpc_srcs}
   )
-target_link_libraries(niscope_server
+target_link_libraries(perftest_server
    ${_REFLECTION}
    ${_GRPC_GRPCPP}
    ${_PROTOBUF_LIBPROTOBUF}
@@ -79,12 +81,12 @@ target_link_libraries(niscope_server
 #----------------------------------------------------------------------
 # Example C++ application to talk to the niscope gRPC service
 #----------------------------------------------------------------------
-add_executable(example_client
+add_executable(perftest_client
   "src/example_client.cc"
   ${niscope_proto_srcs}
   ${niscope_grpc_srcs}
   )
-target_link_libraries(example_client
+target_link_libraries(perftest_client
    ${_REFLECTION}
    ${_GRPC_GRPCPP}
    ${_PROTOBUF_LIBPROTOBUF})

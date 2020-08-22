@@ -26,11 +26,11 @@ public:
 
 public:
     int Init(int id);
-    int InitWithOptions(std::string resourceName, bool idQuery, bool resetDevice, std::string options, ViSession* session);
+    int InitWithOptions(string resourceName, bool idQuery, bool resetDevice, string options, ViSession* session);
     int ConfigureHorizontalTiming(ViSession session, double minSampleRate, int numPoints, double refPosition, int numRecords, bool enforceRealtime);
     int AutoSetup(ViSession session);
-    int Read(ViSession session, std::string channels, double timeout, int numSamples, double* samples, ScopeWaveformInfo* waveformInfo);
-    std::unique_ptr<grpc::ClientReader<niScope::ReadContinuouslyResult>> ReadContinuously(grpc::ClientContext* context, ViSession session, std::string channels, double timeout, int numSamples);
+    int Read(ViSession session, string channels, double timeout, int numSamples, double* samples, ScopeWaveformInfo* waveformInfo);
+    unique_ptr<grpc::ClientReader<niScope::ReadContinuouslyResult>> ReadContinuously(grpc::ClientContext* context, ViSession session, string channels, double timeout, int numSamples);
 private:
     unique_ptr<niScopeService::Stub> m_Stub;
 };
@@ -61,7 +61,7 @@ int NIScope::Init(int id)
 
 //---------------------------------------------------------------------
 //---------------------------------------------------------------------
-int NIScope::InitWithOptions(std::string resourceName, bool idQuery, bool resetDevice, std::string options, ViSession* session)
+int NIScope::InitWithOptions(string resourceName, bool idQuery, bool resetDevice, string options, ViSession* session)
 {
     InitWithOptionsParameters request;
     request.set_resourcename(resourceName.c_str());
@@ -125,7 +125,7 @@ int NIScope::AutoSetup(ViSession session)
 
 //---------------------------------------------------------------------
 //---------------------------------------------------------------------
-int NIScope::Read(ViSession session, std::string channels, double timeout, int numSamples, double* samples, ScopeWaveformInfo* waveformInfo)
+int NIScope::Read(ViSession session, string channels, double timeout, int numSamples, double* samples, ScopeWaveformInfo* waveformInfo)
 {
     ReadParameters request;
     auto requestSession = new ViSession;
@@ -149,7 +149,7 @@ int NIScope::Read(ViSession session, std::string channels, double timeout, int n
 
 //---------------------------------------------------------------------
 //---------------------------------------------------------------------
-std::unique_ptr<grpc::ClientReader<niScope::ReadContinuouslyResult>> NIScope::ReadContinuously(grpc::ClientContext* context, ViSession session, std::string channels, double timeout, int numSamples)
+unique_ptr<grpc::ClientReader<niScope::ReadContinuouslyResult>> NIScope::ReadContinuously(grpc::ClientContext* context, ViSession session, string channels, double timeout, int numSamples)
 {    
     ReadContinuouslyParameters request;
     auto requestSession = new ViSession;
@@ -193,7 +193,7 @@ string GetServerAddress(int argc, char** argv)
     }
     else
     {
-        target_str = "localhost:50051";
+        target_str = "localhost";
     }
     return target_str;
 }
@@ -232,13 +232,13 @@ string GetCertPath(int argc, char** argv)
 
 //---------------------------------------------------------------------
 //---------------------------------------------------------------------
-std::string read_keycert( const std::string& filename)
+string read_keycert( const string& filename)
 {	
-	std::string data;
-	std::ifstream file(filename.c_str(), std::ios::in);
+	string data;
+	ifstream file(filename.c_str(), ios::in);
 	if (file.is_open())
 	{
-		std::stringstream ss;
+		stringstream ss;
 		ss << file.rdbuf();
 		file.close();
 		data = ss.str();
@@ -254,7 +254,7 @@ shared_ptr<grpc::ChannelCredentials> CreateCredentials(int argc, char **argv)
     auto certificatePath = GetCertPath(argc, argv);
     if (!certificatePath.empty())
     {
-        std::string cacert = read_keycert(certificatePath);
+        string cacert = read_keycert(certificatePath);
         grpc::SslCredentialsOptions ssl_opts;
         ssl_opts.pem_root_certs=cacert;
         creds = grpc::SslCredentials(ssl_opts);
@@ -272,11 +272,14 @@ static NIScope* client3;
 static NIScope* client4;
 
 
+//---------------------------------------------------------------------
+//---------------------------------------------------------------------
 static void ReadSamples(NIScope* client, int numSamples)
 {    
     ViSession session;
     int index = 0;
     grpc::ClientContext context;
+    context.set_compression_algorithm(GRPC_COMPRESS_DEFLATE); 
     auto readResult = client->ReadContinuously(&context, session, (char*)"0", 5.0, numSamples);
     ReadContinuouslyResult cresult;
     while(readResult->Read(&cresult))
@@ -286,75 +289,84 @@ static void ReadSamples(NIScope* client, int numSamples)
     }
 }
 
+//---------------------------------------------------------------------
+//---------------------------------------------------------------------
 void PerformMessagePerformanceTest(NIScope& client)
 {
     cout << "Start Messages per second test" << endl;
 
-    auto start = std::chrono::steady_clock::now();
+    auto start = chrono::steady_clock::now();
     for (int x=0; x<50000; ++x)
     {
         client.Init(42);
     }
-    auto end = std::chrono::steady_clock::now();
-    auto elapsed = std::chrono::duration_cast<std::chrono::microseconds>(end - start);
+    auto end = chrono::steady_clock::now();
+    auto elapsed = chrono::duration_cast<chrono::microseconds>(end - start);
+    double msgsPerSecond = (50000.0 * 1000.0 * 1000.0) / (double)elapsed.count();
 
-    double msgsPerSecond = (50000.0 * 100000.0) / (double)elapsed.count();
-    std::cout << "Result: " << msgsPerSecond << " messages/s" << std::endl << std::endl;
+    cout << "Result: " << msgsPerSecond << " messages/s" << endl << endl;
 }
 
-void ReportMBPerSecond(std::chrono::_V2::steady_clock::time_point start, std::chrono::_V2::steady_clock::time_point end, int numSamples)
+//---------------------------------------------------------------------
+//---------------------------------------------------------------------
+void ReportMBPerSecond(chrono::steady_clock::time_point start, chrono::steady_clock::time_point end, int numSamples)
 {
-    int64_t elapsed = std::chrono::duration_cast<std::chrono::microseconds>(end - start).count();
+    int64_t elapsed = chrono::duration_cast<chrono::microseconds>(end - start).count();
+    double elapsedSeconds = elapsed / (1000.0 * 1000.0);
+    double bytesPerSecond = (8.0 * (double)numSamples * 10000) / elapsedSeconds;
+    double MBPerSecond = bytesPerSecond / (1024.0 * 1024);
 
-    double elapsedMiliseconds = elapsed / 1000.0;
-    double elapsedSeconds = elapsedMiliseconds / 1000.0;
-
-    double bytesPerSecond = (8.0 * (double)numSamples * 100000) / elapsedSeconds;
-    double kBytesPerSecond = bytesPerSecond / 1024.0;
-    double MBPerSecond = kBytesPerSecond / 1024.0;
     cout << numSamples << " Samples: " << MBPerSecond << " MB/s, " << elapsed << " total microseconds" << endl;
 }
 
+//---------------------------------------------------------------------
+//---------------------------------------------------------------------
 void PerformStreamingTest(NIScope& client, int numSamples)
 {
-    auto start = std::chrono::steady_clock::now();
+    auto start = chrono::steady_clock::now();
     ReadSamples(&client, numSamples);
-    auto end = std::chrono::steady_clock::now();
+    auto end = chrono::steady_clock::now();
     ReportMBPerSecond(start, end, numSamples);
 }
 
+//---------------------------------------------------------------------
+//---------------------------------------------------------------------
 void PerformTwoStreamTest(NIScope& client, NIScope& client2, int numSamples)
 {
-    auto start = std::chrono::steady_clock::now();
+    auto start = chrono::steady_clock::now();
 
-    auto thread1 = new std::thread(ReadSamples, &client, numSamples);
-    auto thread2 = new std::thread(ReadSamples, &client2, numSamples);
+    auto thread1 = new thread(ReadSamples, &client, numSamples);
+    auto thread2 = new thread(ReadSamples, &client2, numSamples);
 
     thread1->join();
     thread2->join();
 
-    auto end = std::chrono::steady_clock::now();
+    auto end = chrono::steady_clock::now();
     ReportMBPerSecond(start, end, numSamples * 2);
 }
 
+//---------------------------------------------------------------------
+//---------------------------------------------------------------------
 void PerformFourStreamTest(NIScope& client, NIScope& client2, NIScope& client3, NIScope& client4, int numSamples)
 {
-    auto start = std::chrono::steady_clock::now();
+    auto start = chrono::steady_clock::now();
 
-    auto thread1 = new std::thread(ReadSamples, &client, numSamples);
-    auto thread2 = new std::thread(ReadSamples, &client2, numSamples);
-    auto thread3 = new std::thread(ReadSamples, &client3, numSamples);
-    auto thread4 = new std::thread(ReadSamples, &client4, numSamples);
+    auto thread1 = new thread(ReadSamples, &client, numSamples);
+    auto thread2 = new thread(ReadSamples, &client2, numSamples);
+    auto thread3 = new thread(ReadSamples, &client3, numSamples);
+    auto thread4 = new thread(ReadSamples, &client4, numSamples);
 
     thread1->join();
     thread2->join();
     thread3->join();
     thread4->join();
 
-    auto end = std::chrono::steady_clock::now();
+    auto end = chrono::steady_clock::now();
     ReportMBPerSecond(start, end, numSamples * 4);
 }
 
+//---------------------------------------------------------------------
+//---------------------------------------------------------------------
 int main(int argc, char **argv)
 {
     auto resourceName = "SimulatedScope7c632f66-e7c2-4fab-85a4-cd15c8be4130";
@@ -363,14 +375,14 @@ int main(int argc, char **argv)
     auto target_str = GetServerAddress(argc, argv);
     auto creds = CreateCredentials(argc, argv);
 
-    client1 = new NIScope(grpc::CreateChannel("localhost:50051", creds));
+    client1 = new NIScope(grpc::CreateChannel(target_str + ":50051", creds));
 
     ViSession session;
     auto result = client1->InitWithOptions((char*)resourceName, false, false, options, &session);
 
     PerformMessagePerformanceTest(*client1);
 
-    std::cout << "Start streaming tests" << endl;
+    cout << "Start streaming tests" << endl;
     PerformStreamingTest(*client1, 10);
     PerformStreamingTest(*client1, 100);
     PerformStreamingTest(*client1, 1000);
@@ -378,21 +390,21 @@ int main(int argc, char **argv)
     PerformStreamingTest(*client1, 100000);
     PerformStreamingTest(*client1, 200000);
 
-    client2 = new NIScope(grpc::CreateChannel("localhost:50052", creds));
+    client2 = new NIScope(grpc::CreateChannel(target_str + ":50052", creds));
     result = client2->InitWithOptions((char*)resourceName, false, false, options, &session);
 
-    std::cout << endl << "Start 2 stream streaming tests" << endl;
+    cout << endl << "Start 2 stream streaming tests" << endl;
     PerformTwoStreamTest(*client1, *client2, 1000);
     PerformTwoStreamTest(*client1, *client2, 10000);
     PerformTwoStreamTest(*client1, *client2, 100000);
     PerformTwoStreamTest(*client1, *client2, 200000);
 
-    client3 = new NIScope(grpc::CreateChannel("localhost:50053", creds));
-    client4 = new NIScope(grpc::CreateChannel("localhost:50054", creds));
+    client3 = new NIScope(grpc::CreateChannel(target_str + ":50053", creds));
+    client4 = new NIScope(grpc::CreateChannel(target_str + ":50054", creds));
     result = client3->InitWithOptions((char*)resourceName, false, false, options, &session);
     result = client4->InitWithOptions((char*)resourceName, false, false, options, &session);
 
-    std::cout << endl << "Start 4 stream streaming tests" << endl;
+    cout << endl << "Start 4 stream streaming tests" << endl;
     PerformFourStreamTest(*client1, *client2, *client3, *client4, 1000);
     PerformFourStreamTest(*client1, *client2, *client3, *client4, 10000);
     PerformFourStreamTest(*client1, *client2, *client3, *client4, 100000);

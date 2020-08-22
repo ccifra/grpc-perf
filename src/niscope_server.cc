@@ -73,8 +73,8 @@ Status NIScopeServer::ReadContinuously(ServerContext* context, const niScope::Re
 	niScope::ReadContinuouslyResult response;
 	response.mutable_wfm()->Reserve(request->numsamples());
 	response.mutable_wfm()->Resize(request->numsamples(), 0.0);
-	cout << "Writing " << request->numsamples() << " 100000 times" << endl;
-	for (int x=0; x<100000; ++x)
+	cout << "Writing " << request->numsamples() << " 10000 times" << endl;
+	for (int x=0; x<10000; ++x)
 	{
 		writer->Write(response);
 	}
