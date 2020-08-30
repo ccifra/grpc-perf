@@ -3,7 +3,7 @@
 cmake_minimum_required(VERSION 3.5.1)
 cmake_policy(SET CMP0091 NEW)
 
-project(labview-query-server C CXX)
+project(grpc-perf C CXX)
 
 if(NOT MSVC)
   set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11")

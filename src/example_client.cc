@@ -327,47 +327,58 @@ void PerformMessagePerformanceTest(NIScope& client)
 
 //---------------------------------------------------------------------
 //---------------------------------------------------------------------
-void PerformReadTest(NIScope& client)
+void PerformReadTest(NIScope& client, int numSamples)
 {    
-    cout << "Start 3MB Read Test" << endl;
+    cout << "Start " << numSamples << " Read Test" << endl;
 
     ViSession session;
     ScopeWaveformInfo info;
     int index = 0;
-    double* samples = new double[393216];
+    double* samples = new double[numSamples];
 
     auto start = chrono::steady_clock::now();
     for (int x=0; x<1000; ++x)
     {
-        client.Read(session, "", 1000, 393216, samples, &info);
+        client.Read(session, "", 1000, numSamples, samples, &info);
     }
     auto end = chrono::steady_clock::now();
     auto elapsed = chrono::duration_cast<chrono::microseconds>(end - start);
     double msgsPerSecond = (1000.0 * 1000.0 * 1000.0) / (double)elapsed.count();
 
+    delete [] samples;
     cout << "Result: " << msgsPerSecond << " reads per second" << endl << endl;
 }
 
 //---------------------------------------------------------------------
 //---------------------------------------------------------------------
-void PerformWriteTest(NIScope& client)
-{    
-    cout << "Start 3MB Write Test" << endl;
+void PerformWriteTest(NIScope& client, int numSamples)
+{   
+    cout << "Start " << numSamples << " Write Test" << endl;
 
     ViSession session;
     ScopeWaveformInfo info;
     int index = 0;
-    double* samples = new double[393216];
+    double* samples = new double[numSamples];
 
     auto start = chrono::steady_clock::now();
     for (int x=0; x<1000; ++x)
     {
-        client.TestWrite(393216, samples);
+        client.TestWrite(numSamples, samples);
+        if (x == 0 || x == 2)
+        {
+            cout << ",";
+        }
+        if ((x % 20) == 0)
+        {
+            cout << ".";
+        }
     }
+    cout << endl;
     auto end = chrono::steady_clock::now();
     auto elapsed = chrono::duration_cast<chrono::microseconds>(end - start);
     double msgsPerSecond = (1000.0 * 1000.0 * 1000.0) / (double)elapsed.count();
 
+    delete [] samples;
     cout << "Result: " << msgsPerSecond << " reads per second" << endl << endl;
 }
 
@@ -446,10 +457,22 @@ int main(int argc, char **argv)
 
     PerformMessagePerformanceTest(*client1);
 
-    PerformReadTest(*client1);
-    PerformWriteTest(*client1);
+    PerformReadTest(*client1, 100);
+    PerformReadTest(*client1, 1000);
+    PerformReadTest(*client1, 10000);
+    PerformReadTest(*client1, 100000);
+    PerformReadTest(*client1, 200000);
+    PerformReadTest(*client1, 393216);
+    
+    PerformWriteTest(*client1, 100);
+    PerformWriteTest(*client1, 1000);
+    PerformWriteTest(*client1, 10000);
+    PerformWriteTest(*client1, 100000);
+    PerformWriteTest(*client1, 200000);
+    PerformWriteTest(*client1, 393216);
 
     cout << "Start streaming tests" << endl;
+
     PerformStreamingTest(*client1, 10);
     PerformStreamingTest(*client1, 100);
     PerformStreamingTest(*client1, 1000);

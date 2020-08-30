@@ -1,6 +1,8 @@
-# Experimental remote gRPC interface for niScope
+# gRPC performance test application
 
-the project support Windows and Linux for both the client and server.
+the project support Windows and Linux and Linux RT for both the client and server.
+
+Always build release when running benchmarks.  There is a large difference in performance between debug and release.
 
 ## Building on Windows
 
@@ -38,7 +40,7 @@ Build Release
 > mkdir build
 > cd build
 > cmake .
-> cmake --build . --Config Release
+> cmake --build . --config Release
 ```
 
 ## Building on Linux
@@ -50,10 +52,18 @@ Download the repo and update submodules, this will pull the gRPC components and 
 > cd labview-grpc-query-server
 > git submodule update --init --recursive
 ```
+
 Build
 
 ```
 > cmake .
+> make
+```
+
+Build Release
+
+```
+> cmake -DCMAKE_BUILD_TYPE=Release .
 > make
 ```
 
@@ -85,7 +95,11 @@ Build
 > make
 ```
 
-## Example
+## Running Tests
+
+Start the server, perftest_server, on the server machine.
+Run the client, perftest_client.
+If you want to run the client on a different machine pass in the server to conect to: perftest_client --target={server name or ip}
 
 ## SSL/TLS Support
 
