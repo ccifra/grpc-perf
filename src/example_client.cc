@@ -183,31 +183,54 @@ unique_ptr<grpc::ClientReader<niScope::ReadContinuouslyResult>> NIScope::ReadCon
 
 //---------------------------------------------------------------------
 //---------------------------------------------------------------------
+bool UseProxy(int argc, char** argv)
+{    
+    if (argc > 1)
+    {
+        string arg_str("--useproxy");
+        string arg_val = argv[1];
+        if (arg_val.find(arg_str) != string::npos)
+        {
+            return true;
+        }
+    }
+    return false;
+}
+
+//---------------------------------------------------------------------
+//---------------------------------------------------------------------
 string GetServerAddress(int argc, char** argv)
 {
     string target_str;
     string arg_str("--target");
     if (argc > 1)
     {
-        string arg_val = argv[1];
-        size_t start_pos = arg_val.find(arg_str);
-        if (start_pos != string::npos)
+        if (UseProxy(argc, argv))
         {
-            start_pos += arg_str.size();
-            if (arg_val[start_pos] == '=')
-            {
-                target_str = arg_val.substr(start_pos + 1);
-            }
-            else
-            {
-                cout << "The only correct argument syntax is --target=" << endl;
-                return 0;
-            }
+            target_str = "localhost";
         }
         else
         {
-            cout << "The only acceptable argument is --target=" << endl;
-            return 0;
+            string arg_val = argv[1];
+            size_t start_pos = arg_val.find(arg_str);
+            if (start_pos != string::npos)
+            {
+                start_pos += arg_str.size();
+                if (arg_val[start_pos] == '=')
+                {
+                    target_str = arg_val.substr(start_pos + 1);
+                }
+                else
+                {
+                    cout << "The only correct argument syntax is --target=" << endl;
+                    return 0;
+                }
+            }
+            else
+            {
+                cout << "The only acceptable argument is --target=" << endl;
+                return 0;
+            }
         }
     }
     else
@@ -449,13 +472,53 @@ int main(int argc, char **argv)
 
     auto target_str = GetServerAddress(argc, argv);
     auto creds = CreateCredentials(argc, argv);
+    auto useProxy = UseProxy(argc, argv);
 
-    client1 = new NIScope(grpc::CreateChannel(target_str + ":50051", creds));
+    auto port = ":50051";
+    if (useProxy)
+    {
+        port = ":60061";
+    }
+    client1 = new NIScope(grpc::CreateChannel(target_str + port, creds));
 
     ViSession session;
     auto result = client1->InitWithOptions((char*)resourceName, false, false, options, &session);
 
+    cout << "Init result" << result << endl;
+
     PerformMessagePerformanceTest(*client1);
+
+    cout << "Start streaming tests" << endl;
+
+    PerformStreamingTest(*client1, 10);
+    PerformStreamingTest(*client1, 100);
+    PerformStreamingTest(*client1, 1000);
+    PerformStreamingTest(*client1, 10000);
+    PerformStreamingTest(*client1, 100000);
+    PerformStreamingTest(*client1, 200000);
+
+    if (!useProxy)
+    {
+        client2 = new NIScope(grpc::CreateChannel(target_str + ":50052", creds));
+        result = client2->InitWithOptions((char*)resourceName, false, false, options, &session);
+
+        cout << endl << "Start 2 stream streaming tests" << endl;
+        PerformTwoStreamTest(*client1, *client2, 1000);
+        PerformTwoStreamTest(*client1, *client2, 10000);
+        PerformTwoStreamTest(*client1, *client2, 100000);
+        PerformTwoStreamTest(*client1, *client2, 200000);
+
+        client3 = new NIScope(grpc::CreateChannel(target_str + ":50053", creds));
+        client4 = new NIScope(grpc::CreateChannel(target_str + ":50054", creds));
+        result = client3->InitWithOptions((char*)resourceName, false, false, options, &session);
+        result = client4->InitWithOptions((char*)resourceName, false, false, options, &session);
+
+        cout << endl << "Start 4 stream streaming tests" << endl;
+        PerformFourStreamTest(*client1, *client2, *client3, *client4, 1000);
+        PerformFourStreamTest(*client1, *client2, *client3, *client4, 10000);
+        PerformFourStreamTest(*client1, *client2, *client3, *client4, 100000);
+        PerformFourStreamTest(*client1, *client2, *client3, *client4, 200000);
+    }
 
     PerformReadTest(*client1, 100);
     PerformReadTest(*client1, 1000);
@@ -470,33 +533,4 @@ int main(int argc, char **argv)
     PerformWriteTest(*client1, 100000);
     PerformWriteTest(*client1, 200000);
     PerformWriteTest(*client1, 393216);
-
-    cout << "Start streaming tests" << endl;
-
-    PerformStreamingTest(*client1, 10);
-    PerformStreamingTest(*client1, 100);
-    PerformStreamingTest(*client1, 1000);
-    PerformStreamingTest(*client1, 10000);
-    PerformStreamingTest(*client1, 100000);
-    PerformStreamingTest(*client1, 200000);
-
-    client2 = new NIScope(grpc::CreateChannel(target_str + ":50052", creds));
-    result = client2->InitWithOptions((char*)resourceName, false, false, options, &session);
-
-    cout << endl << "Start 2 stream streaming tests" << endl;
-    PerformTwoStreamTest(*client1, *client2, 1000);
-    PerformTwoStreamTest(*client1, *client2, 10000);
-    PerformTwoStreamTest(*client1, *client2, 100000);
-    PerformTwoStreamTest(*client1, *client2, 200000);
-
-    client3 = new NIScope(grpc::CreateChannel(target_str + ":50053", creds));
-    client4 = new NIScope(grpc::CreateChannel(target_str + ":50054", creds));
-    result = client3->InitWithOptions((char*)resourceName, false, false, options, &session);
-    result = client4->InitWithOptions((char*)resourceName, false, false, options, &session);
-
-    cout << endl << "Start 4 stream streaming tests" << endl;
-    PerformFourStreamTest(*client1, *client2, *client3, *client4, 1000);
-    PerformFourStreamTest(*client1, *client2, *client3, *client4, 10000);
-    PerformFourStreamTest(*client1, *client2, *client3, *client4, 100000);
-    PerformFourStreamTest(*client1, *client2, *client3, *client4, 200000);
 }
