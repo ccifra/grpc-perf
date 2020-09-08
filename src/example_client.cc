@@ -477,7 +477,7 @@ int main(int argc, char **argv)
     auto port = ":50051";
     if (useProxy)
     {
-        port = ":60061";
+        port = ":50061";
     }
     client1 = new NIScope(grpc::CreateChannel(target_str + port, creds));
 
