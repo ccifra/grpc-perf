@@ -1,13 +1,13 @@
 #----------------------------------------------------------------------
 #----------------------------------------------------------------------
 cmake_minimum_required(VERSION 3.5.1)
-cmake_policy(SET CMP0091 NEW)
 
 project(grpc-perf C CXX)
 
 if(NOT MSVC)
   set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11")
 else()
+  cmake_policy(SET CMP0091 NEW)
   add_definitions(-D_WIN32_WINNT=0x600 -bigobj)
   set(CMAKE_MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>")
 endif()
