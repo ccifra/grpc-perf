@@ -17,8 +17,8 @@ grpc
 .vs
 .vscode
 
-example_client
-niscope_server
+perftest_client
+perftest_server
 
 *.pb.cc
 *.pb.h
