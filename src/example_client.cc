@@ -348,6 +348,44 @@ void PerformMessagePerformanceTest(NIScope& client)
     cout << "Result: " << msgsPerSecond << " messages/s" << endl << endl;
 }
 
+using timeVector = vector<chrono::microseconds>;
+
+//---------------------------------------------------------------------
+//---------------------------------------------------------------------
+void PerformMessageLatencyTest(NIScope& client)
+{
+    cout << "Start RPC latency test" << endl;
+
+    timeVector times;
+    times.reserve(50000);
+
+    for (int x=0; x<50000; ++x)
+    {
+        auto start = chrono::steady_clock::now();
+        client.Init(42);
+        auto end = chrono::steady_clock::now();
+        auto elapsed = chrono::duration_cast<chrono::microseconds>(end - start);
+        times.emplace_back(elapsed);
+    }
+
+    std::sort(times.begin(), times.end());
+    auto min = times.front();
+    auto max = times.back();
+    auto median = *(times.begin() + 25000);
+    
+    chrono::microseconds count;
+    for (auto i : times)
+        count += i;
+    auto average = (count.count() / 50000.0);
+
+    cout << "End Test" << endl;
+    cout << "Min: " << min.count() << endl;
+    cout << "Max: " << max.count() << endl;
+    cout << "Median: " << median.count() << endl;
+    cout << "Average: " << average << endl;
+    cout << endl;
+}
+
 //---------------------------------------------------------------------
 //---------------------------------------------------------------------
 void PerformReadTest(NIScope& client, int numSamples)
@@ -486,6 +524,7 @@ int main(int argc, char **argv)
 
     cout << "Init result" << result << endl;
 
+    PerformMessageLatencyTest(*client1);
     PerformMessagePerformanceTest(*client1);
 
     cout << "Start streaming tests" << endl;
