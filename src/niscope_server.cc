@@ -216,6 +216,7 @@ void RunServer(int argc, char **argv, const char* saddress)
 	// Register "service" as the instance through which we'll communicate with
 	// clients. In this case it corresponds to an *synchronous* service.
 	builder.RegisterService(&service);
+
 	// Finally assemble the server.
 	auto server = builder.BuildAndStart();
 	cout << "Server listening on " << server_address << endl;
