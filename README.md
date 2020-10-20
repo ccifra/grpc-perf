@@ -1,7 +1,6 @@
 # gRPC performance test application
 
-the project support Windows and Linux and Linux RT for both the client and server.
-
+the project supports Windows, Linux and Linux RT for both the client and server.
 Always build release when running benchmarks.  There is a large difference in performance between debug and release.
 
 ## Building on Windows
@@ -23,7 +22,7 @@ Download the repo and update submodules, this will pull the gRPC components and 
 
 ```
 > git clone https://github.com/ni/labview-grpc-query-server.git labview-grpc-query-server
-> cd labview-grpc-query-server
+> cd grpc-perf
 > git submodule update --init --recursive
 ```
 
@@ -49,7 +48,7 @@ Download the repo and update submodules, this will pull the gRPC components and 
 
 ```
 > git clone https://github.com/ni/labview-grpc-query-server.git labview-grpc-query-server
-> cd labview-grpc-query-server
+> cd grpc-perf
 > git submodule update --init --recursive
 ```
 
