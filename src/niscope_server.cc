@@ -42,22 +42,6 @@ Status NIScopeServer::InitWithOptions(ServerContext* context, const niScope::Ini
 
 //---------------------------------------------------------------------
 //---------------------------------------------------------------------
-Status NIScopeServer::AutoSetup(ServerContext* context, const niScope::AutoSetupParameters* request, niScope::AutoSetupResult* response)
-{
-	response->set_status(0);
-	return Status::OK;
-}
-
-//---------------------------------------------------------------------
-//---------------------------------------------------------------------
-Status NIScopeServer::ConfigureHorizontalTiming(ServerContext* context, const niScope::ConfigureHorizontalTimingParameters* request, niScope::ConfigureHorizontalTimingResult* response)
-{	
-	response->set_status(0);
-	return Status::OK;
-}
-
-//---------------------------------------------------------------------
-//---------------------------------------------------------------------
 Status NIScopeServer::Read(ServerContext* context, const niScope::ReadParameters* request, niScope::ReadResult* response)
 {	
 	response->mutable_wfm()->Reserve(request->numsamples());
