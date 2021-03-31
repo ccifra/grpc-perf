@@ -11,8 +11,6 @@ To prepare for cmake + Microsoft Visual C++ compiler build
 - Install [Git](https://git-scm.com/).
 - Install gRPC for C++
 - Install [CMake](https://cmake.org/download/).
-- Install LabVIEW 2019
-- (Optional) Install [Ninja](https://ninja-build.org/) (`choco install ninja`)
 
 
 ### Building
@@ -38,7 +36,7 @@ Build Release
 ```
 > mkdir build
 > cd build
-> cmake .
+> cmake ..
 > cmake --build . --config Release
 ```
 

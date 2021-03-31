@@ -1,6 +1,5 @@
 //---------------------------------------------------------------------
-// Implementation objects for the LabVIEW implementation of the
-// gRPC QueryServer
+// Implementation objects for the NIScope gRPC Server
 //---------------------------------------------------------------------
 #pragma once
 
@@ -38,8 +37,6 @@ public:
     ::grpc::Status StreamLatencyTestServer(::grpc::ServerContext* context, const ::niScope::StreamLatencyClient* request, ::grpc::ServerWriter< ::niScope::StreamLatencyServer>* writer) override;
     Status Init(ServerContext* context, const niScope::InitParameters*, niScope::InitResult* response);
     Status InitWithOptions(ServerContext* context, const niScope::InitWithOptionsParameters* request, niScope::InitWithOptionsResult* response);
-    Status AutoSetup(ServerContext* context, const niScope::AutoSetupParameters* request, niScope::AutoSetupResult* response);
-    Status ConfigureHorizontalTiming(ServerContext* context, const niScope::ConfigureHorizontalTimingParameters* request, niScope::ConfigureHorizontalTimingResult* response);
     Status Read(ServerContext* context, const niScope::ReadParameters* request, niScope::ReadResult* response);
     Status ReadContinuously(ServerContext* context, const niScope::ReadContinuouslyParameters* request, grpc::ServerWriter<niScope::ReadContinuouslyResult>* writer);
     Status TestWrite(ServerContext* context, const niScope::TestWriteParameters* request, niScope::TestWriteResult* response);

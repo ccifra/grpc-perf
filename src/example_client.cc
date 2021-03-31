@@ -27,8 +27,6 @@ public:
 public:
     int Init(int id);
     int InitWithOptions(string resourceName, bool idQuery, bool resetDevice, string options, ViSession* session);
-    int ConfigureHorizontalTiming(ViSession session, double minSampleRate, int numPoints, double refPosition, int numRecords, bool enforceRealtime);
-    int AutoSetup(ViSession session);
     int Read(ViSession session, string channels, double timeout, int numSamples, double* samples, ScopeWaveformInfo* waveformInfo);
     int TestWrite(int numSamples, double* samples);
     unique_ptr<grpc::ClientReader<niScope::ReadContinuouslyResult>> ReadContinuously(grpc::ClientContext* context, ViSession session, string channels, double timeout, int numSamples);
@@ -78,49 +76,6 @@ int NIScope::InitWithOptions(string resourceName, bool idQuery, bool resetDevice
         cout << status.error_code() << ": " << status.error_message() << endl;
     }
     *session = reply.newvi();
-    return reply.status();
-}
-
-//---------------------------------------------------------------------
-//---------------------------------------------------------------------
-int NIScope::ConfigureHorizontalTiming(ViSession session, double minSampleRate, int numPoints, double refPosition, int numRecords, bool enforceRealtime)
-{    
-    ConfigureHorizontalTimingParameters request;
-    auto requestSession = new ViSession;
-    requestSession->set_id(session.id());
-    request.set_allocated_vi(requestSession);
-    request.set_minsamplerate(minSampleRate);
-    request.set_minnumpts(numPoints);
-    request.set_refposition(refPosition);
-    request.set_numrecords(numRecords);
-    request.set_enforcerealtime(enforceRealtime);
-
-    ClientContext context;
-    ConfigureHorizontalTimingResult reply;
-    Status status = m_Stub->ConfigureHorizontalTiming(&context, request, &reply);
-    if (!status.ok())
-    {
-        cout << status.error_code() << ": " << status.error_message() << endl;
-    }
-    return reply.status();
-}
-
-//---------------------------------------------------------------------
-//---------------------------------------------------------------------
-int NIScope::AutoSetup(ViSession session)
-{
-    AutoSetupParameters request;
-    auto requestSession = new ViSession;
-    requestSession->set_id(session.id());
-    request.set_allocated_vi(requestSession);
-
-    ClientContext context;
-    AutoSetupResult reply;
-    Status status = m_Stub->AutoSetup(&context, request, &reply);
-    if (!status.ok())
-    {
-        cout << status.error_code() << ": " << status.error_message() << endl;
-    }
     return reply.status();
 }
 
