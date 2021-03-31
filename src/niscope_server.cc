@@ -27,7 +27,6 @@ Status NIScopeServer::Init(ServerContext* context, const niScope::InitParameters
 	return Status::OK;	
 }
 
-
 //---------------------------------------------------------------------
 //---------------------------------------------------------------------
 Status NIScopeServer::InitWithOptions(ServerContext* context, const niScope::InitWithOptionsParameters* request, niScope::InitWithOptionsResult* response)
@@ -227,10 +226,13 @@ void RunServer(int argc, char **argv, const char* saddress)
 //---------------------------------------------------------------------
 int main(int argc, char **argv)
 {
-	auto thread1 = new std::thread(RunServer, argc, argv, "0.0.0.0:50051");
-	auto thread2 = new std::thread(RunServer, argc, argv, "0.0.0.0:50052");
+	auto thread1 = new std::thread(RunServer, argc, argv, "unix:///home/chrisc/test.sock");
+	auto thread2 = new std::thread(RunServer, argc, argv, "unix:///home/chrisc/test2.sock");
+	//auto thread1 = new std::thread(RunServer, argc, argv, "0.0.0.0:50051");
+	//auto thread2 = new std::thread(RunServer, argc, argv, "0.0.0.0:50052");
 	auto thread3 = new std::thread(RunServer, argc, argv, "0.0.0.0:50053");
 	auto thread4 = new std::thread(RunServer, argc, argv, "0.0.0.0:50054");
+
 	thread1->join();
 	thread2->join();
 	thread3->join();

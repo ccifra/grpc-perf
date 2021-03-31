@@ -32,7 +32,7 @@ public:
     int Read(ViSession session, string channels, double timeout, int numSamples, double* samples, ScopeWaveformInfo* waveformInfo);
     int TestWrite(int numSamples, double* samples);
     unique_ptr<grpc::ClientReader<niScope::ReadContinuouslyResult>> ReadContinuously(grpc::ClientContext* context, ViSession session, string channels, double timeout, int numSamples);
-private:
+public:
     unique_ptr<niScopeService::Stub> m_Stub;
 };
 
@@ -350,33 +350,180 @@ void PerformMessagePerformanceTest(NIScope& client)
 
 using timeVector = vector<chrono::microseconds>;
 
+
 //---------------------------------------------------------------------
 //---------------------------------------------------------------------
-void PerformMessageLatencyTest(NIScope& client)
-{
-    cout << "Start RPC latency test" << endl;
+void PerformLatencyStreamTest(NIScope& client, std::string fileName)
+{    
+    int iterations = 100000;
+
+    cout << "Start RPC Stream latency test, iterations=" << iterations << endl;
 
     timeVector times;
-    times.reserve(50000);
+    times.reserve(iterations);
 
-    for (int x=0; x<50000; ++x)
+	niScope::StreamLatencyClient clientData;
+	niScope::StreamLatencyServer serverData;
+
+    ClientContext context;
+    auto stream = client.m_Stub->StreamLatencyTest(&context);
+
+    for (int x=0; x<iterations; ++x)
     {
         auto start = chrono::steady_clock::now();
-        client.Init(42);
+        stream->Write(clientData);
+        stream->Read(&serverData);
         auto end = chrono::steady_clock::now();
         auto elapsed = chrono::duration_cast<chrono::microseconds>(end - start);
         times.emplace_back(elapsed);
     }
 
+    {
+    std::ofstream fout;
+    fout.open("xaxis");
+    for (int x=0; x<iterations; ++x)
+        fout << (x+1) << std::endl;
+    fout.close();
+    }
+
+    std::ofstream fout;
+    fout.open(fileName);
+    for (auto i : times)
+        fout << i.count() << std::endl;
+    fout.close();
+
     std::sort(times.begin(), times.end());
     auto min = times.front();
     auto max = times.back();
-    auto median = *(times.begin() + 25000);
+    auto median = *(times.begin() + iterations / 2);
     
-    chrono::microseconds count;
+    double average = times.front().count();
     for (auto i : times)
-        count += i;
-    auto average = (count.count() / 50000.0);
+        average += (double)i.count();
+    average = average / iterations;
+
+    cout << "End Test" << endl;
+    cout << "Min: " << min.count() << endl;
+    cout << "Max: " << max.count() << endl;
+    cout << "Median: " << median.count() << endl;
+    cout << "Average: " << average << endl;
+    cout << endl;
+}
+
+//---------------------------------------------------------------------
+//---------------------------------------------------------------------
+void PerformLatencyStreamTest2(NIScope& client, NIScope& client2, std::string fileName)
+{    
+    int iterations = 100000;
+
+    cout << "Start RPC Stream latency test, iterations=" << iterations << endl;
+
+    timeVector times;
+    times.reserve(iterations);
+
+	niScope::StreamLatencyClient clientData;
+	niScope::StreamLatencyServer serverData;
+	niScope::StreamLatencyServer serverResponseData;
+
+    ClientContext context;
+    auto rstream = client.m_Stub->StreamLatencyTestServer(&context, clientData);
+
+    std::this_thread::sleep_for(std::chrono::milliseconds(1500));
+
+    ClientContext context2;
+    auto wstream = client.m_Stub->StreamLatencyTestClient(&context2, &serverResponseData);
+
+    for (int x=0; x<iterations; ++x)
+    {
+        auto start = chrono::steady_clock::now();
+        wstream->Write(clientData);
+        rstream->Read(&serverData);
+        auto end = chrono::steady_clock::now();
+        auto elapsed = chrono::duration_cast<chrono::microseconds>(end - start);
+        times.emplace_back(elapsed);
+    }
+
+    {
+    std::ofstream fout;
+    fout.open("xaxis");
+    for (int x=0; x<iterations; ++x)
+        fout << (x+1) << std::endl;
+    fout.close();
+    }
+
+    std::ofstream fout;
+    fout.open(fileName);
+    for (auto i : times)
+        fout << i.count() << std::endl;
+    fout.close();
+
+    std::sort(times.begin(), times.end());
+    auto min = times.front();
+    auto max = times.back();
+    auto median = *(times.begin() + iterations / 2);
+    
+    double average = times.front().count();
+    for (auto i : times)
+        average += (double)i.count();
+    average = average / iterations;
+
+    cout << "End Test" << endl;
+    cout << "Min: " << min.count() << endl;
+    cout << "Max: " << max.count() << endl;
+    cout << "Median: " << median.count() << endl;
+    cout << "Average: " << average << endl;
+    cout << endl;
+}
+
+//---------------------------------------------------------------------
+//---------------------------------------------------------------------
+void PerformMessageLatencyTest(NIScope& client, std::string fileName)
+{
+    int iterations = 100000;
+
+    cout << "Start RPC latency test, iterations=" << iterations << endl;
+
+    timeVector times;
+    times.reserve(iterations);
+
+    InitParameters request;
+    request.set_id(123);
+
+    InitResult reply;
+
+    for (int x=0; x<iterations; ++x)
+    {
+        auto start = chrono::steady_clock::now();
+        ClientContext context;
+        client.m_Stub->Init(&context, request, &reply);
+        auto end = chrono::steady_clock::now();
+        auto elapsed = chrono::duration_cast<chrono::microseconds>(end - start);
+        times.emplace_back(elapsed);
+    }
+
+    {
+    std::ofstream fout;
+    fout.open("xaxis");
+    for (int x=0; x<iterations; ++x)
+        fout << (x+1) << std::endl;
+    fout.close();
+    }
+
+    std::ofstream fout;
+    fout.open(fileName);
+    for (auto i : times)
+        fout << i.count() << std::endl;
+    fout.close();
+
+    std::sort(times.begin(), times.end());
+    auto min = times.front();
+    auto max = times.back();
+    auto median = *(times.begin() + iterations / 2);
+    
+    double average = times.front().count();
+    for (auto i : times)
+        average += (double)i.count();
+    average = average / iterations;
 
     cout << "End Test" << endl;
     cout << "Min: " << min.count() << endl;
@@ -517,59 +664,77 @@ int main(int argc, char **argv)
     {
         port = ":50061";
     }
+    
+    //client1 = new NIScope(grpc::CreateChannel("unix:///home/chrisc/test.sock", creds));
+    //client2 = new NIScope(grpc::CreateChannel("unix:///home/chrisc/test2.sock", creds));
     client1 = new NIScope(grpc::CreateChannel(target_str + port, creds));
+    port = ":50052";
+    client2 = new NIScope(grpc::CreateChannel(target_str + port, creds));
 
     ViSession session;
     auto result = client1->InitWithOptions((char*)resourceName, false, false, options, &session);
 
     cout << "Init result" << result << endl;
 
-    PerformMessageLatencyTest(*client1);
-    PerformMessagePerformanceTest(*client1);
+    //PerformLatencyStreamTest(*client1, "streamlatency1.txt");
+    //PerformLatencyStreamTest2(*client1, *client2, "streamlatency2Channel.txt");
+
+    // PerformLatencyStreamTest(*client1, "streamlatency2.txt");
+    // PerformLatencyStreamTest(*client1, "streamlatency3.txt");
+    // PerformLatencyStreamTest(*client1, "streamlatency4.txt");
+    // PerformLatencyStreamTest(*client1, "streamlatency5.txt");
+
+    // PerformMessageLatencyTest(*client1, "latency1.txt");
+    // PerformMessageLatencyTest(*client1, "latency2.txt");
+    // PerformMessageLatencyTest(*client1, "latency3.txt");
+    // PerformMessageLatencyTest(*client1, "latency4.txt");
+    // PerformMessageLatencyTest(*client1, "latency5.txt");
+
+    // PerformMessagePerformanceTest(*client1);
 
     cout << "Start streaming tests" << endl;
 
-    PerformStreamingTest(*client1, 10);
-    PerformStreamingTest(*client1, 100);
-    PerformStreamingTest(*client1, 1000);
-    PerformStreamingTest(*client1, 10000);
-    PerformStreamingTest(*client1, 100000);
-    PerformStreamingTest(*client1, 200000);
+    // PerformStreamingTest(*client1, 10);
+    // PerformStreamingTest(*client1, 100);
+    // PerformStreamingTest(*client1, 1000);
+    // PerformStreamingTest(*client1, 10000);
+    // PerformStreamingTest(*client1, 100000);
+    //PerformStreamingTest(*client1, 200000);
 
-    if (!useProxy)
-    {
-        client2 = new NIScope(grpc::CreateChannel(target_str + ":50052", creds));
-        result = client2->InitWithOptions((char*)resourceName, false, false, options, &session);
+    // if (!useProxy)
+    // {
+    //     client2 = new NIScope(grpc::CreateChannel(target_str + ":50052", creds));
+    //     result = client2->InitWithOptions((char*)resourceName, false, false, options, &session);
 
-        cout << endl << "Start 2 stream streaming tests" << endl;
-        PerformTwoStreamTest(*client1, *client2, 1000);
-        PerformTwoStreamTest(*client1, *client2, 10000);
-        PerformTwoStreamTest(*client1, *client2, 100000);
-        PerformTwoStreamTest(*client1, *client2, 200000);
+    //     cout << endl << "Start 2 stream streaming tests" << endl;
+    //     PerformTwoStreamTest(*client1, *client2, 1000);
+    //     PerformTwoStreamTest(*client1, *client2, 10000);
+    //     PerformTwoStreamTest(*client1, *client2, 100000);
+    //     PerformTwoStreamTest(*client1, *client2, 200000);
 
-        client3 = new NIScope(grpc::CreateChannel(target_str + ":50053", creds));
-        client4 = new NIScope(grpc::CreateChannel(target_str + ":50054", creds));
-        result = client3->InitWithOptions((char*)resourceName, false, false, options, &session);
-        result = client4->InitWithOptions((char*)resourceName, false, false, options, &session);
+    //     client3 = new NIScope(grpc::CreateChannel(target_str + ":50053", creds));
+    //     client4 = new NIScope(grpc::CreateChannel(target_str + ":50054", creds));
+    //     result = client3->InitWithOptions((char*)resourceName, false, false, options, &session);
+    //     result = client4->InitWithOptions((char*)resourceName, false, false, options, &session);
 
-        cout << endl << "Start 4 stream streaming tests" << endl;
-        PerformFourStreamTest(*client1, *client2, *client3, *client4, 1000);
-        PerformFourStreamTest(*client1, *client2, *client3, *client4, 10000);
-        PerformFourStreamTest(*client1, *client2, *client3, *client4, 100000);
-        PerformFourStreamTest(*client1, *client2, *client3, *client4, 200000);
-    }
+    //     cout << endl << "Start 4 stream streaming tests" << endl;
+    //     PerformFourStreamTest(*client1, *client2, *client3, *client4, 1000);
+    //     PerformFourStreamTest(*client1, *client2, *client3, *client4, 10000);
+    //     PerformFourStreamTest(*client1, *client2, *client3, *client4, 100000);
+    //     PerformFourStreamTest(*client1, *client2, *client3, *client4, 200000);
+    // }
 
-    PerformReadTest(*client1, 100);
-    PerformReadTest(*client1, 1000);
-    PerformReadTest(*client1, 10000);
-    PerformReadTest(*client1, 100000);
-    PerformReadTest(*client1, 200000);
-    PerformReadTest(*client1, 393216);
+    // PerformReadTest(*client1, 100);
+    // PerformReadTest(*client1, 1000);
+    // PerformReadTest(*client1, 10000);
+    // PerformReadTest(*client1, 100000);
+    // PerformReadTest(*client1, 200000);
+    // PerformReadTest(*client1, 393216);
     
-    PerformWriteTest(*client1, 100);
-    PerformWriteTest(*client1, 1000);
-    PerformWriteTest(*client1, 10000);
-    PerformWriteTest(*client1, 100000);
-    PerformWriteTest(*client1, 200000);
-    PerformWriteTest(*client1, 393216);
+    // PerformWriteTest(*client1, 100);
+    // PerformWriteTest(*client1, 1000);
+    // PerformWriteTest(*client1, 10000);
+    // PerformWriteTest(*client1, 100000);
+    // PerformWriteTest(*client1, 200000);
+    // PerformWriteTest(*client1, 393216);
 }

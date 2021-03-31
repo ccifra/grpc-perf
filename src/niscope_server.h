@@ -33,6 +33,9 @@ using namespace std;
 class NIScopeServer final : public niScope::niScopeService::Service
 {
 public:
+    ::grpc::Status StreamLatencyTest(::grpc::ServerContext* context, ::grpc::ServerReaderWriter< ::niScope::StreamLatencyServer, ::niScope::StreamLatencyClient>* stream);
+    ::grpc::Status StreamLatencyTestClient(::grpc::ServerContext* context, ::grpc::ServerReader< ::niScope::StreamLatencyClient>* reader, ::niScope::StreamLatencyServer* response) override;
+    ::grpc::Status StreamLatencyTestServer(::grpc::ServerContext* context, const ::niScope::StreamLatencyClient* request, ::grpc::ServerWriter< ::niScope::StreamLatencyServer>* writer) override;
     Status Init(ServerContext* context, const niScope::InitParameters*, niScope::InitResult* response);
     Status InitWithOptions(ServerContext* context, const niScope::InitWithOptionsParameters* request, niScope::InitWithOptionsResult* response);
     Status AutoSetup(ServerContext* context, const niScope::AutoSetupParameters* request, niScope::AutoSetupResult* response);
