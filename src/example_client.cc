@@ -623,13 +623,13 @@ int main(int argc, char **argv)
     //client1 = new NIScope(grpc::CreateChannel("unix:///home/chrisc/test.sock", creds));
     //client2 = new NIScope(grpc::CreateChannel("unix:///home/chrisc/test2.sock", creds));
     client1 = new NIScope(grpc::CreateChannel(target_str + port, creds));
-    port = ":50052";
-    client2 = new NIScope(grpc::CreateChannel(target_str + port, creds));
+    //port = ":50052";
+    //client2 = new NIScope(grpc::CreateChannel(target_str + port, creds));
 
     ViSession session;
-    auto result = client1->InitWithOptions((char*)resourceName, false, false, options, &session);
+    //auto result = client1->InitWithOptions((char*)resourceName, false, false, options, &session);
 
-    cout << "Init result" << result << endl;
+    //cout << "Init result" << result << endl;
 
     //PerformLatencyStreamTest(*client1, "streamlatency1.txt");
     //PerformLatencyStreamTest2(*client1, *client2, "streamlatency2Channel.txt");
@@ -654,7 +654,7 @@ int main(int argc, char **argv)
     // PerformStreamingTest(*client1, 1000);
     // PerformStreamingTest(*client1, 10000);
     // PerformStreamingTest(*client1, 100000);
-    //PerformStreamingTest(*client1, 200000);
+    PerformStreamingTest(*client1, 200000);
 
     // if (!useProxy)
     // {
