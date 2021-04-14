@@ -628,8 +628,9 @@ int main(int argc, char **argv)
 
     ViSession session;
     //auto result = client1->InitWithOptions((char*)resourceName, false, false, options, &session);
+    auto result = client1->Init(42);
 
-    //cout << "Init result" << result << endl;
+    cout << "Init result: " << result << endl;
 
     //PerformLatencyStreamTest(*client1, "streamlatency1.txt");
     //PerformLatencyStreamTest2(*client1, *client2, "streamlatency2Channel.txt");
@@ -645,15 +646,15 @@ int main(int argc, char **argv)
     // PerformMessageLatencyTest(*client1, "latency4.txt");
     // PerformMessageLatencyTest(*client1, "latency5.txt");
 
-    // PerformMessagePerformanceTest(*client1);
+    PerformMessagePerformanceTest(*client1);
 
     cout << "Start streaming tests" << endl;
 
-    // PerformStreamingTest(*client1, 10);
-    // PerformStreamingTest(*client1, 100);
-    // PerformStreamingTest(*client1, 1000);
-    // PerformStreamingTest(*client1, 10000);
-    // PerformStreamingTest(*client1, 100000);
+    PerformStreamingTest(*client1, 10);
+    PerformStreamingTest(*client1, 100);
+    PerformStreamingTest(*client1, 1000);
+    PerformStreamingTest(*client1, 10000);
+    PerformStreamingTest(*client1, 100000);
     PerformStreamingTest(*client1, 200000);
 
     // if (!useProxy)
