@@ -36,6 +36,13 @@ public:
 
 //---------------------------------------------------------------------
 //---------------------------------------------------------------------
+static NIScope* client1;
+static NIScope* client2;
+static NIScope* client3;
+static NIScope* client4;
+
+//---------------------------------------------------------------------
+//---------------------------------------------------------------------
 NIScope::NIScope(shared_ptr<Channel> channel)
     : m_Stub(niScopeService::NewStub(channel))
 {        
@@ -134,22 +141,6 @@ unique_ptr<grpc::ClientReader<niScope::ReadContinuouslyResult>> NIScope::ReadCon
     request.set_numsamples(numSamples);
 
     return m_Stub->ReadContinuously(context, request);
-}
-
-//---------------------------------------------------------------------
-//---------------------------------------------------------------------
-bool UseProxy(int argc, char** argv)
-{    
-    if (argc > 1)
-    {
-        string arg_str("--useproxy");
-        string arg_val = argv[1];
-        if (arg_val.find(arg_str) != string::npos)
-        {
-            return true;
-        }
-    }
-    return false;
 }
 
 //---------------------------------------------------------------------
@@ -262,12 +253,6 @@ shared_ptr<grpc::ChannelCredentials> CreateCredentials(int argc, char **argv)
     }
     return creds;
 }
-
-static NIScope* client1;
-static NIScope* client2;
-static NIScope* client3;
-static NIScope* client4;
-
 
 //---------------------------------------------------------------------
 //---------------------------------------------------------------------
@@ -621,29 +606,17 @@ void PerformFourStreamTest(NIScope& client, NIScope& client2, NIScope& client3, 
 //---------------------------------------------------------------------
 int main(int argc, char **argv)
 {
-    auto resourceName = "SimulatedScope7c632f66-e7c2-4fab-85a4-cd15c8be4130";
-    auto options = "Simulate=1, DriverSetup=Model:5164; BoardType:PXIe; MemorySize:1610612736";
-
     auto target_str = GetServerAddress(argc, argv);
     auto creds = CreateCredentials(argc, argv);
-    auto useProxy = UseProxy(argc, argv);
 
     auto port = ":50051";
-    if (useProxy)
-    {
-        port = ":50061";
-    }
     
     //client1 = new NIScope(grpc::CreateChannel("unix:///home/chrisc/test.sock", creds));
     //client2 = new NIScope(grpc::CreateChannel("unix:///home/chrisc/test2.sock", creds));
-    //PerformLatencyStreamTest2(*client1, *client2, "streamlatency2Channel.txt");
-    //port = ":50052";
     //client2 = new NIScope(grpc::CreateChannel(target_str + port, creds));
-
     client1 = new NIScope(grpc::CreateChannel(target_str + port, creds));
 
     ViSession session;
-    //auto result = client1->InitWithOptions((char*)resourceName, false, false, options, &session);
     auto result = client1->Init(42);
 
     cout << "Init result: " << result << endl;
@@ -653,6 +626,8 @@ int main(int argc, char **argv)
     PerformLatencyStreamTest(*client1, "streamlatency3.txt");
     PerformLatencyStreamTest(*client1, "streamlatency4.txt");
     PerformLatencyStreamTest(*client1, "streamlatency5.txt");
+
+    //PerformLatencyStreamTest2(*client1, *client2, "streamlatency2Channel.txt");
 
     // PerformMessageLatencyTest(*client1, "latency1.txt");
     // PerformMessageLatencyTest(*client1, "latency2.txt");
@@ -670,29 +645,6 @@ int main(int argc, char **argv)
     PerformStreamingTest(*client1, 10000);
     PerformStreamingTest(*client1, 100000);
     PerformStreamingTest(*client1, 200000);
-
-    // if (!useProxy)
-    // {
-    //     client2 = new NIScope(grpc::CreateChannel(target_str + ":50052", creds));
-    //     result = client2->InitWithOptions((char*)resourceName, false, false, options, &session);
-
-    //     cout << endl << "Start 2 stream streaming tests" << endl;
-    //     PerformTwoStreamTest(*client1, *client2, 1000);
-    //     PerformTwoStreamTest(*client1, *client2, 10000);
-    //     PerformTwoStreamTest(*client1, *client2, 100000);
-    //     PerformTwoStreamTest(*client1, *client2, 200000);
-
-    //     client3 = new NIScope(grpc::CreateChannel(target_str + ":50053", creds));
-    //     client4 = new NIScope(grpc::CreateChannel(target_str + ":50054", creds));
-    //     result = client3->InitWithOptions((char*)resourceName, false, false, options, &session);
-    //     result = client4->InitWithOptions((char*)resourceName, false, false, options, &session);
-
-    //     cout << endl << "Start 4 stream streaming tests" << endl;
-    //     PerformFourStreamTest(*client1, *client2, *client3, *client4, 1000);
-    //     PerformFourStreamTest(*client1, *client2, *client3, *client4, 10000);
-    //     PerformFourStreamTest(*client1, *client2, *client3, *client4, 100000);
-    //     PerformFourStreamTest(*client1, *client2, *client3, *client4, 200000);
-    // }
 
     // PerformReadTest(*client1, 100);
     // PerformReadTest(*client1, 1000);

@@ -504,13 +504,9 @@ int main(int argc, char **argv)
 	//auto thread4 = new std::thread(RunServer, argc, argv, "0.0.0.0:50054");
 	thread1->join();
 
-	std::this_thread::sleep_for(std::chrono::milliseconds(500));
-
-	auto scope = NIScope(_inProcServer);
-
-	PerformLatencyStreamTest2(scope, "inprocess.txt");
-
-	
+	// std::this_thread::sleep_for(std::chrono::milliseconds(500));
+	// auto scope = NIScope(_inProcServer);
+	// PerformLatencyStreamTest2(scope, "inprocess.txt");
 	//thread2->join();
 	//thread3->join();
 	//thread4->join();
