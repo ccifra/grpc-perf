@@ -8,6 +8,7 @@
 #include <fstream>
 #include <iostream>
 #include <thread>
+#include <sched.h>
 
 //---------------------------------------------------------------------
 //---------------------------------------------------------------------
@@ -599,6 +600,10 @@ void PerformFourStreamTest(NIScope& client, NIScope& client2, NIScope& client3, 
 //---------------------------------------------------------------------
 int main(int argc, char **argv)
 {
+    sched_param schedParam;
+    schedParam.sched_priority = 64;
+    sched_setscheduler(0, SCHED_FIFO, &schedParam);
+
     auto target_str = GetServerAddress(argc, argv);
     auto creds = CreateCredentials(argc, argv);
 

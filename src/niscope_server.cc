@@ -7,6 +7,7 @@
 #include <niscope_server.h>
 #include <niScope.grpc.pb.h>
 #include <thread>
+#include <sched.h>
 
 //---------------------------------------------------------------------
 //---------------------------------------------------------------------
@@ -496,6 +497,10 @@ void PerformLatencyStreamTest2(NIScope& client, std::string fileName)
 //---------------------------------------------------------------------
 int main(int argc, char **argv)
 {
+    sched_param schedParam;
+    schedParam.sched_priority = 64;
+    sched_setscheduler(0, SCHED_FIFO, &schedParam);
+
 	//auto thread1 = new std::thread(RunServer, argc, argv, "unix:///home/chrisc/test.sock");
 	auto thread1 = new std::thread(RunServer, argc, argv, "0.0.0.0:50051");
 	//auto thread2 = new std::thread(RunServer, argc, argv, "0.0.0.0:50052");
