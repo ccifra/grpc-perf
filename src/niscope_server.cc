@@ -498,7 +498,7 @@ void PerformLatencyStreamTest2(NIScope& client, std::string fileName)
 int main(int argc, char **argv)
 {
     sched_param schedParam;
-    schedParam.sched_priority = 64;
+    schedParam.sched_priority = 99;
     sched_setscheduler(0, SCHED_FIFO, &schedParam);
 
 	//auto thread1 = new std::thread(RunServer, argc, argv, "unix:///home/chrisc/test.sock");
