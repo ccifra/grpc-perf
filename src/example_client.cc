@@ -433,12 +433,18 @@ void PerformMessageLatencyTest(NIScope& client, std::string fileName)
 
     timeVector times;
     times.reserve(iterations);
+    std::this_thread::sleep_for(std::chrono::milliseconds(1000));
 
     InitParameters request;
     request.set_id(123);
 
     InitResult reply;
 
+    for (int x=0; x<10; ++x)
+    {
+        ClientContext context;
+        client.m_Stub->Init(&context, request, &reply);
+    }
     for (int x=0; x<iterations; ++x)
     {
         auto start = chrono::steady_clock::now();
@@ -448,6 +454,7 @@ void PerformMessageLatencyTest(NIScope& client, std::string fileName)
         auto elapsed = chrono::duration_cast<chrono::microseconds>(end - start);
         times.emplace_back(elapsed);
     }
+    std::this_thread::sleep_for(std::chrono::milliseconds(1000));
 
     {
     std::ofstream fout;
@@ -632,11 +639,11 @@ int main(int argc, char **argv)
 
     //PerformLatencyStreamTest2(*client1, *client2, "streamlatency2Channel.txt");
 
-    // PerformMessageLatencyTest(*client1, "latency1.txt");
-    // PerformMessageLatencyTest(*client1, "latency2.txt");
-    // PerformMessageLatencyTest(*client1, "latency3.txt");
-    // PerformMessageLatencyTest(*client1, "latency4.txt");
-    // PerformMessageLatencyTest(*client1, "latency5.txt");
+    PerformMessageLatencyTest(*client1, "latency1.txt");
+    PerformMessageLatencyTest(*client1, "latency2.txt");
+    PerformMessageLatencyTest(*client1, "latency3.txt");
+    PerformMessageLatencyTest(*client1, "latency4.txt");
+    PerformMessageLatencyTest(*client1, "latency5.txt");
 
     PerformMessagePerformanceTest(*client1);
 
