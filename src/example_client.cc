@@ -604,6 +604,11 @@ int main(int argc, char **argv)
     schedParam.sched_priority = 99;
     sched_setscheduler(0, SCHED_FIFO, &schedParam);
 
+    cpu_set_t cpuSet;
+    CPU_ZERO(&cpuSet);
+    CPU_SET(1, &cpuSet);
+    sched_setaffinity(0, sizeof(cpu_set_t), &cpuSet);
+
     auto target_str = GetServerAddress(argc, argv);
     auto creds = CreateCredentials(argc, argv);
 

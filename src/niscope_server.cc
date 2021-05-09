@@ -501,6 +501,11 @@ int main(int argc, char **argv)
     schedParam.sched_priority = 99;
     sched_setscheduler(0, SCHED_FIFO, &schedParam);
 
+    cpu_set_t cpuSet;
+    CPU_ZERO(&cpuSet);
+    CPU_SET(1, &cpuSet);
+    sched_setaffinity(0, sizeof(cpu_set_t), &cpuSet);
+
 	//auto thread1 = new std::thread(RunServer, argc, argv, "unix:///home/chrisc/test.sock");
 	auto thread1 = new std::thread(RunServer, argc, argv, "0.0.0.0:50051");
 	//auto thread2 = new std::thread(RunServer, argc, argv, "0.0.0.0:50052");
