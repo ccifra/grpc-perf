@@ -316,6 +316,7 @@ void PerformLatencyStreamTest(NIScope& client, std::string fileName)
         auto end = chrono::steady_clock::now();
         auto elapsed = chrono::duration_cast<chrono::microseconds>(end - start);
         times.emplace_back(elapsed);
+        std::this_thread::sleep_for(std::chrono::microseconds(100));
     }
     std::this_thread::sleep_for(std::chrono::milliseconds(1000));
 
