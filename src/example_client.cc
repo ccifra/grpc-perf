@@ -284,42 +284,42 @@ void PerformMessagePerformanceTest(NIScope& client)
 
 void EnableTracing()
 {
-    std::ofstream fout;
-    fout.open("/sys/kernel/debug/tracing/events/enable");
-    fout << "1";
-    fout.close();
+    // std::ofstream fout;
+    // fout.open("/sys/kernel/debug/tracing/events/enable");
+    // fout << "1";
+    // fout.close();
 }
 
 void DisableTracing()
 {
-    std::ofstream fout;
-    fout.open("/sys/kernel/debug/tracing/events/enable");
-    fout << "0";
-    fout.close();
+    // std::ofstream fout;
+    // fout.open("/sys/kernel/debug/tracing/events/enable");
+    // fout << "0";
+    // fout.close();
 }
 
 void TracingOff()
 {
-    std::ofstream fout;
-    fout.open("/sys/kernel/debug/tracing/tracing_on");
-    fout << "0";
-    fout.close();
+    // std::ofstream fout;
+    // fout.open("/sys/kernel/debug/tracing/tracing_on");
+    // fout << "0";
+    // fout.close();
 }
 
 void TracingOn()
 {
-    std::ofstream fout;
-    fout.open("/sys/kernel/debug/tracing/tracing_on");
-    fout << "1";
-    fout.close();
+    // std::ofstream fout;
+    // fout.open("/sys/kernel/debug/tracing/tracing_on");
+    // fout << "1";
+    // fout.close();
 }
 
 void TraceMarker(const char* marker)
 {
-    std::ofstream fout;
-    fout.open("/sys/kernel/debug/tracing/trace_marker");
-    fout << marker;
-    fout.close();
+    // std::ofstream fout;
+    // fout.open("/sys/kernel/debug/tracing/trace_marker");
+    // fout << marker;
+    // fout.close();
 }
 
 using timeVector = vector<chrono::microseconds>;
