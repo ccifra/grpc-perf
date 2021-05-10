@@ -282,6 +282,46 @@ void PerformMessagePerformanceTest(NIScope& client)
     cout << "Result: " << msgsPerSecond << " messages/s" << endl << endl;
 }
 
+void EnableTracing()
+{
+    std::ofstream fout;
+    fout.open("/sys/kernel/debug/tracing/events/enable");
+    fout << "1";
+    fout.close();
+}
+
+void DisableTracing()
+{
+    std::ofstream fout;
+    fout.open("/sys/kernel/debug/tracing/events/enable");
+    fout << "0";
+    fout.close();
+}
+
+void TracingOff()
+{
+    std::ofstream fout;
+    fout.open("/sys/kernel/debug/tracing/tracing_on");
+    fout << "0";
+    fout.close();
+}
+
+void TracingOn()
+{
+    std::ofstream fout;
+    fout.open("/sys/kernel/debug/tracing/tracing_on");
+    fout << "1";
+    fout.close();
+}
+
+void TraceMarker(const char* marker)
+{
+    std::ofstream fout;
+    fout.open("/sys/kernel/debug/tracing/trace_marker");
+    fout << marker;
+    fout.close();
+}
+
 using timeVector = vector<chrono::microseconds>;
 
 
@@ -308,15 +348,23 @@ void PerformLatencyStreamTest(NIScope& client, std::string fileName)
         stream->Read(&serverData);
     }
 
+    EnableTracing();
     for (int x=0; x<iterations; ++x)
     {
+        TraceMarker("Start iteration");
         auto start = chrono::steady_clock::now();
         stream->Write(clientData);
         stream->Read(&serverData);
         auto end = chrono::steady_clock::now();
         auto elapsed = chrono::duration_cast<chrono::microseconds>(end - start);
         times.emplace_back(elapsed);
-        std::this_thread::sleep_for(std::chrono::microseconds(100));
+        if (elapsed.count() > 200)
+        {
+            TraceMarker("High Latency");
+            DisableTracing();
+            cout << "HIGH Latency: " << x << "iterations" << endl;
+            break;
+        }
     }
     std::this_thread::sleep_for(std::chrono::milliseconds(1000));
 
@@ -632,30 +680,33 @@ int main(int argc, char **argv)
 
     cout << "Init result: " << result << endl;
 
+    EnableTracing();
     PerformLatencyStreamTest(*client1, "streamlatency1.txt");
-    PerformLatencyStreamTest(*client1, "streamlatency2.txt");
-    PerformLatencyStreamTest(*client1, "streamlatency3.txt");
-    PerformLatencyStreamTest(*client1, "streamlatency4.txt");
-    PerformLatencyStreamTest(*client1, "streamlatency5.txt");
+    DisableTracing();
+
+    // PerformLatencyStreamTest(*client1, "streamlatency2.txt");
+    // PerformLatencyStreamTest(*client1, "streamlatency3.txt");
+    // PerformLatencyStreamTest(*client1, "streamlatency4.txt");
+    // PerformLatencyStreamTest(*client1, "streamlatency5.txt");
 
     //PerformLatencyStreamTest2(*client1, *client2, "streamlatency2Channel.txt");
 
-    PerformMessageLatencyTest(*client1, "latency1.txt");
-    PerformMessageLatencyTest(*client1, "latency2.txt");
-    PerformMessageLatencyTest(*client1, "latency3.txt");
-    PerformMessageLatencyTest(*client1, "latency4.txt");
-    PerformMessageLatencyTest(*client1, "latency5.txt");
+    // PerformMessageLatencyTest(*client1, "latency1.txt");
+    // PerformMessageLatencyTest(*client1, "latency2.txt");
+    // PerformMessageLatencyTest(*client1, "latency3.txt");
+    // PerformMessageLatencyTest(*client1, "latency4.txt");
+    // PerformMessageLatencyTest(*client1, "latency5.txt");
 
-    PerformMessagePerformanceTest(*client1);
+    // PerformMessagePerformanceTest(*client1);
 
-    cout << "Start streaming tests" << endl;
+    // cout << "Start streaming tests" << endl;
 
-    PerformStreamingTest(*client1, 10);
-    PerformStreamingTest(*client1, 100);
-    PerformStreamingTest(*client1, 1000);
-    PerformStreamingTest(*client1, 10000);
-    PerformStreamingTest(*client1, 100000);
-    PerformStreamingTest(*client1, 200000);
+    // PerformStreamingTest(*client1, 10);
+    // PerformStreamingTest(*client1, 100);
+    // PerformStreamingTest(*client1, 1000);
+    // PerformStreamingTest(*client1, 10000);
+    // PerformStreamingTest(*client1, 100000);
+    // PerformStreamingTest(*client1, 200000);
 
     // PerformReadTest(*client1, 100);
     // PerformReadTest(*client1, 1000);
