@@ -27,6 +27,7 @@ service niScopeService {
     rpc AutoSetup(AutoSetupParameters) returns (AutoSetupResult) {};
     rpc ConfigureHorizontalTiming(ConfigureHorizontalTimingParameters) returns (ConfigureHorizontalTimingResult) {};
     rpc TestWrite(TestWriteParameters) returns (TestWriteResult) {};
+    rpc TestWriteContinuously(stream TestWriteParameters) returns (stream TestWriteResult) {};
     rpc Read(ReadParameters) returns (ReadResult) {};
     rpc ReadContinuously(ReadContinuouslyParameters) returns (stream ReadContinuouslyResult) {};
 }
@@ -106,10 +107,8 @@ message TestWriteResult {
 }
 
 message ReadContinuouslyParameters {
-  ViSession vi = 1;
-  string channelList = 2;
-  double timeout = 3;
-  int32 numSamples = 4;
+  int32 numIterations = 1;
+  int32 numSamples = 2;
 }
     
 message ReadContinuouslyResult {

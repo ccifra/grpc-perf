@@ -32,12 +32,13 @@ using namespace std;
 class NIScopeServer final : public niScope::niScopeService::Service
 {
 public:
-    ::grpc::Status StreamLatencyTest(::grpc::ServerContext* context, ::grpc::ServerReaderWriter< ::niScope::StreamLatencyServer, ::niScope::StreamLatencyClient>* stream);
+    ::grpc::Status StreamLatencyTest(::grpc::ServerContext* context, ::grpc::ServerReaderWriter< ::niScope::StreamLatencyServer, ::niScope::StreamLatencyClient>* stream) override;
     ::grpc::Status StreamLatencyTestClient(::grpc::ServerContext* context, ::grpc::ServerReader< ::niScope::StreamLatencyClient>* reader, ::niScope::StreamLatencyServer* response) override;
     ::grpc::Status StreamLatencyTestServer(::grpc::ServerContext* context, const ::niScope::StreamLatencyClient* request, ::grpc::ServerWriter< ::niScope::StreamLatencyServer>* writer) override;
-    Status Init(ServerContext* context, const niScope::InitParameters*, niScope::InitResult* response);
-    Status InitWithOptions(ServerContext* context, const niScope::InitWithOptionsParameters* request, niScope::InitWithOptionsResult* response);
-    Status Read(ServerContext* context, const niScope::ReadParameters* request, niScope::ReadResult* response);
-    Status ReadContinuously(ServerContext* context, const niScope::ReadContinuouslyParameters* request, grpc::ServerWriter<niScope::ReadContinuouslyResult>* writer);
-    Status TestWrite(ServerContext* context, const niScope::TestWriteParameters* request, niScope::TestWriteResult* response);
+    Status Init(ServerContext* context, const niScope::InitParameters*, niScope::InitResult* response) override;
+    Status InitWithOptions(ServerContext* context, const niScope::InitWithOptionsParameters* request, niScope::InitWithOptionsResult* response) override;
+    Status Read(ServerContext* context, const niScope::ReadParameters* request, niScope::ReadResult* response) override;
+    Status ReadContinuously(ServerContext* context, const niScope::ReadContinuouslyParameters* request, grpc::ServerWriter<niScope::ReadContinuouslyResult>* writer) override;
+    Status TestWrite(ServerContext* context, const niScope::TestWriteParameters* request, niScope::TestWriteResult* response) override;
+    Status TestWriteContinuously(ServerContext* context, ::grpc::ServerReaderWriter<niScope::TestWriteResult, niScope::TestWriteParameters>* stream) override;
 };

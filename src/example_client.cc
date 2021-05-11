@@ -8,7 +8,10 @@
 #include <fstream>
 #include <iostream>
 #include <thread>
+
+#ifndef _WIN32
 #include <sched.h>
+#endif
 
 //---------------------------------------------------------------------
 //---------------------------------------------------------------------
@@ -136,10 +139,8 @@ unique_ptr<grpc::ClientReader<niScope::ReadContinuouslyResult>> NIScope::ReadCon
     ReadContinuouslyParameters request;
     auto requestSession = new ViSession;
     requestSession->set_id(session.id());
-    request.set_allocated_vi(requestSession);
-    request.set_channellist(channels.c_str());
-    request.set_timeout(timeout);
     request.set_numsamples(numSamples);
+    request.set_numiterations(10000);
 
     return m_Stub->ReadContinuously(context, request);
 }
@@ -365,6 +366,159 @@ void PerformLatencyStreamTest(NIScope& client, std::string fileName)
             cout << "HIGH Latency: " << x << "iterations" << endl;
             break;
         }
+    }
+    std::this_thread::sleep_for(std::chrono::milliseconds(1000));
+
+    {
+        std::ofstream fout;
+        fout.open("xaxis");
+        for (int x=0; x<iterations; ++x)
+        {
+            fout << (x+1) << std::endl;
+        }
+        fout.close();
+    }
+
+    {
+        std::ofstream fout;
+        fout.open(fileName);
+        for (auto i : times)
+        {
+            fout << i.count() << std::endl;
+        }
+        fout.close();
+    }
+
+    std::sort(times.begin(), times.end());
+    auto min = times.front();
+    auto max = times.back();
+    auto median = *(times.begin() + iterations / 2);
+    
+    double average = times.front().count();
+    for (auto i : times)
+        average += (double)i.count();
+    average = average / iterations;
+
+    cout << "End Test" << endl;
+    cout << "Min: " << min.count() << endl;
+    cout << "Max: " << max.count() << endl;
+    cout << "Median: " << median.count() << endl;
+    cout << "Average: " << average << endl;
+    cout << endl;
+    std::this_thread::sleep_for(std::chrono::milliseconds(1000));
+}
+
+//---------------------------------------------------------------------
+//---------------------------------------------------------------------
+void PerformLatencyPayloadWriteTest(NIScope& client, int numSamples, std::string fileName)
+{    
+    int iterations = 100000;
+
+    cout << "Start RPC Latency payload write test, iterations=" << iterations << " numSamples=" << numSamples << endl;
+    std::this_thread::sleep_for(std::chrono::milliseconds(1000));
+
+    timeVector times;
+    times.reserve(iterations);
+
+    TestWriteParameters request;
+    request.mutable_wfm()->Reserve(numSamples);
+    request.mutable_wfm()->Resize(numSamples, 0);
+    TestWriteResult reply;
+
+    for (int x=0; x<10; ++x)
+    {
+        ClientContext context;
+        client.m_Stub->TestWrite(&context, request, &reply);
+    }
+
+    EnableTracing();
+    for (int x=0; x<iterations; ++x)
+    {
+        TraceMarker("Start iteration");
+        auto start = chrono::steady_clock::now();
+        ClientContext context;
+        client.m_Stub->TestWrite(&context, request, &reply);
+        auto end = chrono::steady_clock::now();
+        auto elapsed = chrono::duration_cast<chrono::microseconds>(end - start);
+        times.emplace_back(elapsed);
+    }
+    std::this_thread::sleep_for(std::chrono::milliseconds(1000));
+
+    {
+        std::ofstream fout;
+        fout.open("xaxis");
+        for (int x=0; x<iterations; ++x)
+        {
+            fout << (x+1) << std::endl;
+        }
+        fout.close();
+    }
+
+    {
+        std::ofstream fout;
+        fout.open(fileName);
+        for (auto i : times)
+        {
+            fout << i.count() << std::endl;
+        }
+        fout.close();
+    }
+
+    std::sort(times.begin(), times.end());
+    auto min = times.front();
+    auto max = times.back();
+    auto median = *(times.begin() + iterations / 2);
+    
+    double average = times.front().count();
+    for (auto i : times)
+        average += (double)i.count();
+    average = average / iterations;
+
+    cout << "End Test" << endl;
+    cout << "Min: " << min.count() << endl;
+    cout << "Max: " << max.count() << endl;
+    cout << "Median: " << median.count() << endl;
+    cout << "Average: " << average << endl;
+    cout << endl;
+    std::this_thread::sleep_for(std::chrono::milliseconds(1000));
+}
+
+//---------------------------------------------------------------------
+//---------------------------------------------------------------------
+void PerformLatencyPayloadWriteStreamTest(NIScope& client, int numSamples, std::string fileName)
+{    
+    int iterations = 100000;
+
+    cout << "Start RPC Latency payload write stream test, iterations=" << iterations << " numSamples=" << numSamples << endl;
+    std::this_thread::sleep_for(std::chrono::milliseconds(1000));
+
+    timeVector times;
+    times.reserve(iterations);
+
+    TestWriteParameters request;
+    request.mutable_wfm()->Reserve(numSamples);
+    request.mutable_wfm()->Resize(numSamples, 0);
+    TestWriteResult reply;
+
+    ClientContext context;
+    auto stream = client.m_Stub->TestWriteContinuously(&context);
+
+    for (int x=0; x<10; ++x)
+    {
+        stream->Write(request);
+        stream->Read(&reply);
+    }
+
+    EnableTracing();
+    for (int x=0; x<iterations; ++x)
+    {
+        TraceMarker("Start iteration");
+        auto start = chrono::steady_clock::now();
+        stream->Write(request);
+        stream->Read(&reply);
+        auto end = chrono::steady_clock::now();
+        auto elapsed = chrono::duration_cast<chrono::microseconds>(end - start);
+        times.emplace_back(elapsed);
     }
     std::this_thread::sleep_for(std::chrono::milliseconds(1000));
 
@@ -656,14 +810,16 @@ void PerformFourStreamTest(NIScope& client, NIScope& client2, NIScope& client3, 
 //---------------------------------------------------------------------
 int main(int argc, char **argv)
 {
+#ifndef _WIN32    
     sched_param schedParam;
-    schedParam.sched_priority = 99;
+    schedParam.sched_priority = 95;
     sched_setscheduler(0, SCHED_FIFO, &schedParam);
 
     cpu_set_t cpuSet;
     CPU_ZERO(&cpuSet);
     CPU_SET(1, &cpuSet);
     sched_setaffinity(0, sizeof(cpu_set_t), &cpuSet);
+#endif
 
     auto target_str = GetServerAddress(argc, argv);
     auto creds = CreateCredentials(argc, argv);
@@ -680,25 +836,42 @@ int main(int argc, char **argv)
 
     cout << "Init result: " << result << endl;
 
-    EnableTracing();
-    PerformLatencyStreamTest(*client1, "streamlatency1.txt");
-    DisableTracing();
 
+    // EnableTracing();
+    PerformLatencyStreamTest(*client1, "streamlatency1.txt");
     // PerformLatencyStreamTest(*client1, "streamlatency2.txt");
     // PerformLatencyStreamTest(*client1, "streamlatency3.txt");
     // PerformLatencyStreamTest(*client1, "streamlatency4.txt");
     // PerformLatencyStreamTest(*client1, "streamlatency5.txt");
+    // DisableTracing();
 
-    //PerformLatencyStreamTest2(*client1, *client2, "streamlatency2Channel.txt");
-
-    // PerformMessageLatencyTest(*client1, "latency1.txt");
+    PerformMessageLatencyTest(*client1, "latency1.txt");
     // PerformMessageLatencyTest(*client1, "latency2.txt");
     // PerformMessageLatencyTest(*client1, "latency3.txt");
     // PerformMessageLatencyTest(*client1, "latency4.txt");
     // PerformMessageLatencyTest(*client1, "latency5.txt");
 
-    // PerformMessagePerformanceTest(*client1);
+    PerformLatencyPayloadWriteTest(*client1, 1, "payloadlatency1.txt");
+    PerformLatencyPayloadWriteTest(*client1, 8, "payloadlatency8.txt");
+    PerformLatencyPayloadWriteTest(*client1, 16, "payloadlatency16.txt");
+    PerformLatencyPayloadWriteTest(*client1, 32, "payloadlatency32.txt");
+    PerformLatencyPayloadWriteTest(*client1, 64, "payloadlatency64.txt");
+    PerformLatencyPayloadWriteTest(*client1, 128, "payloadlatency128.txt");
+    PerformLatencyPayloadWriteTest(*client1, 1024, "payloadlatency1024.txt");
+    PerformLatencyPayloadWriteTest(*client1, 32768, "payloadlatency32768.txt");
 
+    PerformLatencyPayloadWriteStreamTest(*client1, 1, "payloadstreamlatency1.txt");
+    PerformLatencyPayloadWriteStreamTest(*client1, 8, "payloadstreamlatency8.txt");
+    PerformLatencyPayloadWriteStreamTest(*client1, 16, "payloadstreamlatency16.txt");
+    PerformLatencyPayloadWriteStreamTest(*client1, 32, "payloadstreamlatency32.txt");
+    PerformLatencyPayloadWriteStreamTest(*client1, 64, "payloadstreamlatency64.txt");
+    PerformLatencyPayloadWriteStreamTest(*client1, 128, "payloadstreamlatency128.txt");
+    PerformLatencyPayloadWriteStreamTest(*client1, 1024, "payloadstreamlatency1024.txt");
+    PerformLatencyPayloadWriteStreamTest(*client1, 32768, "payloadstreamlatency32768.txt");
+
+
+    //PerformLatencyStreamTest2(*client1, *client2, "streamlatency2Channel.txt");
+    // PerformMessagePerformanceTest(*client1);
     // cout << "Start streaming tests" << endl;
 
     // PerformStreamingTest(*client1, 10);

@@ -7,7 +7,10 @@
 #include <niscope_server.h>
 #include <niScope.grpc.pb.h>
 #include <thread>
+
+#ifndef _WIN32
 #include <sched.h>
+#endif
 
 //---------------------------------------------------------------------
 //---------------------------------------------------------------------
@@ -186,10 +189,8 @@ unique_ptr<grpc::ClientReader<niScope::ReadContinuouslyResult>> NIScope::ReadCon
     ReadContinuouslyParameters request;
     auto requestSession = new ViSession;
     requestSession->set_id(session.id());
-    request.set_allocated_vi(requestSession);
-    request.set_channellist(channels.c_str());
-    request.set_timeout(timeout);
     request.set_numsamples(numSamples);
+    request.set_numiterations(10000);
 
     return m_Stub->ReadContinuously(context, request);
 }
@@ -274,13 +275,31 @@ Status NIScopeServer::TestWrite(ServerContext* context, const niScope::TestWrite
 
 //---------------------------------------------------------------------
 //---------------------------------------------------------------------
+Status NIScopeServer::TestWriteContinuously(ServerContext* context, ::grpc::ServerReaderWriter<niScope::TestWriteResult, niScope::TestWriteParameters>* stream)
+{
+    niScope::TestWriteParameters readParameters;
+    niScope::TestWriteResult response;    
+    response.set_status(0);
+    while (stream->Read(&readParameters))
+    {
+        stream->Write(response);
+    }
+	return Status::OK;
+}
+
+//---------------------------------------------------------------------
+//---------------------------------------------------------------------
 Status NIScopeServer::ReadContinuously(ServerContext* context, const niScope::ReadContinuouslyParameters* request, grpc::ServerWriter<niScope::ReadContinuouslyResult>* writer)
 {			
 	niScope::ReadContinuouslyResult response;
 	response.mutable_wfm()->Reserve(request->numsamples());
 	response.mutable_wfm()->Resize(request->numsamples(), 0.0);
-	cout << "Writing " << request->numsamples() << " 10000 times" << endl;
-	for (int x=0; x<10000; ++x)
+    auto iterations = request->numiterations();
+    if (iterations == 0)
+    {
+        iterations = 10000;
+    }
+	for (int x=0; x<iterations; ++x)
 	{
 		writer->Write(response);
 	}
@@ -497,14 +516,16 @@ void PerformLatencyStreamTest2(NIScope& client, std::string fileName)
 //---------------------------------------------------------------------
 int main(int argc, char **argv)
 {
+#ifndef _WIN32    
     sched_param schedParam;
-    schedParam.sched_priority = 99;
+    schedParam.sched_priority = 95;
     sched_setscheduler(0, SCHED_FIFO, &schedParam);
 
     cpu_set_t cpuSet;
     CPU_ZERO(&cpuSet);
     CPU_SET(1, &cpuSet);
     sched_setaffinity(0, sizeof(cpu_set_t), &cpuSet);
+#endif
 
 	//auto thread1 = new std::thread(RunServer, argc, argv, "unix:///home/chrisc/test.sock");
 	auto thread1 = new std::thread(RunServer, argc, argv, "0.0.0.0:50051");
