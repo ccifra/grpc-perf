@@ -62,7 +62,7 @@ add_custom_command(
 #----------------------------------------------------------------------
 # Include generated *.pb.h files
 #----------------------------------------------------------------------
-include_directories("${CMAKE_CURRENT_BINARY_DIR}" "./src")
+include_directories("${CMAKE_CURRENT_BINARY_DIR}" "./src" "./third_party/grpc")
 
 #----------------------------------------------------------------------
 # NIScope gRPC Server

@@ -6,6 +6,7 @@
 #include <iostream>
 #include <niscope_server.h>
 #include <niScope.grpc.pb.h>
+#include <src/core/lib/iomgr/executor.h>
 #include <thread>
 
 #ifndef _WIN32
@@ -419,6 +420,10 @@ std::shared_ptr<grpc::Channel> _inProcServer;
 //---------------------------------------------------------------------
 void RunServer(int argc, char **argv, const char* saddress)
 {
+    grpc_init();
+    ::grpc_core::Executor::SetThreadingDefault(false);
+    ::grpc_core::Executor::SetThreadingAll(false);
+
 	auto server_address = saddress; //GetServerAddress(argc, argv);
 	auto creds = CreateCredentials(argc, argv);
 

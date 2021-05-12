@@ -8,6 +8,7 @@
 #include <fstream>
 #include <iostream>
 #include <thread>
+#include <src/core/lib/iomgr/executor.h>
 
 #ifndef _WIN32
 #include <sched.h>
@@ -810,6 +811,10 @@ void PerformFourStreamTest(NIScope& client, NIScope& client2, NIScope& client3, 
 //---------------------------------------------------------------------
 int main(int argc, char **argv)
 {
+    grpc_init();
+    ::grpc_core::Executor::SetThreadingDefault(false);
+    ::grpc_core::Executor::SetThreadingAll(false);
+
 #ifndef _WIN32    
     sched_param schedParam;
     schedParam.sched_priority = 95;
