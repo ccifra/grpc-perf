@@ -574,23 +574,31 @@ void PerformLatencyStreamTest2(NIScope& client, NIScope& client2, std::string fi
     timeVector times;
     times.reserve(iterations);
 
-	niScope::StreamLatencyClient clientData;
+	niScope::StreamLatencyClient clientData1;
+    clientData1.set_message(0);
+	niScope::StreamLatencyClient clientData2;
+    clientData2.set_message(1);
+	niScope::StreamLatencyClient clientData3;
+    clientData3.set_message(2);
+	niScope::StreamLatencyClient clientData4;
+    clientData4.set_message(3);
+
 	niScope::StreamLatencyServer serverData;
 	niScope::StreamLatencyServer serverResponseData;
 
     std::this_thread::sleep_for(std::chrono::milliseconds(1000));
 
     ClientContext context;
-    auto rstream = client.m_Stub->StreamLatencyTestServer(&context, clientData);
+    auto rstream = client.m_Stub->StreamLatencyTestServer(&context, clientData1);
     std::this_thread::sleep_for(std::chrono::milliseconds(1000));
     ClientContext context2;
-    auto rstream2 = client.m_Stub->StreamLatencyTestServer(&context2, clientData);
+    auto rstream2 = client.m_Stub->StreamLatencyTestServer(&context2, clientData2);
     std::this_thread::sleep_for(std::chrono::milliseconds(1000));
     ClientContext context3;
-    auto rstream3 = client.m_Stub->StreamLatencyTestServer(&context3, clientData);
+    auto rstream3 = client.m_Stub->StreamLatencyTestServer(&context3, clientData3);
     std::this_thread::sleep_for(std::chrono::milliseconds(1000));
     ClientContext context4;
-    auto rstream4 = client.m_Stub->StreamLatencyTestServer(&context4, clientData);
+    auto rstream4 = client.m_Stub->StreamLatencyTestServer(&context4, clientData4);
 
     std::this_thread::sleep_for(std::chrono::milliseconds(1500));
 
@@ -608,10 +616,10 @@ void PerformLatencyStreamTest2(NIScope& client, NIScope& client2, std::string fi
     for (int x=0; x<iterations; ++x)
     {
         auto start = chrono::steady_clock::now();
-        wstream->Write(clientData);
-        wstream->Write(clientData);
-        wstream->Write(clientData);
-        wstream->Write(clientData);
+        wstream->Write(clientData1);
+        wstream2->Write(clientData2);
+        wstream3->Write(clientData3);
+        wstream4->Write(clientData4);
         rstream->Read(&serverData);
         rstream2->Read(&serverData);
         rstream3->Read(&serverData);
@@ -620,6 +628,11 @@ void PerformLatencyStreamTest2(NIScope& client, NIScope& client2, std::string fi
         auto elapsed = chrono::duration_cast<chrono::microseconds>(end - start);
         times.emplace_back(elapsed);
     }
+
+    wstream->WritesDone();
+    wstream2->WritesDone();
+    wstream3->WritesDone();
+    wstream4->WritesDone();
 
     {
     std::ofstream fout;
@@ -795,42 +808,6 @@ void PerformStreamingTest(NIScope& client, int numSamples)
     ReadSamples(&client, numSamples);
     auto end = chrono::steady_clock::now();
     ReportMBPerSecond(start, end, numSamples);
-}
-
-//---------------------------------------------------------------------
-//---------------------------------------------------------------------
-void PerformTwoStreamTest(NIScope& client, NIScope& client2, int numSamples)
-{
-    auto start = chrono::steady_clock::now();
-
-    auto thread1 = new thread(ReadSamples, &client, numSamples);
-    auto thread2 = new thread(ReadSamples, &client2, numSamples);
-
-    thread1->join();
-    thread2->join();
-
-    auto end = chrono::steady_clock::now();
-    ReportMBPerSecond(start, end, numSamples * 2);
-}
-
-//---------------------------------------------------------------------
-//---------------------------------------------------------------------
-void PerformFourStreamTest(NIScope& client, NIScope& client2, NIScope& client3, NIScope& client4, int numSamples)
-{
-    auto start = chrono::steady_clock::now();
-
-    auto thread1 = new thread(ReadSamples, &client, numSamples);
-    auto thread2 = new thread(ReadSamples, &client2, numSamples);
-    auto thread3 = new thread(ReadSamples, &client3, numSamples);
-    auto thread4 = new thread(ReadSamples, &client4, numSamples);
-
-    thread1->join();
-    thread2->join();
-    thread3->join();
-    thread4->join();
-
-    auto end = chrono::steady_clock::now();
-    ReportMBPerSecond(start, end, numSamples * 4);
 }
 
 //---------------------------------------------------------------------

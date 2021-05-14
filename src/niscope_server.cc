@@ -32,10 +32,9 @@ using namespace std;
 using namespace niScope;
 
 
-static ::grpc::ServerWriter< ::niScope::StreamLatencyServer>* _writer;
-static ::grpc::ServerWriter< ::niScope::StreamLatencyServer>* _writer2;
-static ::grpc::ServerWriter< ::niScope::StreamLatencyServer>* _writer3;
-static ::grpc::ServerWriter< ::niScope::StreamLatencyServer>* _writer4;
+//---------------------------------------------------------------------
+//---------------------------------------------------------------------
+static ::grpc::ServerWriter< ::niScope::StreamLatencyServer>* _writers [32];
 
 //---------------------------------------------------------------------
 //---------------------------------------------------------------------
@@ -205,20 +204,18 @@ unique_ptr<grpc::ClientReader<niScope::ReadContinuouslyResult>> NIScope::ReadCon
 {	
 	niScope::StreamLatencyClient client;
 	niScope::StreamLatencyServer server;
+    uint32_t slot;
 	while (reader->Read(&client))
 	{
-        reader->Read(&client);
-        reader->Read(&client);
-        reader->Read(&client);
-		_writer->Write(server);
-		_writer2->Write(server);
-		_writer3->Write(server);
-		_writer4->Write(server);
-	}
-	_writer = nullptr;
-    _writer2 = nullptr;
-    _writer3 = nullptr;
-    _writer4 = nullptr;
+        slot = client.message();
+        //cout << "Reader read at slot: " << slot << endl;
+        if (_writers[slot] != nullptr)
+        {
+            //cout << "Reader writing to slot: " << slot << endl;
+            _writers[slot]->Write(server);
+        }
+ 	}
+     _writers[slot] = nullptr;
 	return Status::OK;
 }
 
@@ -226,38 +223,14 @@ unique_ptr<grpc::ClientReader<niScope::ReadContinuouslyResult>> NIScope::ReadCon
 //---------------------------------------------------------------------
 ::grpc::Status NIScopeServer::StreamLatencyTestServer(::grpc::ServerContext* context, const ::niScope::StreamLatencyClient* request, ::grpc::ServerWriter< ::niScope::StreamLatencyServer>* writer)
 {
-    if (_writer == nullptr)
+    auto slot = request->message();
+    //cout << "Setting writer to slot: " << slot << endl;
+    _writers[slot] = writer;
+    while (_writers[slot] == writer)
     {
-    	_writer = writer;
-        while (_writer == writer)
-        {
-            std::this_thread::sleep_for(std::chrono::milliseconds(500));
-        }
+        std::this_thread::sleep_for(std::chrono::milliseconds(500));
     }
-    else if (_writer2 == nullptr)
-    {
-    	_writer2 = writer;
-        while (_writer2 == writer)
-        {
-            std::this_thread::sleep_for(std::chrono::milliseconds(500));
-        }
-    }
-    else if (_writer3 == nullptr)
-    {
-    	_writer3 = writer;
-        while (_writer3 == writer)
-        {
-            std::this_thread::sleep_for(std::chrono::milliseconds(500));
-        }
-    }
-    else if (_writer4 == nullptr)
-    {
-    	_writer4 = writer;
-        while (_writer4 == writer)
-        {
-            std::this_thread::sleep_for(std::chrono::milliseconds(500));
-        }
-    }
+    //cout << "Writer done at slot: " << slot << endl;
 	return Status::OK;
 }
 
