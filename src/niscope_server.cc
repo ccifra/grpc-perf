@@ -33,6 +33,9 @@ using namespace niScope;
 
 
 static ::grpc::ServerWriter< ::niScope::StreamLatencyServer>* _writer;
+static ::grpc::ServerWriter< ::niScope::StreamLatencyServer>* _writer2;
+static ::grpc::ServerWriter< ::niScope::StreamLatencyServer>* _writer3;
+static ::grpc::ServerWriter< ::niScope::StreamLatencyServer>* _writer4;
 
 //---------------------------------------------------------------------
 //---------------------------------------------------------------------
@@ -204,9 +207,18 @@ unique_ptr<grpc::ClientReader<niScope::ReadContinuouslyResult>> NIScope::ReadCon
 	niScope::StreamLatencyServer server;
 	while (reader->Read(&client))
 	{
+        reader->Read(&client);
+        reader->Read(&client);
+        reader->Read(&client);
 		_writer->Write(server);
+		_writer2->Write(server);
+		_writer3->Write(server);
+		_writer4->Write(server);
 	}
 	_writer = nullptr;
+    _writer2 = nullptr;
+    _writer3 = nullptr;
+    _writer4 = nullptr;
 	return Status::OK;
 }
 
@@ -214,11 +226,38 @@ unique_ptr<grpc::ClientReader<niScope::ReadContinuouslyResult>> NIScope::ReadCon
 //---------------------------------------------------------------------
 ::grpc::Status NIScopeServer::StreamLatencyTestServer(::grpc::ServerContext* context, const ::niScope::StreamLatencyClient* request, ::grpc::ServerWriter< ::niScope::StreamLatencyServer>* writer)
 {
-	_writer = writer;
-	while (_writer == writer)
-	{
-		std::this_thread::sleep_for(std::chrono::milliseconds(500));
-	}
+    if (_writer == nullptr)
+    {
+    	_writer = writer;
+        while (_writer == writer)
+        {
+            std::this_thread::sleep_for(std::chrono::milliseconds(500));
+        }
+    }
+    else if (_writer2 == nullptr)
+    {
+    	_writer2 = writer;
+        while (_writer2 == writer)
+        {
+            std::this_thread::sleep_for(std::chrono::milliseconds(500));
+        }
+    }
+    else if (_writer3 == nullptr)
+    {
+    	_writer3 = writer;
+        while (_writer3 == writer)
+        {
+            std::this_thread::sleep_for(std::chrono::milliseconds(500));
+        }
+    }
+    else if (_writer4 == nullptr)
+    {
+    	_writer4 = writer;
+        while (_writer4 == writer)
+        {
+            std::this_thread::sleep_for(std::chrono::milliseconds(500));
+        }
+    }
 	return Status::OK;
 }
 
@@ -420,9 +459,9 @@ std::shared_ptr<grpc::Channel> _inProcServer;
 //---------------------------------------------------------------------
 void RunServer(int argc, char **argv, const char* saddress)
 {
-    grpc_init();
-    ::grpc_core::Executor::SetThreadingDefault(false);
-    ::grpc_core::Executor::SetThreadingAll(false);
+    // grpc_init();
+    // ::grpc_core::Executor::SetThreadingDefault(false);
+    // ::grpc_core::Executor::SetThreadingAll(false);
 
 	auto server_address = saddress; //GetServerAddress(argc, argv);
 	auto creds = CreateCredentials(argc, argv);

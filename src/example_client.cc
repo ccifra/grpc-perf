@@ -577,19 +577,44 @@ void PerformLatencyStreamTest2(NIScope& client, NIScope& client2, std::string fi
 	niScope::StreamLatencyServer serverData;
 	niScope::StreamLatencyServer serverResponseData;
 
+    std::this_thread::sleep_for(std::chrono::milliseconds(1000));
+
     ClientContext context;
     auto rstream = client.m_Stub->StreamLatencyTestServer(&context, clientData);
+    std::this_thread::sleep_for(std::chrono::milliseconds(1000));
+    ClientContext context2;
+    auto rstream2 = client.m_Stub->StreamLatencyTestServer(&context2, clientData);
+    std::this_thread::sleep_for(std::chrono::milliseconds(1000));
+    ClientContext context3;
+    auto rstream3 = client.m_Stub->StreamLatencyTestServer(&context3, clientData);
+    std::this_thread::sleep_for(std::chrono::milliseconds(1000));
+    ClientContext context4;
+    auto rstream4 = client.m_Stub->StreamLatencyTestServer(&context4, clientData);
 
     std::this_thread::sleep_for(std::chrono::milliseconds(1500));
 
-    ClientContext context2;
-    auto wstream = client.m_Stub->StreamLatencyTestClient(&context2, &serverResponseData);
+    ClientContext context5;
+    auto wstream = client.m_Stub->StreamLatencyTestClient(&context5, &serverResponseData);
+    ClientContext context6;
+    auto wstream2 = client.m_Stub->StreamLatencyTestClient(&context6, &serverResponseData);
+    ClientContext context7;
+    auto wstream3 = client.m_Stub->StreamLatencyTestClient(&context7, &serverResponseData);
+    ClientContext context8;
+    auto wstream4 = client.m_Stub->StreamLatencyTestClient(&context8, &serverResponseData);
+
+    std::this_thread::sleep_for(std::chrono::milliseconds(1500));
 
     for (int x=0; x<iterations; ++x)
     {
         auto start = chrono::steady_clock::now();
         wstream->Write(clientData);
+        wstream->Write(clientData);
+        wstream->Write(clientData);
+        wstream->Write(clientData);
         rstream->Read(&serverData);
+        rstream2->Read(&serverData);
+        rstream3->Read(&serverData);
+        rstream4->Read(&serverData);
         auto end = chrono::steady_clock::now();
         auto elapsed = chrono::duration_cast<chrono::microseconds>(end - start);
         times.emplace_back(elapsed);
@@ -811,19 +836,19 @@ void PerformFourStreamTest(NIScope& client, NIScope& client2, NIScope& client3, 
 //---------------------------------------------------------------------
 int main(int argc, char **argv)
 {
-    grpc_init();
-    ::grpc_core::Executor::SetThreadingDefault(false);
-    ::grpc_core::Executor::SetThreadingAll(false);
+    // grpc_init();
+    // ::grpc_core::Executor::SetThreadingDefault(false);
+    // ::grpc_core::Executor::SetThreadingAll(false);
 
 #ifndef _WIN32    
     sched_param schedParam;
     schedParam.sched_priority = 95;
     sched_setscheduler(0, SCHED_FIFO, &schedParam);
 
-    cpu_set_t cpuSet;
-    CPU_ZERO(&cpuSet);
-    CPU_SET(1, &cpuSet);
-    sched_setaffinity(0, sizeof(cpu_set_t), &cpuSet);
+    // cpu_set_t cpuSet;
+    // CPU_ZERO(&cpuSet);
+    // CPU_SET(1, &cpuSet);
+    // sched_setaffinity(0, sizeof(cpu_set_t), &cpuSet);
 #endif
 
     auto target_str = GetServerAddress(argc, argv);
@@ -835,6 +860,7 @@ int main(int argc, char **argv)
     //client2 = new NIScope(grpc::CreateChannel("unix:///home/chrisc/test2.sock", creds));
     //client2 = new NIScope(grpc::CreateChannel(target_str + port, creds));
     client1 = new NIScope(grpc::CreateChannel(target_str + port, creds));
+    client2 = new NIScope(grpc::CreateChannel(target_str + port, creds));
 
     ViSession session;
     auto result = client1->Init(42);
@@ -843,39 +869,39 @@ int main(int argc, char **argv)
 
 
     // EnableTracing();
-    PerformLatencyStreamTest(*client1, "streamlatency1.txt");
+    //PerformLatencyStreamTest(*client1, "streamlatency1.txt");
     // PerformLatencyStreamTest(*client1, "streamlatency2.txt");
     // PerformLatencyStreamTest(*client1, "streamlatency3.txt");
     // PerformLatencyStreamTest(*client1, "streamlatency4.txt");
     // PerformLatencyStreamTest(*client1, "streamlatency5.txt");
     // DisableTracing();
 
-    PerformMessageLatencyTest(*client1, "latency1.txt");
+    //PerformMessageLatencyTest(*client1, "latency1.txt");
     // PerformMessageLatencyTest(*client1, "latency2.txt");
     // PerformMessageLatencyTest(*client1, "latency3.txt");
     // PerformMessageLatencyTest(*client1, "latency4.txt");
     // PerformMessageLatencyTest(*client1, "latency5.txt");
 
-    PerformLatencyPayloadWriteTest(*client1, 1, "payloadlatency1.txt");
-    PerformLatencyPayloadWriteTest(*client1, 8, "payloadlatency8.txt");
-    PerformLatencyPayloadWriteTest(*client1, 16, "payloadlatency16.txt");
-    PerformLatencyPayloadWriteTest(*client1, 32, "payloadlatency32.txt");
-    PerformLatencyPayloadWriteTest(*client1, 64, "payloadlatency64.txt");
-    PerformLatencyPayloadWriteTest(*client1, 128, "payloadlatency128.txt");
-    PerformLatencyPayloadWriteTest(*client1, 1024, "payloadlatency1024.txt");
-    PerformLatencyPayloadWriteTest(*client1, 32768, "payloadlatency32768.txt");
+    // PerformLatencyPayloadWriteTest(*client1, 1, "payloadlatency1.txt");
+    // PerformLatencyPayloadWriteTest(*client1, 8, "payloadlatency8.txt");
+    // PerformLatencyPayloadWriteTest(*client1, 16, "payloadlatency16.txt");
+    // PerformLatencyPayloadWriteTest(*client1, 32, "payloadlatency32.txt");
+    // PerformLatencyPayloadWriteTest(*client1, 64, "payloadlatency64.txt");
+    // PerformLatencyPayloadWriteTest(*client1, 128, "payloadlatency128.txt");
+    // PerformLatencyPayloadWriteTest(*client1, 1024, "payloadlatency1024.txt");
+    // PerformLatencyPayloadWriteTest(*client1, 32768, "payloadlatency32768.txt");
 
-    PerformLatencyPayloadWriteStreamTest(*client1, 1, "payloadstreamlatency1.txt");
-    PerformLatencyPayloadWriteStreamTest(*client1, 8, "payloadstreamlatency8.txt");
-    PerformLatencyPayloadWriteStreamTest(*client1, 16, "payloadstreamlatency16.txt");
-    PerformLatencyPayloadWriteStreamTest(*client1, 32, "payloadstreamlatency32.txt");
-    PerformLatencyPayloadWriteStreamTest(*client1, 64, "payloadstreamlatency64.txt");
-    PerformLatencyPayloadWriteStreamTest(*client1, 128, "payloadstreamlatency128.txt");
-    PerformLatencyPayloadWriteStreamTest(*client1, 1024, "payloadstreamlatency1024.txt");
-    PerformLatencyPayloadWriteStreamTest(*client1, 32768, "payloadstreamlatency32768.txt");
+    // PerformLatencyPayloadWriteStreamTest(*client1, 1, "payloadstreamlatency1.txt");
+    // PerformLatencyPayloadWriteStreamTest(*client1, 8, "payloadstreamlatency8.txt");
+    // PerformLatencyPayloadWriteStreamTest(*client1, 16, "payloadstreamlatency16.txt");
+    // PerformLatencyPayloadWriteStreamTest(*client1, 32, "payloadstreamlatency32.txt");
+    // PerformLatencyPayloadWriteStreamTest(*client1, 64, "payloadstreamlatency64.txt");
+    // PerformLatencyPayloadWriteStreamTest(*client1, 128, "payloadstreamlatency128.txt");
+    // PerformLatencyPayloadWriteStreamTest(*client1, 1024, "payloadstreamlatency1024.txt");
+    // PerformLatencyPayloadWriteStreamTest(*client1, 32768, "payloadstreamlatency32768.txt");
 
 
-    //PerformLatencyStreamTest2(*client1, *client2, "streamlatency2Channel.txt");
+    PerformLatencyStreamTest2(*client1, *client2, "streamlatency2Channel.txt");
     // PerformMessagePerformanceTest(*client1);
     // cout << "Start streaming tests" << endl;
 
