@@ -9,6 +9,7 @@
 #include <iostream>
 #include <thread>
 #include <src/core/lib/iomgr/executor.h>
+#include <src/core/lib/iomgr/timer_manager.h>
 
 #ifndef _WIN32
 #include <sched.h>
@@ -594,13 +595,13 @@ void PerformLatencyStreamTest2(NIScope& client, NIScope& client2, std::string fi
     std::this_thread::sleep_for(std::chrono::milliseconds(1500));
 
     ClientContext context5;
-    auto wstream = client.m_Stub->StreamLatencyTestClient(&context5, &serverResponseData);
+    auto wstream = client2.m_Stub->StreamLatencyTestClient(&context5, &serverResponseData);
     ClientContext context6;
-    auto wstream2 = client.m_Stub->StreamLatencyTestClient(&context6, &serverResponseData);
+    auto wstream2 = client2.m_Stub->StreamLatencyTestClient(&context6, &serverResponseData);
     ClientContext context7;
-    auto wstream3 = client.m_Stub->StreamLatencyTestClient(&context7, &serverResponseData);
+    auto wstream3 = client2.m_Stub->StreamLatencyTestClient(&context7, &serverResponseData);
     ClientContext context8;
-    auto wstream4 = client.m_Stub->StreamLatencyTestClient(&context8, &serverResponseData);
+    auto wstream4 = client2.m_Stub->StreamLatencyTestClient(&context8, &serverResponseData);
 
     std::this_thread::sleep_for(std::chrono::milliseconds(1500));
 
@@ -836,7 +837,8 @@ void PerformFourStreamTest(NIScope& client, NIScope& client2, NIScope& client3, 
 //---------------------------------------------------------------------
 int main(int argc, char **argv)
 {
-    // grpc_init();
+    grpc_init();
+    grpc_timer_manager_set_threading(false);
     // ::grpc_core::Executor::SetThreadingDefault(false);
     // ::grpc_core::Executor::SetThreadingAll(false);
 
