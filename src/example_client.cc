@@ -599,9 +599,9 @@ void PerformLatencyStreamTest2(NIScope& client, NIScope& client2, int streamCoun
     }
 
     std::this_thread::sleep_for(std::chrono::milliseconds(1500));
-    for (int x=0; x<iterations; ++x)
+    for (int x=0; x<10; ++x)
     {
-        for (int i=0; i<10; ++i)
+        for (int i=0; i<streamCount; ++i)
         {
             streamInfos[i].wstream->Write(streamInfos[i].clientData);
         }
