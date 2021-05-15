@@ -7,6 +7,7 @@
 #include <niscope_server.h>
 #include <niScope.grpc.pb.h>
 #include <src/core/lib/iomgr/executor.h>
+#include <src/core/lib/iomgr/timer_manager.h>
 #include <thread>
 
 #ifndef _WIN32
@@ -205,9 +206,18 @@ unique_ptr<grpc::ClientReader<niScope::ReadContinuouslyResult>> NIScope::ReadCon
 	niScope::StreamLatencyClient client;
 	niScope::StreamLatencyServer server;
     uint32_t slot;
+    bool first = true;
 	while (reader->Read(&client))
 	{
         slot = client.message();
+        if (first)
+        {
+            first = false;
+            cpu_set_t cpuSet;
+            CPU_ZERO(&cpuSet);
+            CPU_SET(slot, &cpuSet);
+            sched_setaffinity(0, sizeof(cpu_set_t), &cpuSet);
+        }
         //cout << "Reader read at slot: " << slot << endl;
         if (_writers[slot] != nullptr)
         {
@@ -432,7 +442,8 @@ std::shared_ptr<grpc::Channel> _inProcServer;
 //---------------------------------------------------------------------
 void RunServer(int argc, char **argv, const char* saddress)
 {
-    // grpc_init();
+    grpc_init();
+    grpc_timer_manager_set_threading(false);
     // ::grpc_core::Executor::SetThreadingDefault(false);
     // ::grpc_core::Executor::SetThreadingAll(false);
 
@@ -538,25 +549,13 @@ int main(int argc, char **argv)
     schedParam.sched_priority = 95;
     sched_setscheduler(0, SCHED_FIFO, &schedParam);
 
-    cpu_set_t cpuSet;
-    CPU_ZERO(&cpuSet);
-    CPU_SET(1, &cpuSet);
-    sched_setaffinity(0, sizeof(cpu_set_t), &cpuSet);
+    // cpu_set_t cpuSet;
+    // CPU_ZERO(&cpuSet);
+    // CPU_SET(1, &cpuSet);
+    // sched_setaffinity(0, sizeof(cpu_set_t), &cpuSet);
 #endif
 
-	//auto thread1 = new std::thread(RunServer, argc, argv, "unix:///home/chrisc/test.sock");
-	auto thread1 = new std::thread(RunServer, argc, argv, "0.0.0.0:50051");
-	//auto thread2 = new std::thread(RunServer, argc, argv, "0.0.0.0:50052");
-	//auto thread2 = new std::thread(RunServer, argc, argv, "unix:///home/chrisc/test2.sock");
-//	auto thread3 = new std::thread(RunServer, argc, argv, "0.0.0.0:50053");
-	//auto thread4 = new std::thread(RunServer, argc, argv, "0.0.0.0:50054");
-	thread1->join();
-
-	// std::this_thread::sleep_for(std::chrono::milliseconds(500));
-	// auto scope = NIScope(_inProcServer);
-	// PerformLatencyStreamTest2(scope, "inprocess.txt");
-	//thread2->join();
-	//thread3->join();
-	//thread4->join();
+    RunServer(argc, argv, "0.0.0.0:50051");
+    //RunServer(argc, argv, "unix:///home/chrisc/test.sock");
 	return 0;
 }

@@ -579,7 +579,7 @@ void PerformLatencyStreamTest2(NIScope& client, NIScope& client2, int streamCoun
 {    
     int iterations = 100000;
 
-    cout << "Start RPC Stream latency test, iterations=" << iterations << endl;
+    cout << "Start RPC Stream latency test, streams:" << streamCount << ", iterations=" << iterations << endl;
 
     timeVector times;
     times.reserve(iterations);
@@ -598,6 +598,18 @@ void PerformLatencyStreamTest2(NIScope& client, NIScope& client2, int streamCoun
         std::this_thread::sleep_for(std::chrono::milliseconds(1000));
     }
 
+    std::this_thread::sleep_for(std::chrono::milliseconds(1500));
+    for (int x=0; x<iterations; ++x)
+    {
+        for (int i=0; i<10; ++i)
+        {
+            streamInfos[i].wstream->Write(streamInfos[i].clientData);
+        }
+        for (int i=0; i<streamCount; ++i)
+        {
+            streamInfos[i].rstream->Read(&serverData);
+        }
+    }
     std::this_thread::sleep_for(std::chrono::milliseconds(1500));
 
     for (int x=0; x<iterations; ++x)
@@ -805,18 +817,18 @@ int main(int argc, char **argv)
 {
     grpc_init();
     grpc_timer_manager_set_threading(false);
-    // ::grpc_core::Executor::SetThreadingDefault(false);
-    // ::grpc_core::Executor::SetThreadingAll(false);
+    ::grpc_core::Executor::SetThreadingDefault(false);
+    ::grpc_core::Executor::SetThreadingAll(false);
 
 #ifndef _WIN32    
     sched_param schedParam;
     schedParam.sched_priority = 95;
     sched_setscheduler(0, SCHED_FIFO, &schedParam);
 
-    // cpu_set_t cpuSet;
-    // CPU_ZERO(&cpuSet);
-    // CPU_SET(1, &cpuSet);
-    // sched_setaffinity(0, sizeof(cpu_set_t), &cpuSet);
+    cpu_set_t cpuSet;
+    CPU_ZERO(&cpuSet);
+    CPU_SET(1, &cpuSet);
+    sched_setaffinity(0, sizeof(cpu_set_t), &cpuSet);
 #endif
 
     auto target_str = GetServerAddress(argc, argv);
@@ -828,7 +840,7 @@ int main(int argc, char **argv)
     //client2 = new NIScope(grpc::CreateChannel("unix:///home/chrisc/test2.sock", creds));
     //client2 = new NIScope(grpc::CreateChannel(target_str + port, creds));
     client1 = new NIScope(grpc::CreateChannel(target_str + port, creds));
-    client2 = new NIScope(grpc::CreateChannel(target_str + port, creds));
+    //client2 = new NIScope(grpc::CreateChannel(target_str + port, creds));
 
     ViSession session;
     auto result = client1->Init(42);
@@ -869,11 +881,11 @@ int main(int argc, char **argv)
     // PerformLatencyPayloadWriteStreamTest(*client1, 32768, "payloadstreamlatency32768.txt");
 
 
-    PerformLatencyStreamTest2(*client1, *client2, 1, "streamlatency1Stream.txt");
-    PerformLatencyStreamTest2(*client1, *client2, 2, "streamlatency1Stream.txt");
-    PerformLatencyStreamTest2(*client1, *client2, 3, "streamlatency1Stream.txt");
-    PerformLatencyStreamTest2(*client1, *client2, 4, "streamlatency4Stream.txt");
-    PerformLatencyStreamTest2(*client1, *client2, 5, "streamlatency4Stream.txt");
+    PerformLatencyStreamTest2(*client1, *client1, 1, "streamlatency1Stream.txt");
+    PerformLatencyStreamTest2(*client1, *client1, 2, "streamlatency1Stream.txt");
+    PerformLatencyStreamTest2(*client1, *client1, 3, "streamlatency1Stream.txt");
+    PerformLatencyStreamTest2(*client1, *client1, 4, "streamlatency4Stream.txt");
+    PerformLatencyStreamTest2(*client1, *client1, 5, "streamlatency4Stream.txt");
     // PerformMessagePerformanceTest(*client1);
     // cout << "Start streaming tests" << endl;
 
