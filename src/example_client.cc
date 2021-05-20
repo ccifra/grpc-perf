@@ -814,6 +814,63 @@ void PerformStreamingTest(NIScope& client, int numSamples)
 
 //---------------------------------------------------------------------
 //---------------------------------------------------------------------
+void PerformTwoStreamTest(NIScope& client, NIScope& client2, int numSamples)
+{
+    auto start = chrono::steady_clock::now();
+
+    auto thread1 = new thread(ReadSamples, &client, numSamples);
+    auto thread2 = new thread(ReadSamples, &client2, numSamples);
+
+    thread1->join();
+    thread2->join();
+
+    auto end = chrono::steady_clock::now();
+    ReportMBPerSecond(start, end, numSamples * 2);
+}
+
+//---------------------------------------------------------------------
+//---------------------------------------------------------------------
+void PerformFourStreamTest(NIScope& client, NIScope& client2, NIScope& client3, NIScope& client4, int numSamples)
+{
+    auto start = chrono::steady_clock::now();
+
+    auto thread1 = new thread(ReadSamples, &client, numSamples);
+    auto thread2 = new thread(ReadSamples, &client2, numSamples);
+    auto thread3 = new thread(ReadSamples, &client3, numSamples);
+    auto thread4 = new thread(ReadSamples, &client4, numSamples);
+
+    thread1->join();
+    thread2->join();
+    thread3->join();
+    thread4->join();
+
+    auto end = chrono::steady_clock::now();
+    ReportMBPerSecond(start, end, numSamples * 4);
+}
+
+//---------------------------------------------------------------------
+//---------------------------------------------------------------------
+void PerformNStreamTest(std::vector<NIScope*>& clients, int numSamples)
+{
+    auto start = chrono::steady_clock::now();
+
+    std::vector<thread*> threads;
+    threads.reserve(clients.size());
+    for (auto client: clients)
+    {
+        auto t = new thread(ReadSamples, client, numSamples);
+        threads.emplace_back(t);
+    }
+    for (auto thread: threads)
+    {
+        thread->join();
+    }
+    auto end = chrono::steady_clock::now();
+    ReportMBPerSecond(start, end, numSamples * clients.size());
+}
+
+//---------------------------------------------------------------------
+//---------------------------------------------------------------------
 int main(int argc, char **argv)
 {
     grpc_init();
@@ -835,8 +892,7 @@ int main(int argc, char **argv)
     auto target_str = GetServerAddress(argc, argv);
     auto creds = CreateCredentials(argc, argv);
 
-    auto port = ":50051";
-    
+    auto port = ":50051";   
     //client1 = new NIScope(grpc::CreateChannel("unix:///home/chrisc/test.sock", creds));
     //client2 = new NIScope(grpc::CreateChannel("unix:///home/chrisc/test2.sock", creds));
     //client2 = new NIScope(grpc::CreateChannel(target_str + port, creds));
@@ -856,7 +912,7 @@ int main(int argc, char **argv)
 
 
     // EnableTracing();
-    //PerformLatencyStreamTest(*client1, "streamlatency1.txt");
+    PerformLatencyStreamTest(*client1, "streamlatency1.txt");
     // PerformLatencyStreamTest(*client1, "streamlatency2.txt");
     // PerformLatencyStreamTest(*client1, "streamlatency3.txt");
     // PerformLatencyStreamTest(*client1, "streamlatency4.txt");
@@ -888,6 +944,48 @@ int main(int argc, char **argv)
     // PerformLatencyPayloadWriteStreamTest(*client1, 32768, "payloadstreamlatency32768.txt");
 
 
+    PerformMessagePerformanceTest(*client1);
+    cout << "Start streaming tests" << endl;
+
+    PerformStreamingTest(*client1, 10);
+    PerformStreamingTest(*client1, 100);
+    PerformStreamingTest(*client1, 1000);
+    PerformStreamingTest(*client1, 10000);
+    PerformStreamingTest(*client1, 100000);
+    PerformStreamingTest(*client1, 200000);
+
+    client2 = new NIScope(grpc::CreateChannel(target_str + ":50052", creds));
+    result = client2->Init(42);
+
+    cout << endl << "Start 2 stream streaming tests" << endl;
+    PerformTwoStreamTest(*client1, *client2, 1000);
+    PerformTwoStreamTest(*client1, *client2, 10000);
+    PerformTwoStreamTest(*client1, *client2, 100000);
+    PerformTwoStreamTest(*client1, *client2, 200000);
+
+
+    client3 = new NIScope(grpc::CreateChannel(target_str + ":50053", creds));
+    client4 = new NIScope(grpc::CreateChannel(target_str + ":50054", creds));
+    result = client3->Init(32);
+    result = client4->Init(42);
+
+    cout << endl << "Start 4 stream streaming tests" << endl;
+    // PerformFourStreamTest(*client1, *client2, *client3, *client4, 1000);
+    // PerformFourStreamTest(*client1, *client2, *client3, *client4, 10000);
+    // PerformFourStreamTest(*client1, *client2, *client3, *client4, 100000);
+    // PerformFourStreamTest(*client1, *client2, *client3, *client4, 200000);
+    
+    std::vector<NIScope*> clients;
+    for (int x=0; x<20; ++x)
+    {
+        auto port = 50051 + x;        
+        auto client = new NIScope(grpc::CreateChannel(target_str + string(":") + to_string(port), creds));
+        clients.push_back(client);
+    }
+    cout << endl << "Start 20 stream streaming tests" << endl;
+    PerformNStreamTest(clients, 1000);
+    PerformNStreamTest(clients, 10000);
+    PerformNStreamTest(clients, 100000);
     PerformLatencyStreamTest2(*client1, *client1, 1, "streamlatency1Stream.txt");
     PerformLatencyStreamTest2(*client1, *client1, 2, "streamlatency1Stream.txt");
     PerformLatencyStreamTest2(*client1, *client1, 3, "streamlatency1Stream.txt");
