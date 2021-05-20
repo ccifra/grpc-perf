@@ -273,6 +273,7 @@ void PerformMessagePerformanceTest(NIScope& client)
 {
     cout << "Start Messages per second test" << endl;
 
+    //auto s = chrono::high_resolution_clock::now();
     auto start = chrono::steady_clock::now();
     for (int x=0; x<50000; ++x)
     {
@@ -839,8 +840,14 @@ int main(int argc, char **argv)
     //client1 = new NIScope(grpc::CreateChannel("unix:///home/chrisc/test.sock", creds));
     //client2 = new NIScope(grpc::CreateChannel("unix:///home/chrisc/test2.sock", creds));
     //client2 = new NIScope(grpc::CreateChannel(target_str + port, creds));
-    client1 = new NIScope(grpc::CreateChannel(target_str + port, creds));
-    //client2 = new NIScope(grpc::CreateChannel(target_str + port, creds));
+
+    ::grpc::ChannelArguments args;
+    // Set a dummy (but distinct) channel arg on each channel so that
+    // every channel gets its own connection
+    args.SetInt("test_key", 1);
+    args.SetInt(GRPC_ARG_MINIMAL_STACK, 1);
+    client1 = new NIScope(grpc::CreateCustomChannel(target_str + port, creds, args));
+    client2 = new NIScope(grpc::CreateCustomChannel(target_str + port, creds, args));
 
     ViSession session;
     auto result = client1->Init(42);
