@@ -7,6 +7,7 @@
 #include <niscope_server.h>
 #include <niScope.grpc.pb.h>
 #include <src/core/lib/iomgr/executor.h>
+#include <src/core/lib/iomgr/timer_manager.h>
 #include <thread>
 
 #ifndef _WIN32
@@ -205,9 +206,18 @@ unique_ptr<grpc::ClientReader<niScope::ReadContinuouslyResult>> NIScope::ReadCon
 	niScope::StreamLatencyClient client;
 	niScope::StreamLatencyServer server;
     uint32_t slot;
+    bool first = true;
 	while (reader->Read(&client))
 	{
         slot = client.message();
+        if (first)
+        {
+            first = false;
+            cpu_set_t cpuSet;
+            CPU_ZERO(&cpuSet);
+            CPU_SET(slot, &cpuSet);
+            sched_setaffinity(0, sizeof(cpu_set_t), &cpuSet);
+        }
         //cout << "Reader read at slot: " << slot << endl;
         if (_writers[slot] != nullptr)
         {
@@ -432,7 +442,8 @@ std::shared_ptr<grpc::Channel> _inProcServer;
 //---------------------------------------------------------------------
 void RunServer(int argc, char **argv, const char* saddress)
 {
-    // grpc_init();
+    grpc_init();
+    grpc_timer_manager_set_threading(false);
     // ::grpc_core::Executor::SetThreadingDefault(false);
     // ::grpc_core::Executor::SetThreadingAll(false);
 

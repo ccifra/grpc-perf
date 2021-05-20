@@ -563,83 +563,84 @@ void PerformLatencyPayloadWriteStreamTest(NIScope& client, int numSamples, std::
     std::this_thread::sleep_for(std::chrono::milliseconds(1000));
 }
 
+struct StreamInfo
+{
+    ClientContext context;
+    niScope::StreamLatencyClient clientData;
+    std::unique_ptr< ::grpc::ClientReader< ::niScope::StreamLatencyServer>> rstream;
+
+    ClientContext wcontext;
+    std::unique_ptr< ::grpc::ClientWriter< ::niScope::StreamLatencyClient>> wstream;
+};
+
 //---------------------------------------------------------------------
 //---------------------------------------------------------------------
-void PerformLatencyStreamTest2(NIScope& client, NIScope& client2, std::string fileName)
+void PerformLatencyStreamTest2(NIScope& client, NIScope& client2, int streamCount, std::string fileName)
 {    
     int iterations = 100000;
 
-    cout << "Start RPC Stream latency test, iterations=" << iterations << endl;
+    cout << "Start RPC Stream latency test, streams:" << streamCount << ", iterations=" << iterations << endl;
 
     timeVector times;
     times.reserve(iterations);
 
-	niScope::StreamLatencyClient clientData1;
-    clientData1.set_message(0);
-	niScope::StreamLatencyClient clientData2;
-    clientData2.set_message(1);
-	niScope::StreamLatencyClient clientData3;
-    clientData3.set_message(2);
-	niScope::StreamLatencyClient clientData4;
-    clientData4.set_message(3);
-
+    StreamInfo* streamInfos = new StreamInfo[streamCount];
 	niScope::StreamLatencyServer serverData;
 	niScope::StreamLatencyServer serverResponseData;
 
-    std::this_thread::sleep_for(std::chrono::milliseconds(1000));
+    for (int x=0; x<streamCount; ++x)
+    {
+        streamInfos[x].clientData.set_message(x);       
+        streamInfos[x].rstream = client.m_Stub->StreamLatencyTestServer(&streamInfos[x].context, streamInfos[x].clientData);
+        std::this_thread::sleep_for(std::chrono::milliseconds(1000));
 
-    ClientContext context;
-    auto rstream = client.m_Stub->StreamLatencyTestServer(&context, clientData1);
-    std::this_thread::sleep_for(std::chrono::milliseconds(1000));
-    ClientContext context2;
-    auto rstream2 = client.m_Stub->StreamLatencyTestServer(&context2, clientData2);
-    std::this_thread::sleep_for(std::chrono::milliseconds(1000));
-    ClientContext context3;
-    auto rstream3 = client.m_Stub->StreamLatencyTestServer(&context3, clientData3);
-    std::this_thread::sleep_for(std::chrono::milliseconds(1000));
-    ClientContext context4;
-    auto rstream4 = client.m_Stub->StreamLatencyTestServer(&context4, clientData4);
+        streamInfos[x].wstream = client2.m_Stub->StreamLatencyTestClient(&streamInfos[x].wcontext, &serverResponseData);
+        std::this_thread::sleep_for(std::chrono::milliseconds(1000));
+    }
 
     std::this_thread::sleep_for(std::chrono::milliseconds(1500));
-
-    ClientContext context5;
-    auto wstream = client2.m_Stub->StreamLatencyTestClient(&context5, &serverResponseData);
-    ClientContext context6;
-    auto wstream2 = client2.m_Stub->StreamLatencyTestClient(&context6, &serverResponseData);
-    ClientContext context7;
-    auto wstream3 = client2.m_Stub->StreamLatencyTestClient(&context7, &serverResponseData);
-    ClientContext context8;
-    auto wstream4 = client2.m_Stub->StreamLatencyTestClient(&context8, &serverResponseData);
-
+    for (int x=0; x<10; ++x)
+    {
+        for (int i=0; i<streamCount; ++i)
+        {
+            streamInfos[i].wstream->Write(streamInfos[i].clientData);
+        }
+        for (int i=0; i<streamCount; ++i)
+        {
+            streamInfos[i].rstream->Read(&serverData);
+        }
+    }
     std::this_thread::sleep_for(std::chrono::milliseconds(1500));
 
     for (int x=0; x<iterations; ++x)
     {
         auto start = chrono::steady_clock::now();
-        wstream->Write(clientData1);
-        wstream2->Write(clientData2);
-        wstream3->Write(clientData3);
-        wstream4->Write(clientData4);
-        rstream->Read(&serverData);
-        rstream2->Read(&serverData);
-        rstream3->Read(&serverData);
-        rstream4->Read(&serverData);
+        for (int i=0; i<streamCount; ++i)
+        {
+            streamInfos[i].wstream->Write(streamInfos[i].clientData);
+        }
+        for (int i=0; i<streamCount; ++i)
+        {
+            streamInfos[i].rstream->Read(&serverData);
+        }
         auto end = chrono::steady_clock::now();
         auto elapsed = chrono::duration_cast<chrono::microseconds>(end - start);
         times.emplace_back(elapsed);
     }
 
-    wstream->WritesDone();
-    wstream2->WritesDone();
-    wstream3->WritesDone();
-    wstream4->WritesDone();
+    for (int x=0; x<streamCount; ++x)
+    {
+        streamInfos[x].wstream->WritesDone();
+    }
+
+    delete [] streamInfos;
 
     {
-    std::ofstream fout;
-    fout.open("xaxis");
-    for (int x=0; x<iterations; ++x)
-        fout << (x+1) << std::endl;
-    fout.close();
+        std::ofstream fout;
+        fout.open("xaxis");
+        for (int x=0; x<iterations; ++x)
+            fout << (x+1) << std::endl;
+        fout.close();
     }
 
     std::ofstream fout;
@@ -873,18 +874,18 @@ int main(int argc, char **argv)
 {
     grpc_init();
     grpc_timer_manager_set_threading(false);
-    // ::grpc_core::Executor::SetThreadingDefault(false);
-    // ::grpc_core::Executor::SetThreadingAll(false);
+    ::grpc_core::Executor::SetThreadingDefault(false);
+    ::grpc_core::Executor::SetThreadingAll(false);
 
 #ifndef _WIN32    
     sched_param schedParam;
     schedParam.sched_priority = 95;
     sched_setscheduler(0, SCHED_FIFO, &schedParam);
 
-    // cpu_set_t cpuSet;
-    // CPU_ZERO(&cpuSet);
-    // CPU_SET(1, &cpuSet);
-    // sched_setaffinity(0, sizeof(cpu_set_t), &cpuSet);
+    cpu_set_t cpuSet;
+    CPU_ZERO(&cpuSet);
+    CPU_SET(1, &cpuSet);
+    sched_setaffinity(0, sizeof(cpu_set_t), &cpuSet);
 #endif
 
     auto target_str = GetServerAddress(argc, argv);
@@ -938,7 +939,6 @@ int main(int argc, char **argv)
     // PerformLatencyPayloadWriteStreamTest(*client1, 32768, "payloadstreamlatency32768.txt");
 
 
-    PerformLatencyStreamTest2(*client1, *client2, "streamlatency2Channel.txt");
     PerformMessagePerformanceTest(*client1);
     cout << "Start streaming tests" << endl;
 
@@ -981,6 +981,20 @@ int main(int argc, char **argv)
     PerformNStreamTest(clients, 1000);
     PerformNStreamTest(clients, 10000);
     PerformNStreamTest(clients, 100000);
+    PerformLatencyStreamTest2(*client1, *client1, 1, "streamlatency1Stream.txt");
+    PerformLatencyStreamTest2(*client1, *client1, 2, "streamlatency1Stream.txt");
+    PerformLatencyStreamTest2(*client1, *client1, 3, "streamlatency1Stream.txt");
+    PerformLatencyStreamTest2(*client1, *client1, 4, "streamlatency4Stream.txt");
+    PerformLatencyStreamTest2(*client1, *client1, 5, "streamlatency4Stream.txt");
+    // PerformMessagePerformanceTest(*client1);
+    // cout << "Start streaming tests" << endl;
+
+    // PerformStreamingTest(*client1, 10);
+    // PerformStreamingTest(*client1, 100);
+    // PerformStreamingTest(*client1, 1000);
+    // PerformStreamingTest(*client1, 10000);
+    // PerformStreamingTest(*client1, 100000);
+    // PerformStreamingTest(*client1, 200000);
 
     // PerformReadTest(*client1, 100);
     // PerformReadTest(*client1, 1000);
