@@ -538,25 +538,34 @@ int main(int argc, char **argv)
     schedParam.sched_priority = 95;
     sched_setscheduler(0, SCHED_FIFO, &schedParam);
 
-    cpu_set_t cpuSet;
-    CPU_ZERO(&cpuSet);
-    CPU_SET(1, &cpuSet);
-    sched_setaffinity(0, sizeof(cpu_set_t), &cpuSet);
+    // cpu_set_t cpuSet;
+    // CPU_ZERO(&cpuSet);
+    // CPU_SET(1, &cpuSet);
+    // sched_setaffinity(0, sizeof(cpu_set_t), &cpuSet);
 #endif
 
 	//auto thread1 = new std::thread(RunServer, argc, argv, "unix:///home/chrisc/test.sock");
-	auto thread1 = new std::thread(RunServer, argc, argv, "0.0.0.0:50051");
-	//auto thread2 = new std::thread(RunServer, argc, argv, "0.0.0.0:50052");
 	//auto thread2 = new std::thread(RunServer, argc, argv, "unix:///home/chrisc/test2.sock");
-//	auto thread3 = new std::thread(RunServer, argc, argv, "0.0.0.0:50053");
-	//auto thread4 = new std::thread(RunServer, argc, argv, "0.0.0.0:50054");
-	thread1->join();
-
+    std::vector<thread*> threads;
+    std::vector<string> ports;
+    for (int x=0; x<20; ++x)
+    {
+        auto port = 50051 + x;
+        auto portStr = string("0.0.0.0:") + to_string(port);
+        ports.push_back(portStr);
+    } 
+    for (auto port: ports)
+    {
+        auto p = new string(port.c_str());
+    	auto t = new std::thread(RunServer, argc, argv, p->c_str());
+        threads.push_back(t);
+    }
 	// std::this_thread::sleep_for(std::chrono::milliseconds(500));
 	// auto scope = NIScope(_inProcServer);
 	// PerformLatencyStreamTest2(scope, "inprocess.txt");
-	//thread2->join();
-	//thread3->join();
-	//thread4->join();
+    for (auto t: threads)
+    {
+        t->join();
+    }
 	return 0;
 }
