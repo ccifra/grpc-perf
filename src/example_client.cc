@@ -25,6 +25,10 @@ using namespace niScope;
 
 //---------------------------------------------------------------------
 //---------------------------------------------------------------------
+using timeVector = vector<chrono::microseconds>;
+
+//---------------------------------------------------------------------
+//---------------------------------------------------------------------
 class NIScope
 {
 public:
@@ -38,6 +42,17 @@ public:
     unique_ptr<grpc::ClientReader<niScope::ReadContinuouslyResult>> ReadContinuously(grpc::ClientContext* context, ViSession session, string channels, double timeout, int numSamples);
 public:
     unique_ptr<niScopeService::Stub> m_Stub;
+};
+
+//---------------------------------------------------------------------
+//---------------------------------------------------------------------
+class NIMonikerClient
+{
+public:
+    NIMonikerClient(shared_ptr<Channel> channel);
+public:
+    unique_ptr<MonikerService::Stub> m_Stub;
+
 };
 
 //---------------------------------------------------------------------
@@ -149,6 +164,63 @@ unique_ptr<grpc::ClientReader<niScope::ReadContinuouslyResult>> NIScope::ReadCon
 
 //---------------------------------------------------------------------
 //---------------------------------------------------------------------
+NIMonikerClient::NIMonikerClient(shared_ptr<Channel> channel)
+    : m_Stub(MonikerService::NewStub(channel))
+{
+}
+
+//---------------------------------------------------------------------
+//---------------------------------------------------------------------
+void EnableTracing()
+{
+    // std::ofstream fout;
+    // fout.open("/sys/kernel/debug/tracing/events/enable");
+    // fout << "1";
+    // fout.close();
+}
+
+//---------------------------------------------------------------------
+//---------------------------------------------------------------------
+void DisableTracing()
+{
+    // std::ofstream fout;
+    // fout.open("/sys/kernel/debug/tracing/events/enable");
+    // fout << "0";
+    // fout.close();
+}
+
+//---------------------------------------------------------------------
+//---------------------------------------------------------------------
+void TracingOff()
+{
+    // std::ofstream fout;
+    // fout.open("/sys/kernel/debug/tracing/tracing_on");
+    // fout << "0";
+    // fout.close();
+}
+
+//---------------------------------------------------------------------
+//---------------------------------------------------------------------
+void TracingOn()
+{
+    // std::ofstream fout;
+    // fout.open("/sys/kernel/debug/tracing/tracing_on");
+    // fout << "1";
+    // fout.close();
+}
+
+//---------------------------------------------------------------------
+//---------------------------------------------------------------------
+void TraceMarker(const char* marker)
+{
+    // std::ofstream fout;
+    // fout.open("/sys/kernel/debug/tracing/trace_marker");
+    // fout << marker;
+    // fout.close();
+}
+
+//---------------------------------------------------------------------
+//---------------------------------------------------------------------
 string GetServerAddress(int argc, char** argv)
 {
     string target_str;
@@ -253,124 +325,9 @@ shared_ptr<grpc::ChannelCredentials> CreateCredentials(int argc, char **argv)
 
 //---------------------------------------------------------------------
 //---------------------------------------------------------------------
-static void ReadSamples(NIScope* client, int numSamples)
-{    
-    ViSession session;
-    int index = 0;
-    grpc::ClientContext context;
-    auto readResult = client->ReadContinuously(&context, session, (char*)"0", 5.0, numSamples);
-    ReadContinuouslyResult cresult;
-    while(readResult->Read(&cresult))
-    {
-        cresult.wfm().size();
-        index += 1;
-    }
-}
-
-//---------------------------------------------------------------------
-//---------------------------------------------------------------------
-void PerformMessagePerformanceTest(NIScope& client)
+void WriteLatencyData(timeVector times, const string& fileName)
 {
-    cout << "Start Messages per second test" << endl;
-
-    //auto s = chrono::high_resolution_clock::now();
-    auto start = chrono::steady_clock::now();
-    for (int x=0; x<50000; ++x)
-    {
-        client.Init(42);
-    }
-    auto end = chrono::steady_clock::now();
-    auto elapsed = chrono::duration_cast<chrono::microseconds>(end - start);
-    double msgsPerSecond = (50000.0 * 1000.0 * 1000.0) / (double)elapsed.count();
-
-    cout << "Result: " << msgsPerSecond << " messages/s" << endl << endl;
-}
-
-void EnableTracing()
-{
-    // std::ofstream fout;
-    // fout.open("/sys/kernel/debug/tracing/events/enable");
-    // fout << "1";
-    // fout.close();
-}
-
-void DisableTracing()
-{
-    // std::ofstream fout;
-    // fout.open("/sys/kernel/debug/tracing/events/enable");
-    // fout << "0";
-    // fout.close();
-}
-
-void TracingOff()
-{
-    // std::ofstream fout;
-    // fout.open("/sys/kernel/debug/tracing/tracing_on");
-    // fout << "0";
-    // fout.close();
-}
-
-void TracingOn()
-{
-    // std::ofstream fout;
-    // fout.open("/sys/kernel/debug/tracing/tracing_on");
-    // fout << "1";
-    // fout.close();
-}
-
-void TraceMarker(const char* marker)
-{
-    // std::ofstream fout;
-    // fout.open("/sys/kernel/debug/tracing/trace_marker");
-    // fout << marker;
-    // fout.close();
-}
-
-using timeVector = vector<chrono::microseconds>;
-
-
-//---------------------------------------------------------------------
-//---------------------------------------------------------------------
-void PerformLatencyStreamTest(NIScope& client, std::string fileName)
-{    
-    int iterations = 100000;
-
-    cout << "Start RPC Stream latency test, iterations=" << iterations << endl;
-    std::this_thread::sleep_for(std::chrono::milliseconds(1000));
-
-    timeVector times;
-    times.reserve(iterations);
-
-	niScope::StreamLatencyClient clientData;
-	niScope::StreamLatencyServer serverData;
-
-    ClientContext context;
-    auto stream = client.m_Stub->StreamLatencyTest(&context);
-    for (int x=0; x<10; ++x)
-    {
-        stream->Write(clientData);
-        stream->Read(&serverData);
-    }
-
-    EnableTracing();
-    for (int x=0; x<iterations; ++x)
-    {
-        TraceMarker("Start iteration");
-        auto start = chrono::steady_clock::now();
-        stream->Write(clientData);
-        stream->Read(&serverData);
-        auto end = chrono::steady_clock::now();
-        auto elapsed = chrono::duration_cast<chrono::microseconds>(end - start);
-        times.emplace_back(elapsed);
-        if (elapsed.count() > 200)
-        {
-            TraceMarker("High Latency");
-            DisableTracing();
-            cout << "HIGH Latency: " << x << "iterations" << endl;
-            break;
-        }
-    }
-    std::this_thread::sleep_for(std::chrono::milliseconds(1000));
+    auto iterations = times.size();
 
     {
         std::ofstream fout;
@@ -408,6 +365,172 @@ void PerformLatencyStreamTest(NIScope& client, std::string fileName)
     cout << "Median: " << median.count() << endl;
     cout << "Average: " << average << endl;
     cout << endl;
+}
+
+//---------------------------------------------------------------------
+//---------------------------------------------------------------------
+static void ReadSamples(NIScope* client, int numSamples)
+{    
+    ViSession session;
+    int index = 0;
+    grpc::ClientContext context;
+    auto readResult = client->ReadContinuously(&context, session, (char*)"0", 5.0, numSamples);
+    ReadContinuouslyResult cresult;
+    while(readResult->Read(&cresult))
+    {
+        cresult.wfm().size();
+        index += 1;
+    }
+}
+
+//---------------------------------------------------------------------
+//---------------------------------------------------------------------
+void PerformMessagePerformanceTest(NIScope& client)
+{
+    cout << "Start Messages per second test" << endl;
+
+    //auto s = chrono::high_resolution_clock::now();
+    auto start = chrono::steady_clock::now();
+    for (int x=0; x<50000; ++x)
+    {
+        client.Init(42);
+    }
+    auto end = chrono::steady_clock::now();
+    auto elapsed = chrono::duration_cast<chrono::microseconds>(end - start);
+    double msgsPerSecond = (50000.0 * 1000.0 * 1000.0) / (double)elapsed.count();
+
+    cout << "Result: " << msgsPerSecond << " messages/s" << endl << endl;
+}
+
+//---------------------------------------------------------------------
+//---------------------------------------------------------------------
+void PerformLatencyStreamTest(NIScope& client, std::string fileName)
+{    
+    int iterations = 100000;
+
+    cout << "Start RPC Stream latency test, iterations=" << iterations << endl;
+    std::this_thread::sleep_for(std::chrono::milliseconds(1000));
+
+    timeVector times;
+    times.reserve(iterations);
+
+	niScope::StreamLatencyClient clientData;
+	niScope::StreamLatencyServer serverData;
+
+    ClientContext context;
+    auto stream = client.m_Stub->StreamLatencyTest(&context);
+    for (int x=0; x<10; ++x)
+    {
+        stream->Write(clientData);
+        stream->Read(&serverData);
+    }
+
+    EnableTracing();
+    for (int x=0; x<iterations; ++x)
+    {
+        TraceMarker("Start iteration");
+        auto start = chrono::steady_clock::now();
+        stream->Write(clientData);
+        stream->Read(&serverData);
+        auto end = chrono::steady_clock::now();
+        auto elapsed = chrono::duration_cast<chrono::microseconds>(end - start);
+        times.emplace_back(elapsed);
+        // if (elapsed.count() > 200)
+        // {
+        //     TraceMarker("High Latency");
+        //     DisableTracing();
+        //     cout << "HIGH Latency: " << x << "iterations" << endl;
+        //     break;
+        // }
+    }
+    std::this_thread::sleep_for(std::chrono::milliseconds(1000));
+    WriteLatencyData(times, fileName);
+    std::this_thread::sleep_for(std::chrono::milliseconds(1000));
+}
+
+//---------------------------------------------------------------------
+//---------------------------------------------------------------------
+void PerformMonikerLatencyReadWriteTest(NIMonikerClient& client, int numItems, std::string fileName)
+{    
+    int iterations = 100000;
+
+    cout << "Start Moniker Read Write latency test, items: " << numItems << " iterations:" << iterations << endl;
+    std::this_thread::sleep_for(std::chrono::milliseconds(1000));
+
+    timeVector times;
+    times.reserve(iterations);
+
+	niScope::StreamLatencyClient clientData;
+	niScope::StreamLatencyServer serverData;
+
+    ClientContext context;
+    niScope::MonikerList monikerList;
+
+    for (int x=0; x<numItems; ++x)
+    {
+        auto readMoniker = monikerList.add_readmonikers();
+        readMoniker->set_datainstance("1");
+        auto writeMoniker = monikerList.add_writemonikers();
+        writeMoniker->set_datainstance("1");
+    }
+    niScope::MonikerStreamId monikerId;
+    auto streamId = client.m_Stub->InitiateMonikerStream(&context, monikerList, &monikerId);
+    
+    ClientContext streamContext;
+    MonikerWriteRequest writeRequest;
+    writeRequest.set_monikerstreamid(monikerId.streamid());
+    auto stream = client.m_Stub->StreamReadWrite(&streamContext);
+
+    for (int x=0; x<10; ++x)
+    {
+        MonikerWriteRequest writeRequest;
+        writeRequest.set_monikerstreamid(monikerId.streamid());
+        for (int i=0; i<numItems; ++i)
+        {
+            niScope::StreamLatencyClient writeValue;
+            writeValue.set_message(42 + i);
+            auto v = writeRequest.add_values();
+            v->PackFrom(writeValue);
+        }
+        stream->Write(writeRequest);
+
+        MonikerReadResult readResult;
+        stream->Read(&readResult);
+        for (int i=0; i<numItems; ++i)
+        {
+            StreamLatencyServer readValue;
+            readResult.values()[i].UnpackTo(&readValue);
+        }
+    }
+    std::this_thread::sleep_for(std::chrono::milliseconds(1000));
+
+    for (int x=0; x<iterations; ++x)
+    {
+        auto start = chrono::steady_clock::now();
+        MonikerWriteRequest writeRequest;
+        writeRequest.set_monikerstreamid(monikerId.streamid());
+        for (int i=0; i<numItems; ++i)
+        {
+            niScope::StreamLatencyClient writeValue;
+            writeValue.set_message(42 + i);
+            auto v = writeRequest.add_values();
+            v->PackFrom(writeValue);
+        }
+        stream->Write(writeRequest);
+
+        MonikerReadResult readResult;
+        stream->Read(&readResult);
+        for (int i=0; i<numItems; ++i)
+        {
+            StreamLatencyServer readValue;
+            readResult.values()[i].UnpackTo(&readValue);
+        }
+        auto end = chrono::steady_clock::now();
+        auto elapsed = chrono::duration_cast<chrono::microseconds>(end - start);
+        times.emplace_back(elapsed);
+    }
+    std::this_thread::sleep_for(std::chrono::milliseconds(1000));
+    WriteLatencyData(times, fileName);
     std::this_thread::sleep_for(std::chrono::milliseconds(1000));
 }
 
@@ -446,43 +569,7 @@ void PerformLatencyPayloadWriteTest(NIScope& client, int numSamples, std::string
         times.emplace_back(elapsed);
     }
     std::this_thread::sleep_for(std::chrono::milliseconds(1000));
-
-    {
-        std::ofstream fout;
-        fout.open("xaxis");
-        for (int x=0; x<iterations; ++x)
-        {
-            fout << (x+1) << std::endl;
-        }
-        fout.close();
-    }
-
-    {
-        std::ofstream fout;
-        fout.open(fileName);
-        for (auto i : times)
-        {
-            fout << i.count() << std::endl;
-        }
-        fout.close();
-    }
-
-    std::sort(times.begin(), times.end());
-    auto min = times.front();
-    auto max = times.back();
-    auto median = *(times.begin() + iterations / 2);
-    
-    double average = times.front().count();
-    for (auto i : times)
-        average += (double)i.count();
-    average = average / iterations;
-
-    cout << "End Test" << endl;
-    cout << "Min: " << min.count() << endl;
-    cout << "Max: " << max.count() << endl;
-    cout << "Median: " << median.count() << endl;
-    cout << "Average: " << average << endl;
-    cout << endl;
+    WriteLatencyData(times, fileName);
     std::this_thread::sleep_for(std::chrono::milliseconds(1000));
 }
 
@@ -524,46 +611,12 @@ void PerformLatencyPayloadWriteStreamTest(NIScope& client, int numSamples, std::
         times.emplace_back(elapsed);
     }
     std::this_thread::sleep_for(std::chrono::milliseconds(1000));
-
-    {
-        std::ofstream fout;
-        fout.open("xaxis");
-        for (int x=0; x<iterations; ++x)
-        {
-            fout << (x+1) << std::endl;
-        }
-        fout.close();
-    }
-
-    {
-        std::ofstream fout;
-        fout.open(fileName);
-        for (auto i : times)
-        {
-            fout << i.count() << std::endl;
-        }
-        fout.close();
-    }
-
-    std::sort(times.begin(), times.end());
-    auto min = times.front();
-    auto max = times.back();
-    auto median = *(times.begin() + iterations / 2);
-    
-    double average = times.front().count();
-    for (auto i : times)
-        average += (double)i.count();
-    average = average / iterations;
-
-    cout << "End Test" << endl;
-    cout << "Min: " << min.count() << endl;
-    cout << "Max: " << max.count() << endl;
-    cout << "Median: " << median.count() << endl;
-    cout << "Average: " << average << endl;
-    cout << endl;
+    WriteLatencyData(times, fileName);
     std::this_thread::sleep_for(std::chrono::milliseconds(1000));
 }
 
+//---------------------------------------------------------------------
+//---------------------------------------------------------------------
 struct StreamInfo
 {
     ClientContext context;
@@ -635,37 +688,7 @@ void PerformLatencyStreamTest2(NIScope& client, NIScope& client2, int streamCoun
     }
 
     delete [] streamInfos;
-
-    {
-        std::ofstream fout;
-        fout.open("xaxis");
-        for (int x=0; x<iterations; ++x)
-            fout << (x+1) << std::endl;
-        fout.close();
-    }
-
-    std::ofstream fout;
-    fout.open(fileName);
-    for (auto i : times)
-        fout << i.count() << std::endl;
-    fout.close();
-
-    std::sort(times.begin(), times.end());
-    auto min = times.front();
-    auto max = times.back();
-    auto median = *(times.begin() + iterations / 2);
-    
-    double average = times.front().count();
-    for (auto i : times)
-        average += (double)i.count();
-    average = average / iterations;
-
-    cout << "End Test" << endl;
-    cout << "Min: " << min.count() << endl;
-    cout << "Max: " << max.count() << endl;
-    cout << "Median: " << median.count() << endl;
-    cout << "Average: " << average << endl;
-    cout << endl;
+    WriteLatencyData(times, fileName);
 }
 
 //---------------------------------------------------------------------
@@ -700,37 +723,7 @@ void PerformMessageLatencyTest(NIScope& client, std::string fileName)
         times.emplace_back(elapsed);
     }
     std::this_thread::sleep_for(std::chrono::milliseconds(1000));
-
-    {
-    std::ofstream fout;
-    fout.open("xaxis");
-    for (int x=0; x<iterations; ++x)
-        fout << (x+1) << std::endl;
-    fout.close();
-    }
-
-    std::ofstream fout;
-    fout.open(fileName);
-    for (auto i : times)
-        fout << i.count() << std::endl;
-    fout.close();
-
-    std::sort(times.begin(), times.end());
-    auto min = times.front();
-    auto max = times.back();
-    auto median = *(times.begin() + iterations / 2);
-    
-    double average = times.front().count();
-    for (auto i : times)
-        average += (double)i.count();
-    average = average / iterations;
-
-    cout << "End Test" << endl;
-    cout << "Min: " << min.count() << endl;
-    cout << "Max: " << max.count() << endl;
-    cout << "Median: " << median.count() << endl;
-    cout << "Average: " << average << endl;
-    cout << endl;
+    WriteLatencyData(times, fileName);
 }
 
 //---------------------------------------------------------------------
@@ -903,13 +896,11 @@ int main(int argc, char **argv)
     args.SetInt("test_key", 1);
     args.SetInt(GRPC_ARG_MINIMAL_STACK, 1);
     client1 = new NIScope(grpc::CreateCustomChannel(target_str + port, creds, args));
-    client2 = new NIScope(grpc::CreateCustomChannel(target_str + port, creds, args));
+    //client2 = new NIScope(grpc::CreateCustomChannel(target_str + port, creds, args));
 
     ViSession session;
     auto result = client1->Init(42);
-
     cout << "Init result: " << result << endl;
-
 
     // EnableTracing();
     PerformLatencyStreamTest(*client1, "streamlatency1.txt");
@@ -918,6 +909,13 @@ int main(int argc, char **argv)
     // PerformLatencyStreamTest(*client1, "streamlatency4.txt");
     // PerformLatencyStreamTest(*client1, "streamlatency5.txt");
     // DisableTracing();
+
+    auto monikerClient = new NIMonikerClient(grpc::CreateCustomChannel(target_str + port, creds, args));
+    PerformMonikerLatencyReadWriteTest(*monikerClient, 1, "monikerlatency1.txt");
+    PerformMonikerLatencyReadWriteTest(*monikerClient, 2, "monikerlatency2.txt");
+    PerformMonikerLatencyReadWriteTest(*monikerClient, 3, "monikerlatency3.txt");
+    PerformMonikerLatencyReadWriteTest(*monikerClient, 4, "monikerlatency4.txt");
+    PerformMonikerLatencyReadWriteTest(*monikerClient, 5, "monikerlatency5.txt");
 
     //PerformMessageLatencyTest(*client1, "latency1.txt");
     // PerformMessageLatencyTest(*client1, "latency2.txt");
@@ -943,54 +941,51 @@ int main(int argc, char **argv)
     // PerformLatencyPayloadWriteStreamTest(*client1, 1024, "payloadstreamlatency1024.txt");
     // PerformLatencyPayloadWriteStreamTest(*client1, 32768, "payloadstreamlatency32768.txt");
 
+    // PerformMessagePerformanceTest(*client1);
 
-    PerformMessagePerformanceTest(*client1);
-    cout << "Start streaming tests" << endl;
+    // cout << "Start streaming tests" << endl;
+    // PerformStreamingTest(*client1, 10);
+    // PerformStreamingTest(*client1, 100);
+    // PerformStreamingTest(*client1, 1000);
+    // PerformStreamingTest(*client1, 10000);
+    // PerformStreamingTest(*client1, 100000);
+    // PerformStreamingTest(*client1, 200000);
 
-    PerformStreamingTest(*client1, 10);
-    PerformStreamingTest(*client1, 100);
-    PerformStreamingTest(*client1, 1000);
-    PerformStreamingTest(*client1, 10000);
-    PerformStreamingTest(*client1, 100000);
-    PerformStreamingTest(*client1, 200000);
-
-    client2 = new NIScope(grpc::CreateChannel(target_str + ":50052", creds));
-    result = client2->Init(42);
-
-    cout << endl << "Start 2 stream streaming tests" << endl;
-    PerformTwoStreamTest(*client1, *client2, 1000);
-    PerformTwoStreamTest(*client1, *client2, 10000);
-    PerformTwoStreamTest(*client1, *client2, 100000);
-    PerformTwoStreamTest(*client1, *client2, 200000);
+    // client2 = new NIScope(grpc::CreateChannel(target_str + ":50052", creds));
+    // result = client2->Init(42);
+    // cout << endl << "Start 2 stream streaming tests" << endl;
+    // PerformTwoStreamTest(*client1, *client2, 1000);
+    // PerformTwoStreamTest(*client1, *client2, 10000);
+    // PerformTwoStreamTest(*client1, *client2, 100000);
+    // PerformTwoStreamTest(*client1, *client2, 200000);
 
 
-    client3 = new NIScope(grpc::CreateChannel(target_str + ":50053", creds));
-    client4 = new NIScope(grpc::CreateChannel(target_str + ":50054", creds));
-    result = client3->Init(32);
-    result = client4->Init(42);
-
-    cout << endl << "Start 4 stream streaming tests" << endl;
+    // client3 = new NIScope(grpc::CreateChannel(target_str + ":50053", creds));
+    // client4 = new NIScope(grpc::CreateChannel(target_str + ":50054", creds));
+    // result = client3->Init(32);
+    // result = client4->Init(42);
+    // cout << endl << "Start 4 stream streaming tests" << endl;
     // PerformFourStreamTest(*client1, *client2, *client3, *client4, 1000);
     // PerformFourStreamTest(*client1, *client2, *client3, *client4, 10000);
     // PerformFourStreamTest(*client1, *client2, *client3, *client4, 100000);
     // PerformFourStreamTest(*client1, *client2, *client3, *client4, 200000);
     
-    std::vector<NIScope*> clients;
-    for (int x=0; x<20; ++x)
-    {
-        auto port = 50051 + x;        
-        auto client = new NIScope(grpc::CreateChannel(target_str + string(":") + to_string(port), creds));
-        clients.push_back(client);
-    }
-    cout << endl << "Start 20 stream streaming tests" << endl;
-    PerformNStreamTest(clients, 1000);
-    PerformNStreamTest(clients, 10000);
-    PerformNStreamTest(clients, 100000);
-    PerformLatencyStreamTest2(*client1, *client1, 1, "streamlatency1Stream.txt");
-    PerformLatencyStreamTest2(*client1, *client1, 2, "streamlatency1Stream.txt");
-    PerformLatencyStreamTest2(*client1, *client1, 3, "streamlatency1Stream.txt");
-    PerformLatencyStreamTest2(*client1, *client1, 4, "streamlatency4Stream.txt");
-    PerformLatencyStreamTest2(*client1, *client1, 5, "streamlatency4Stream.txt");
+    // std::vector<NIScope*> clients;
+    // for (int x=0; x<20; ++x)
+    // {
+    //     auto port = 50051 + x;        
+    //     auto client = new NIScope(grpc::CreateChannel(target_str + string(":") + to_string(port), creds));
+    //     clients.push_back(client);
+    // }
+    // cout << endl << "Start 20 stream streaming tests" << endl;
+    // PerformNStreamTest(clients, 1000);
+    // PerformNStreamTest(clients, 10000);
+    // PerformNStreamTest(clients, 100000);
+    // PerformLatencyStreamTest2(*client1, *client1, 1, "streamlatency1Stream.txt");
+    // PerformLatencyStreamTest2(*client1, *client1, 2, "streamlatency1Stream.txt");
+    // PerformLatencyStreamTest2(*client1, *client1, 3, "streamlatency1Stream.txt");
+    // PerformLatencyStreamTest2(*client1, *client1, 4, "streamlatency4Stream.txt");
+    // PerformLatencyStreamTest2(*client1, *client1, 5, "streamlatency4Stream.txt");
     // PerformMessagePerformanceTest(*client1);
     // cout << "Start streaming tests" << endl;
 

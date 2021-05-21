@@ -42,3 +42,10 @@ public:
     Status TestWrite(ServerContext* context, const niScope::TestWriteParameters* request, niScope::TestWriteResult* response) override;
     Status TestWriteContinuously(ServerContext* context, ::grpc::ServerReaderWriter<niScope::TestWriteResult, niScope::TestWriteParameters>* stream) override;
 };
+
+class MonikerServer final : public niScope::MonikerService::Service
+{
+public:
+    Status InitiateMonikerStream(::grpc::ServerContext* context, const ::niScope::MonikerList* request, ::niScope::MonikerStreamId* response) override;
+    Status StreamReadWrite(::grpc::ServerContext* context, ::grpc::ServerReaderWriter< ::niScope::MonikerReadResult, ::niScope::MonikerWriteRequest>* stream) override;
+};

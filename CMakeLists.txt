@@ -54,7 +54,7 @@ add_custom_command(
   COMMAND ${_PROTOBUF_PROTOC}
   ARGS --grpc_out "${CMAKE_CURRENT_BINARY_DIR}"
     --cpp_out "${CMAKE_CURRENT_BINARY_DIR}"
-    -I "${niscope_proto_path}"
+    -I "${niscope_proto_path}" -I "${CMAKE_CURRENT_SOURCE_DIR}/third_party/grpc/third_party/protobuf/src"
     --plugin=protoc-gen-grpc="${_GRPC_CPP_PLUGIN_EXECUTABLE}"
     "${niscope_proto}"
   DEPENDS "${niscope_proto}")

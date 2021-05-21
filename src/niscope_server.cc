@@ -213,10 +213,12 @@ unique_ptr<grpc::ClientReader<niScope::ReadContinuouslyResult>> NIScope::ReadCon
         if (first)
         {
             first = false;
+#ifndef _WIN32    
             cpu_set_t cpuSet;
             CPU_ZERO(&cpuSet);
             CPU_SET(slot, &cpuSet);
             sched_setaffinity(0, sizeof(cpu_set_t), &cpuSet);
+#endif
         }
         //cout << "Reader read at slot: " << slot << endl;
         if (_writers[slot] != nullptr)
@@ -325,6 +327,37 @@ Status NIScopeServer::ReadContinuously(ServerContext* context, const niScope::Re
 	for (int x=0; x<iterations; ++x)
 	{
 		writer->Write(response);
+	}
+	return Status::OK;
+}
+
+//---------------------------------------------------------------------
+//---------------------------------------------------------------------
+Status MonikerServer::InitiateMonikerStream(::grpc::ServerContext* context, const ::niScope::MonikerList* request, ::niScope::MonikerStreamId* response)
+{    
+    response->set_streamid(1);
+	return Status::OK;
+}
+
+//---------------------------------------------------------------------
+//---------------------------------------------------------------------
+Status MonikerServer::StreamReadWrite(::grpc::ServerContext* context, ::grpc::ServerReaderWriter< ::niScope::MonikerReadResult, ::niScope::MonikerWriteRequest>* stream)
+{    
+	niScope::MonikerWriteRequest client;
+	while (stream->Read(&client))
+	{
+        niScope::MonikerReadResult server;
+        for (int x=0; x<client.values().size(); ++x)
+        {
+            niScope::StreamLatencyClient writeValue;
+            client.values()[x].UnpackTo(&writeValue);
+
+            niScope::StreamLatencyServer readValue;
+            readValue.set_message(writeValue.message());
+            auto newValue = server.add_values();
+            newValue->PackFrom(readValue);
+        }
+		stream->Write(server);
 	}
 	return Status::OK;
 }
@@ -451,6 +484,7 @@ void RunServer(int argc, char **argv, const char* saddress)
 	auto creds = CreateCredentials(argc, argv);
 
 	NIScopeServer service;
+    MonikerServer monikerService;
 	grpc::EnableDefaultHealthCheckService(true);
 	grpc::reflection::InitProtoReflectionServerBuilderPlugin();
 
@@ -460,16 +494,27 @@ void RunServer(int argc, char **argv, const char* saddress)
 	builder.AddListeningPort(server_address, creds);
 	builder.SetMaxMessageSize(4 * 1024 * 1024);
 	builder.SetMaxReceiveMessageSize(4 * 1024 * 1024);
-	// Register "service" as the instance through which we'll communicate with
-	// clients. In this case it corresponds to an *synchronous* service.
+    
+    // GRPC_ARG_ENABLE_CHANNELZ
+    // GRPC_ARG_ENABLE_CENSUS
+    // GRPC_ARG_DISABLE_CLIENT_AUTHORITY_FILTER
+    // GRPC_ARG_ENABLE_DEADLINE_CHECKS
+    // GRPC_ARG_ENABLE_LOAD_REPORTING
+    // GRPC_ARG_MINIMAL_STACK
+    // GRPC_ARG_ENABLE_PER_MESSAGE_DECOMPRESSION
+    // GRPC_ARG_ENABLE_RETRIES
+    // GRPC_ARG_HTTP2_BDP_PROBE
+    // GRPC_ARG_INHIBIT_HEALTH_CHECKING
+    // GRPC_ARG_TCP_TX_ZEROCOPY_ENABLED
+    // builder.AddChannelArgument();
+
 	builder.RegisterService(&service);
+    builder.RegisterService(&monikerService);
 
-	// Finally assemble the server.
+	// Assemble the server.
 	auto server = builder.BuildAndStart();
-	cout << "Server listening on " << server_address << endl;
-
 	_inProcServer = server->InProcessChannel(grpc_impl::ChannelArguments());
-
+	cout << "Server listening on " << server_address << endl;
 	server->Wait();
 }
 
@@ -555,28 +600,28 @@ int main(int argc, char **argv)
     // sched_setaffinity(0, sizeof(cpu_set_t), &cpuSet);
 #endif
 
-	//auto thread1 = new std::thread(RunServer, argc, argv, "unix:///home/chrisc/test.sock");
-	//auto thread2 = new std::thread(RunServer, argc, argv, "unix:///home/chrisc/test2.sock");
-    std::vector<thread*> threads;
-    std::vector<string> ports;
-    for (int x=0; x<20; ++x)
-    {
-        auto port = 50051 + x;
-        auto portStr = string("0.0.0.0:") + to_string(port);
-        ports.push_back(portStr);
-    } 
-    for (auto port: ports)
-    {
-        auto p = new string(port.c_str());
-    	auto t = new std::thread(RunServer, argc, argv, p->c_str());
-        threads.push_back(t);
-    }
+    // std::vector<thread*> threads;
+    // std::vector<string> ports;
+    // for (int x=0; x<20; ++x)
+    // {
+    //     auto port = 50051 + x;
+    //     auto portStr = string("0.0.0.0:") + to_string(port);
+    //     ports.push_back(portStr);
+    // } 
+    // for (auto port: ports)
+    // {
+    //     auto p = new string(port.c_str());
+    // 	auto t = new std::thread(RunServer, argc, argv, p->c_str());
+    //     threads.push_back(t);
+    // }
 	// std::this_thread::sleep_for(std::chrono::milliseconds(500));
 	// auto scope = NIScope(_inProcServer);
 	// PerformLatencyStreamTest2(scope, "inprocess.txt");
-    for (auto t: threads)
-    {
-        t->join();
-    }
+    // for (auto t: threads)
+    // {
+    //     t->join();
+    // }
+
+    RunServer(argc, argv, "0.0.0.0:50051");
 	return 0;
 }

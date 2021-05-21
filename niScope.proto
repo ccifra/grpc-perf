@@ -4,6 +4,10 @@ syntax = "proto3";
 
 //---------------------------------------------------------------------
 //---------------------------------------------------------------------
+import "google/protobuf/any.proto";
+
+//---------------------------------------------------------------------
+//---------------------------------------------------------------------
 option java_multiple_files = true;
 option java_package = "ni.niScope";
 option java_outer_classname = "niScope";
@@ -30,6 +34,37 @@ service niScopeService {
     rpc TestWriteContinuously(stream TestWriteParameters) returns (stream TestWriteResult) {};
     rpc Read(ReadParameters) returns (ReadResult) {};
     rpc ReadContinuously(ReadContinuouslyParameters) returns (stream ReadContinuouslyResult) {};
+}
+
+service MonikerService {
+  rpc InitiateMonikerStream(MonikerList) returns (MonikerStreamId);
+  rpc StreamReadWrite(stream MonikerWriteRequest) returns (stream MonikerReadResult) {};
+  rpc StreamRead(MonikerStreamId) returns (stream MonikerReadResult) {};
+  rpc StreamWrite(stream MonikerWriteRequest) returns (stream MonikerStreamId) {};
+}
+
+message Moniker {
+  string ServiceLocation = 1;
+  string DataSource = 2;
+  string DataInstance = 3;
+}
+
+message MonikerWriteRequest {
+  int32 monikerStreamId = 1;
+  repeated google.protobuf.Any Values = 2;
+}
+
+message MonikerReadResult {
+  repeated google.protobuf.Any Values = 1;
+}
+
+message MonikerList {
+  repeated Moniker ReadMonikers = 1;
+  repeated Moniker WriteMonikers = 2;
+}
+
+message MonikerStreamId {
+  int32 streamId = 1;
 }
 
 message StreamLatencyClient {
