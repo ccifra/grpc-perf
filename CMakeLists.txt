@@ -39,25 +39,25 @@ endif()
 #----------------------------------------------------------------------
 # Proto file
 #----------------------------------------------------------------------
-get_filename_component(niscope_proto "niScope.proto" ABSOLUTE)
-get_filename_component(niscope_proto_path "${niscope_proto}" PATH)
+get_filename_component(perftest_proto "perftest.proto" ABSOLUTE)
+get_filename_component(perftest_proto_path "${perftest_proto}" PATH)
 
 #----------------------------------------------------------------------
 # Generated sources
 #----------------------------------------------------------------------
-set(niscope_proto_srcs "${CMAKE_CURRENT_BINARY_DIR}/niScope.pb.cc")
-set(niscope_proto_hdrs "${CMAKE_CURRENT_BINARY_DIR}/niScope.pb.h")
-set(niscope_grpc_srcs "${CMAKE_CURRENT_BINARY_DIR}/niScope.grpc.pb.cc")
-set(niscope_grpc_hdrs "${CMAKE_CURRENT_BINARY_DIR}/niScope.grpc.pb.h")
+set(perftest_proto_srcs "${CMAKE_CURRENT_BINARY_DIR}/perftest.pb.cc")
+set(perftest_proto_hdrs "${CMAKE_CURRENT_BINARY_DIR}/perftest.pb.h")
+set(perftest_grpc_srcs "${CMAKE_CURRENT_BINARY_DIR}/perftest.grpc.pb.cc")
+set(perftest_grpc_hdrs "${CMAKE_CURRENT_BINARY_DIR}/perftest.grpc.pb.h")
 add_custom_command(
-  OUTPUT "${niscope_proto_srcs}" "${niscope_proto_hdrs}" "${niscope_grpc_srcs}" "${niscope_grpc_hdrs}"
+  OUTPUT "${perftest_proto_srcs}" "${perftest_proto_hdrs}" "${perftest_grpc_srcs}" "${perftest_grpc_hdrs}"
   COMMAND ${_PROTOBUF_PROTOC}
   ARGS --grpc_out "${CMAKE_CURRENT_BINARY_DIR}"
     --cpp_out "${CMAKE_CURRENT_BINARY_DIR}"
-    -I "${niscope_proto_path}" -I "${CMAKE_CURRENT_SOURCE_DIR}/third_party/grpc/third_party/protobuf/src"
+    -I "${perftest_proto_path}" -I "${CMAKE_CURRENT_SOURCE_DIR}/third_party/grpc/third_party/protobuf/src"
     --plugin=protoc-gen-grpc="${_GRPC_CPP_PLUGIN_EXECUTABLE}"
-    "${niscope_proto}"
-  DEPENDS "${niscope_proto}")
+    "${perftest_proto}"
+  DEPENDS "${perftest_proto}")
 
 #----------------------------------------------------------------------
 # Include generated *.pb.h files
@@ -65,12 +65,12 @@ add_custom_command(
 include_directories("${CMAKE_CURRENT_BINARY_DIR}" "./src" "./third_party/grpc")
 
 #----------------------------------------------------------------------
-# NIScope gRPC Server
+# perftest gRPC Server
 #----------------------------------------------------------------------
 add_executable(perftest_server
-  src/niscope_server.cc
-  ${niscope_proto_srcs}
-  ${niscope_grpc_srcs}
+  src/perftest_server.cc
+  ${perftest_proto_srcs}
+  ${perftest_grpc_srcs}
   )
 target_link_libraries(perftest_server
    ${_REFLECTION}
@@ -79,12 +79,12 @@ target_link_libraries(perftest_server
    )
 
 #----------------------------------------------------------------------
-# Example C++ application to talk to the niscope gRPC service
+# Example C++ application to talk to the perftest gRPC service
 #----------------------------------------------------------------------
 add_executable(perftest_client
-  "src/example_client.cc"
-  ${niscope_proto_srcs}
-  ${niscope_grpc_srcs}
+  "src/perftest_client.cc"
+  ${perftest_proto_srcs}
+  ${perftest_grpc_srcs}
   )
 target_link_libraries(perftest_client
    ${_REFLECTION}

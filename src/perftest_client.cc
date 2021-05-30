@@ -3,7 +3,7 @@
 #include <grpcpp/grpcpp.h>
 #include <grpcpp/health_check_service_interface.h>
 #include <grpcpp/ext/proto_server_reflection_plugin.h>
-#include <niScope.grpc.pb.h>
+#include <perftest.grpc.pb.h>
 #include <sstream>
 #include <fstream>
 #include <iostream>
@@ -21,7 +21,7 @@ using grpc::Channel;
 using grpc::ClientContext;
 using grpc::Status;
 using namespace std;
-using namespace niScope;
+using namespace niPerfTest;
 
 //---------------------------------------------------------------------
 //---------------------------------------------------------------------
@@ -29,19 +29,19 @@ using timeVector = vector<chrono::microseconds>;
 
 //---------------------------------------------------------------------
 //---------------------------------------------------------------------
-class NIScope
+class NIPerfTestClient
 {
 public:
-    NIScope(shared_ptr<Channel> channel);
+    NIPerfTestClient(shared_ptr<Channel> channel);
 
 public:
     int Init(int id);
     int InitWithOptions(string resourceName, bool idQuery, bool resetDevice, string options, ViSession* session);
-    int Read(ViSession session, string channels, double timeout, int numSamples, double* samples, ScopeWaveformInfo* waveformInfo);
+    int Read(ViSession session, string channels, double timeout, int numSamples, double* samples, WaveformInfo* waveformInfo);
     int TestWrite(int numSamples, double* samples);
-    unique_ptr<grpc::ClientReader<niScope::ReadContinuouslyResult>> ReadContinuously(grpc::ClientContext* context, ViSession session, string channels, double timeout, int numSamples);
+    unique_ptr<grpc::ClientReader<niPerfTest::ReadContinuouslyResult>> ReadContinuously(grpc::ClientContext* context, ViSession session, string channels, double timeout, int numSamples);
 public:
-    unique_ptr<niScopeService::Stub> m_Stub;
+    unique_ptr<niPerfTestService::Stub> m_Stub;
 };
 
 //---------------------------------------------------------------------
@@ -57,21 +57,21 @@ public:
 
 //---------------------------------------------------------------------
 //---------------------------------------------------------------------
-static NIScope* client1;
-static NIScope* client2;
-static NIScope* client3;
-static NIScope* client4;
+static NIPerfTestClient* client1;
+static NIPerfTestClient* client2;
+static NIPerfTestClient* client3;
+static NIPerfTestClient* client4;
 
 //---------------------------------------------------------------------
 //---------------------------------------------------------------------
-NIScope::NIScope(shared_ptr<Channel> channel)
-    : m_Stub(niScopeService::NewStub(channel))
+NIPerfTestClient::NIPerfTestClient(shared_ptr<Channel> channel)
+    : m_Stub(niPerfTestService::NewStub(channel))
 {        
 }
 
 //---------------------------------------------------------------------
 //---------------------------------------------------------------------
-int NIScope::Init(int id)
+int NIPerfTestClient::Init(int id)
 {
     InitParameters request;
     request.set_id(id);
@@ -88,7 +88,7 @@ int NIScope::Init(int id)
 
 //---------------------------------------------------------------------
 //---------------------------------------------------------------------
-int NIScope::InitWithOptions(string resourceName, bool idQuery, bool resetDevice, string options, ViSession* session)
+int NIPerfTestClient::InitWithOptions(string resourceName, bool idQuery, bool resetDevice, string options, ViSession* session)
 {
     InitWithOptionsParameters request;
     request.set_resourcename(resourceName.c_str());
@@ -109,7 +109,7 @@ int NIScope::InitWithOptions(string resourceName, bool idQuery, bool resetDevice
 
 //---------------------------------------------------------------------
 //---------------------------------------------------------------------
-int NIScope::Read(ViSession session, string channels, double timeout, int numSamples, double* samples, ScopeWaveformInfo* waveformInfo)
+int NIPerfTestClient::Read(ViSession session, string channels, double timeout, int numSamples, double* samples, WaveformInfo* waveformInfo)
 {
     ReadParameters request;
     auto requestSession = new ViSession;
@@ -133,7 +133,7 @@ int NIScope::Read(ViSession session, string channels, double timeout, int numSam
 
 //---------------------------------------------------------------------
 //---------------------------------------------------------------------
-int NIScope::TestWrite(int numSamples, double* samples)
+int NIPerfTestClient::TestWrite(int numSamples, double* samples)
 {   
     TestWriteParameters request;
     request.mutable_wfm()->Reserve(numSamples);
@@ -151,7 +151,7 @@ int NIScope::TestWrite(int numSamples, double* samples)
 
 //---------------------------------------------------------------------
 //---------------------------------------------------------------------
-unique_ptr<grpc::ClientReader<niScope::ReadContinuouslyResult>> NIScope::ReadContinuously(grpc::ClientContext* context, ViSession session, string channels, double timeout, int numSamples)
+unique_ptr<grpc::ClientReader<niPerfTest::ReadContinuouslyResult>> NIPerfTestClient::ReadContinuously(grpc::ClientContext* context, ViSession session, string channels, double timeout, int numSamples)
 {    
     ReadContinuouslyParameters request;
     auto requestSession = new ViSession;
@@ -369,7 +369,7 @@ void WriteLatencyData(timeVector times, const string& fileName)
 
 //---------------------------------------------------------------------
 //---------------------------------------------------------------------
-static void ReadSamples(NIScope* client, int numSamples)
+static void ReadSamples(NIPerfTestClient* client, int numSamples)
 {    
     ViSession session;
     int index = 0;
@@ -385,7 +385,7 @@ static void ReadSamples(NIScope* client, int numSamples)
 
 //---------------------------------------------------------------------
 //---------------------------------------------------------------------
-void PerformMessagePerformanceTest(NIScope& client)
+void PerformMessagePerformanceTest(NIPerfTestClient& client)
 {
     cout << "Start Messages per second test" << endl;
 
@@ -404,7 +404,7 @@ void PerformMessagePerformanceTest(NIScope& client)
 
 //---------------------------------------------------------------------
 //---------------------------------------------------------------------
-void PerformLatencyStreamTest(NIScope& client, std::string fileName)
+void PerformLatencyStreamTest(NIPerfTestClient& client, std::string fileName)
 {    
     int iterations = 100000;
 
@@ -414,8 +414,8 @@ void PerformLatencyStreamTest(NIScope& client, std::string fileName)
     timeVector times;
     times.reserve(iterations);
 
-	niScope::StreamLatencyClient clientData;
-	niScope::StreamLatencyServer serverData;
+	niPerfTest::StreamLatencyClient clientData;
+	niPerfTest::StreamLatencyServer serverData;
 
     ClientContext context;
     auto stream = client.m_Stub->StreamLatencyTest(&context);
@@ -460,11 +460,11 @@ void PerformMonikerLatencyReadWriteTest(NIMonikerClient& client, int numItems, s
     timeVector times;
     times.reserve(iterations);
 
-	niScope::StreamLatencyClient clientData;
-	niScope::StreamLatencyServer serverData;
+	niPerfTest::StreamLatencyClient clientData;
+	niPerfTest::StreamLatencyServer serverData;
 
     ClientContext context;
-    niScope::MonikerList monikerList;
+    niPerfTest::MonikerList monikerList;
 
     for (int x=0; x<numItems; ++x)
     {
@@ -473,7 +473,7 @@ void PerformMonikerLatencyReadWriteTest(NIMonikerClient& client, int numItems, s
         auto writeMoniker = monikerList.add_writemonikers();
         writeMoniker->set_datainstance("1");
     }
-    niScope::MonikerStreamId monikerId;
+    niPerfTest::MonikerStreamId monikerId;
     auto streamId = client.m_Stub->InitiateMonikerStream(&context, monikerList, &monikerId);
     
     ClientContext streamContext;
@@ -487,7 +487,7 @@ void PerformMonikerLatencyReadWriteTest(NIMonikerClient& client, int numItems, s
         writeRequest.set_monikerstreamid(monikerId.streamid());
         for (int i=0; i<numItems; ++i)
         {
-            niScope::StreamLatencyClient writeValue;
+            niPerfTest::StreamLatencyClient writeValue;
             writeValue.set_message(42 + i);
             auto v = writeRequest.add_values();
             v->PackFrom(writeValue);
@@ -511,7 +511,7 @@ void PerformMonikerLatencyReadWriteTest(NIMonikerClient& client, int numItems, s
         writeRequest.set_monikerstreamid(monikerId.streamid());
         for (int i=0; i<numItems; ++i)
         {
-            niScope::StreamLatencyClient writeValue;
+            niPerfTest::StreamLatencyClient writeValue;
             writeValue.set_message(42 + i);
             auto v = writeRequest.add_values();
             v->PackFrom(writeValue);
@@ -536,7 +536,7 @@ void PerformMonikerLatencyReadWriteTest(NIMonikerClient& client, int numItems, s
 
 //---------------------------------------------------------------------
 //---------------------------------------------------------------------
-void PerformLatencyPayloadWriteTest(NIScope& client, int numSamples, std::string fileName)
+void PerformLatencyPayloadWriteTest(NIPerfTestClient& client, int numSamples, std::string fileName)
 {    
     int iterations = 100000;
 
@@ -575,7 +575,7 @@ void PerformLatencyPayloadWriteTest(NIScope& client, int numSamples, std::string
 
 //---------------------------------------------------------------------
 //---------------------------------------------------------------------
-void PerformLatencyPayloadWriteStreamTest(NIScope& client, int numSamples, std::string fileName)
+void PerformLatencyPayloadWriteStreamTest(NIPerfTestClient& client, int numSamples, std::string fileName)
 {    
     int iterations = 100000;
 
@@ -620,16 +620,16 @@ void PerformLatencyPayloadWriteStreamTest(NIScope& client, int numSamples, std::
 struct StreamInfo
 {
     ClientContext context;
-    niScope::StreamLatencyClient clientData;
-    std::unique_ptr< ::grpc::ClientReader< ::niScope::StreamLatencyServer>> rstream;
+    niPerfTest::StreamLatencyClient clientData;
+    std::unique_ptr< ::grpc::ClientReader< ::niPerfTest::StreamLatencyServer>> rstream;
 
     ClientContext wcontext;
-    std::unique_ptr< ::grpc::ClientWriter< ::niScope::StreamLatencyClient>> wstream;
+    std::unique_ptr< ::grpc::ClientWriter< ::niPerfTest::StreamLatencyClient>> wstream;
 };
 
 //---------------------------------------------------------------------
 //---------------------------------------------------------------------
-void PerformLatencyStreamTest2(NIScope& client, NIScope& client2, int streamCount, std::string fileName)
+void PerformLatencyStreamTest2(NIPerfTestClient& client, NIPerfTestClient& client2, int streamCount, std::string fileName)
 {    
     int iterations = 100000;
 
@@ -639,8 +639,8 @@ void PerformLatencyStreamTest2(NIScope& client, NIScope& client2, int streamCoun
     times.reserve(iterations);
 
     StreamInfo* streamInfos = new StreamInfo[streamCount];
-	niScope::StreamLatencyServer serverData;
-	niScope::StreamLatencyServer serverResponseData;
+	niPerfTest::StreamLatencyServer serverData;
+	niPerfTest::StreamLatencyServer serverResponseData;
 
     for (int x=0; x<streamCount; ++x)
     {
@@ -693,7 +693,7 @@ void PerformLatencyStreamTest2(NIScope& client, NIScope& client2, int streamCoun
 
 //---------------------------------------------------------------------
 //---------------------------------------------------------------------
-void PerformMessageLatencyTest(NIScope& client, std::string fileName)
+void PerformMessageLatencyTest(NIPerfTestClient& client, std::string fileName)
 {
     int iterations = 100000;
 
@@ -728,12 +728,12 @@ void PerformMessageLatencyTest(NIScope& client, std::string fileName)
 
 //---------------------------------------------------------------------
 //---------------------------------------------------------------------
-void PerformReadTest(NIScope& client, int numSamples)
+void PerformReadTest(NIPerfTestClient& client, int numSamples)
 {    
     cout << "Start " << numSamples << " Read Test" << endl;
 
     ViSession session;
-    ScopeWaveformInfo info;
+    WaveformInfo info;
     int index = 0;
     double* samples = new double[numSamples];
 
@@ -752,12 +752,12 @@ void PerformReadTest(NIScope& client, int numSamples)
 
 //---------------------------------------------------------------------
 //---------------------------------------------------------------------
-void PerformWriteTest(NIScope& client, int numSamples)
+void PerformWriteTest(NIPerfTestClient& client, int numSamples)
 {   
     cout << "Start " << numSamples << " Write Test" << endl;
 
     ViSession session;
-    ScopeWaveformInfo info;
+    WaveformInfo info;
     int index = 0;
     double* samples = new double[numSamples];
 
@@ -797,7 +797,7 @@ void ReportMBPerSecond(chrono::steady_clock::time_point start, chrono::steady_cl
 
 //---------------------------------------------------------------------
 //---------------------------------------------------------------------
-void PerformStreamingTest(NIScope& client, int numSamples)
+void PerformStreamingTest(NIPerfTestClient& client, int numSamples)
 {
     auto start = chrono::steady_clock::now();
     ReadSamples(&client, numSamples);
@@ -807,7 +807,7 @@ void PerformStreamingTest(NIScope& client, int numSamples)
 
 //---------------------------------------------------------------------
 //---------------------------------------------------------------------
-void PerformTwoStreamTest(NIScope& client, NIScope& client2, int numSamples)
+void PerformTwoStreamTest(NIPerfTestClient& client, NIPerfTestClient& client2, int numSamples)
 {
     auto start = chrono::steady_clock::now();
 
@@ -823,7 +823,7 @@ void PerformTwoStreamTest(NIScope& client, NIScope& client2, int numSamples)
 
 //---------------------------------------------------------------------
 //---------------------------------------------------------------------
-void PerformFourStreamTest(NIScope& client, NIScope& client2, NIScope& client3, NIScope& client4, int numSamples)
+void PerformFourStreamTest(NIPerfTestClient& client, NIPerfTestClient& client2, NIPerfTestClient& client3, NIPerfTestClient& client4, int numSamples)
 {
     auto start = chrono::steady_clock::now();
 
@@ -843,7 +843,7 @@ void PerformFourStreamTest(NIScope& client, NIScope& client2, NIScope& client3, 
 
 //---------------------------------------------------------------------
 //---------------------------------------------------------------------
-void PerformNStreamTest(std::vector<NIScope*>& clients, int numSamples)
+void PerformNStreamTest(std::vector<NIPerfTestClient*>& clients, int numSamples)
 {
     auto start = chrono::steady_clock::now();
 
@@ -895,7 +895,7 @@ int main(int argc, char **argv)
     // every channel gets its own connection
     args.SetInt("test_key", 1);
     args.SetInt(GRPC_ARG_MINIMAL_STACK, 1);
-    client1 = new NIScope(grpc::CreateCustomChannel(target_str + port, creds, args));
+    client1 = new NIPerfTestClient(grpc::CreateCustomChannel(target_str + port, creds, args));
     //client2 = new NIScope(grpc::CreateCustomChannel(target_str + port, creds, args));
 
     ViSession session;

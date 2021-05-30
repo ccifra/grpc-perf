@@ -9,20 +9,20 @@ import "google/protobuf/any.proto";
 //---------------------------------------------------------------------
 //---------------------------------------------------------------------
 option java_multiple_files = true;
-option java_package = "ni.niScope";
-option java_outer_classname = "niScope";
+option java_package = "ni.preftest";
+option java_outer_classname = "preftest";
 option objc_class_prefix = "NI";
 
 option cc_enable_arenas = true;
 
 //---------------------------------------------------------------------
 //---------------------------------------------------------------------
-package niScope;
+package niPerfTest;
 
 //---------------------------------------------------------------------
-// The niScope service definition.
+// The niPerfTest service definition.
 //---------------------------------------------------------------------
-service niScopeService {
+service niPerfTestService {
     rpc StreamLatencyTest(stream StreamLatencyClient) returns (stream StreamLatencyServer) {};
     rpc StreamLatencyTestClient(stream StreamLatencyClient) returns (StreamLatencyServer) {};
     rpc StreamLatencyTestServer(StreamLatencyClient) returns (stream StreamLatencyServer) {};
@@ -36,6 +36,8 @@ service niScopeService {
     rpc ReadContinuously(ReadContinuouslyParameters) returns (stream ReadContinuouslyResult) {};
 }
 
+//---------------------------------------------------------------------
+//---------------------------------------------------------------------
 service MonikerService {
   rpc InitiateMonikerStream(MonikerList) returns (MonikerStreamId);
   rpc StreamReadWrite(stream MonikerWriteRequest) returns (stream MonikerReadResult) {};
@@ -129,7 +131,7 @@ message ReadParameters {
 message ReadResult {
   int32 status = 1;
   repeated double wfm = 5;
-  repeated ScopeWaveformInfo wfmInfo = 2;
+  repeated WaveformInfo wfmInfo = 2;
 }
 
 message TestWriteParameters {
@@ -151,7 +153,7 @@ message ReadContinuouslyResult {
   repeated double wfm = 2;
 }
 
-message ScopeWaveformInfo {
+message WaveformInfo {
   double absoluteInitialX = 1;
   double relativeInitialX = 2;
   double xIncrement = 3;
