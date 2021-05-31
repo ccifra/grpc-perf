@@ -481,7 +481,7 @@ void PerformMonikerLatencyReadWriteTest(NIMonikerClient& client, int numItems, s
     writeRequest.set_monikerstreamid(monikerId.streamid());
     auto stream = client.m_Stub->StreamReadWrite(&streamContext);
 
-    for (int x=0; x<10; ++x)
+    for (int x=0; x<100; ++x)
     {
         MonikerWriteRequest writeRequest;
         writeRequest.set_monikerstreamid(monikerId.streamid());
@@ -502,7 +502,6 @@ void PerformMonikerLatencyReadWriteTest(NIMonikerClient& client, int numItems, s
             readResult.values()[i].UnpackTo(&readValue);
         }
     }
-    std::this_thread::sleep_for(std::chrono::milliseconds(1000));
 
     for (int x=0; x<iterations; ++x)
     {
@@ -551,7 +550,7 @@ void PerformLatencyPayloadWriteTest(NIPerfTestClient& client, int numSamples, st
     request.mutable_wfm()->Resize(numSamples, 0);
     TestWriteResult reply;
 
-    for (int x=0; x<10; ++x)
+    for (int x=0; x<100; ++x)
     {
         ClientContext context;
         client.m_Stub->TestWrite(&context, request, &reply);
@@ -568,9 +567,7 @@ void PerformLatencyPayloadWriteTest(NIPerfTestClient& client, int numSamples, st
         auto elapsed = chrono::duration_cast<chrono::microseconds>(end - start);
         times.emplace_back(elapsed);
     }
-    std::this_thread::sleep_for(std::chrono::milliseconds(1000));
     WriteLatencyData(times, fileName);
-    std::this_thread::sleep_for(std::chrono::milliseconds(1000));
 }
 
 //---------------------------------------------------------------------
@@ -593,7 +590,7 @@ void PerformLatencyPayloadWriteStreamTest(NIPerfTestClient& client, int numSampl
     ClientContext context;
     auto stream = client.m_Stub->TestWriteContinuously(&context);
 
-    for (int x=0; x<10; ++x)
+    for (int x=0; x<100; ++x)
     {
         stream->Write(request);
         stream->Read(&reply);
@@ -610,9 +607,7 @@ void PerformLatencyPayloadWriteStreamTest(NIPerfTestClient& client, int numSampl
         auto elapsed = chrono::duration_cast<chrono::microseconds>(end - start);
         times.emplace_back(elapsed);
     }
-    std::this_thread::sleep_for(std::chrono::milliseconds(1000));
     WriteLatencyData(times, fileName);
-    std::this_thread::sleep_for(std::chrono::milliseconds(1000));
 }
 
 //---------------------------------------------------------------------
@@ -649,11 +644,9 @@ void PerformLatencyStreamTest2(NIPerfTestClient& client, NIPerfTestClient& clien
         std::this_thread::sleep_for(std::chrono::milliseconds(1000));
 
         streamInfos[x].wstream = client2.m_Stub->StreamLatencyTestClient(&streamInfos[x].wcontext, &serverResponseData);
-        std::this_thread::sleep_for(std::chrono::milliseconds(1000));
     }
-
     std::this_thread::sleep_for(std::chrono::milliseconds(1500));
-    for (int x=0; x<10; ++x)
+    for (int x=0; x<100; ++x)
     {
         for (int i=0; i<streamCount; ++i)
         {
@@ -664,8 +657,6 @@ void PerformLatencyStreamTest2(NIPerfTestClient& client, NIPerfTestClient& clien
             streamInfos[i].rstream->Read(&serverData);
         }
     }
-    std::this_thread::sleep_for(std::chrono::milliseconds(1500));
-
     for (int x=0; x<iterations; ++x)
     {
         auto start = chrono::steady_clock::now();
@@ -708,7 +699,7 @@ void PerformMessageLatencyTest(NIPerfTestClient& client, std::string fileName)
 
     InitResult reply;
 
-    for (int x=0; x<10; ++x)
+    for (int x=0; x<100; ++x)
     {
         ClientContext context;
         client.m_Stub->Init(&context, request, &reply);
@@ -722,7 +713,6 @@ void PerformMessageLatencyTest(NIPerfTestClient& client, std::string fileName)
         auto elapsed = chrono::duration_cast<chrono::microseconds>(end - start);
         times.emplace_back(elapsed);
     }
-    std::this_thread::sleep_for(std::chrono::milliseconds(1000));
     WriteLatencyData(times, fileName);
 }
 
@@ -884,8 +874,8 @@ int main(int argc, char **argv)
 
     auto target_str = GetServerAddress(argc, argv);
     auto creds = CreateCredentials(argc, argv);
-
     auto port = ":50051";   
+
     //client1 = new NIScope(grpc::CreateChannel("unix:///home/chrisc/test.sock", creds));
     //client2 = new NIScope(grpc::CreateChannel("unix:///home/chrisc/test2.sock", creds));
     //client2 = new NIScope(grpc::CreateChannel(target_str + port, creds));
@@ -893,7 +883,6 @@ int main(int argc, char **argv)
     ::grpc::ChannelArguments args;
     // Set a dummy (but distinct) channel arg on each channel so that
     // every channel gets its own connection
-    args.SetInt("test_key", 1);
     args.SetInt(GRPC_ARG_MINIMAL_STACK, 1);
     client1 = new NIPerfTestClient(grpc::CreateCustomChannel(target_str + port, creds, args));
     //client2 = new NIScope(grpc::CreateCustomChannel(target_str + port, creds, args));
@@ -904,12 +893,13 @@ int main(int argc, char **argv)
 
     // EnableTracing();
     PerformLatencyStreamTest(*client1, "streamlatency1.txt");
-    // PerformLatencyStreamTest(*client1, "streamlatency2.txt");
-    // PerformLatencyStreamTest(*client1, "streamlatency3.txt");
-    // PerformLatencyStreamTest(*client1, "streamlatency4.txt");
-    // PerformLatencyStreamTest(*client1, "streamlatency5.txt");
+    PerformLatencyStreamTest(*client1, "streamlatency2.txt");
+    PerformLatencyStreamTest(*client1, "streamlatency3.txt");
+    PerformLatencyStreamTest(*client1, "streamlatency4.txt");
+    PerformLatencyStreamTest(*client1, "streamlatency5.txt");
     // DisableTracing();
 
+    cout << "Start moniker latency read write tests" << endl;
     auto monikerClient = new NIMonikerClient(grpc::CreateCustomChannel(target_str + port, creds, args));
     PerformMonikerLatencyReadWriteTest(*monikerClient, 1, "monikerlatency1.txt");
     PerformMonikerLatencyReadWriteTest(*monikerClient, 2, "monikerlatency2.txt");
@@ -923,14 +913,15 @@ int main(int argc, char **argv)
     // PerformMessageLatencyTest(*client1, "latency4.txt");
     // PerformMessageLatencyTest(*client1, "latency5.txt");
 
-    // PerformLatencyPayloadWriteTest(*client1, 1, "payloadlatency1.txt");
-    // PerformLatencyPayloadWriteTest(*client1, 8, "payloadlatency8.txt");
-    // PerformLatencyPayloadWriteTest(*client1, 16, "payloadlatency16.txt");
-    // PerformLatencyPayloadWriteTest(*client1, 32, "payloadlatency32.txt");
-    // PerformLatencyPayloadWriteTest(*client1, 64, "payloadlatency64.txt");
-    // PerformLatencyPayloadWriteTest(*client1, 128, "payloadlatency128.txt");
-    // PerformLatencyPayloadWriteTest(*client1, 1024, "payloadlatency1024.txt");
-    // PerformLatencyPayloadWriteTest(*client1, 32768, "payloadlatency32768.txt");
+    cout << "Start latency payload write tests" << endl;
+    PerformLatencyPayloadWriteTest(*client1, 1, "payloadlatency1.txt");
+    PerformLatencyPayloadWriteTest(*client1, 8, "payloadlatency8.txt");
+    PerformLatencyPayloadWriteTest(*client1, 16, "payloadlatency16.txt");
+    PerformLatencyPayloadWriteTest(*client1, 32, "payloadlatency32.txt");
+    PerformLatencyPayloadWriteTest(*client1, 64, "payloadlatency64.txt");
+    PerformLatencyPayloadWriteTest(*client1, 128, "payloadlatency128.txt");
+    PerformLatencyPayloadWriteTest(*client1, 1024, "payloadlatency1024.txt");
+    PerformLatencyPayloadWriteTest(*client1, 32768, "payloadlatency32768.txt");
 
     // PerformLatencyPayloadWriteStreamTest(*client1, 1, "payloadstreamlatency1.txt");
     // PerformLatencyPayloadWriteStreamTest(*client1, 8, "payloadstreamlatency8.txt");
@@ -987,13 +978,13 @@ int main(int argc, char **argv)
     // PerformLatencyStreamTest2(*client1, *client1, 4, "streamlatency4Stream.txt");
     // PerformLatencyStreamTest2(*client1, *client1, 5, "streamlatency4Stream.txt");
     // PerformMessagePerformanceTest(*client1);
-    // cout << "Start streaming tests" << endl;
-
+    
+    cout << "Start streaming tests" << endl;
     // PerformStreamingTest(*client1, 10);
     // PerformStreamingTest(*client1, 100);
     // PerformStreamingTest(*client1, 1000);
     // PerformStreamingTest(*client1, 10000);
-    // PerformStreamingTest(*client1, 100000);
+    PerformStreamingTest(*client1, 100000);
     // PerformStreamingTest(*client1, 200000);
 
     // PerformReadTest(*client1, 100);

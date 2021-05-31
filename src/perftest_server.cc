@@ -323,13 +323,15 @@ void RunServer(int argc, char **argv, const char* saddress)
 
 	NIPerfTestServer service;
     MonikerServer monikerService;
-	grpc::EnableDefaultHealthCheckService(true);
-	grpc::reflection::InitProtoReflectionServerBuilderPlugin();
+	//grpc::EnableDefaultHealthCheckService(true);
+	//grpc::reflection::InitProtoReflectionServerBuilderPlugin();
 
 	ServerBuilder builder;
-	builder.SetDefaultCompressionAlgorithm(GRPC_COMPRESS_NONE);
 	// Listen on the given address without any authentication mechanism.
 	builder.AddListeningPort(server_address, creds);
+
+    builder.AddChannelArgument(GRPC_ARG_MINIMAL_STACK, 1);
+	builder.SetDefaultCompressionAlgorithm(GRPC_COMPRESS_NONE);
 	builder.SetMaxMessageSize(4 * 1024 * 1024);
 	builder.SetMaxReceiveMessageSize(4 * 1024 * 1024);
     
