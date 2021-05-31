@@ -39,7 +39,7 @@ static ::grpc::ServerWriter< ::niPerfTest::StreamLatencyServer>* _writers [32];
 
 //---------------------------------------------------------------------
 //---------------------------------------------------------------------
-::grpc::Status NIScopeServer::StreamLatencyTestClient(::grpc::ServerContext* context, ::grpc::ServerReader<::niPerfTest::StreamLatencyClient>* reader, ::niPerfTest::StreamLatencyServer* response)
+::grpc::Status NIPerfTestServer::StreamLatencyTestClient(::grpc::ServerContext* context, ::grpc::ServerReader<::niPerfTest::StreamLatencyClient>* reader, ::niPerfTest::StreamLatencyServer* response)
 {	
 	niPerfTest::StreamLatencyClient client;
 	niPerfTest::StreamLatencyServer server;
@@ -71,7 +71,7 @@ static ::grpc::ServerWriter< ::niPerfTest::StreamLatencyServer>* _writers [32];
 
 //---------------------------------------------------------------------
 //---------------------------------------------------------------------
-::grpc::Status NIScopeServer::StreamLatencyTestServer(::grpc::ServerContext* context, const ::niPerfTest::StreamLatencyClient* request, ::grpc::ServerWriter< ::niPerfTest::StreamLatencyServer>* writer)
+::grpc::Status NIPerfTestServer::StreamLatencyTestServer(::grpc::ServerContext* context, const ::niPerfTest::StreamLatencyClient* request, ::grpc::ServerWriter< ::niPerfTest::StreamLatencyServer>* writer)
 {
     auto slot = request->message();
     //cout << "Setting writer to slot: " << slot << endl;
@@ -86,7 +86,7 @@ static ::grpc::ServerWriter< ::niPerfTest::StreamLatencyServer>* _writers [32];
 
 //---------------------------------------------------------------------
 //---------------------------------------------------------------------
-Status NIScopeServer::StreamLatencyTest(ServerContext* context, grpc::ServerReaderWriter<niPerfTest::StreamLatencyServer, niPerfTest::StreamLatencyClient>* stream)
+Status NIPerfTestServer::StreamLatencyTest(ServerContext* context, grpc::ServerReaderWriter<niPerfTest::StreamLatencyServer, niPerfTest::StreamLatencyClient>* stream)
 {
 	niPerfTest::StreamLatencyClient client;
 	niPerfTest::StreamLatencyServer server;
@@ -99,7 +99,7 @@ Status NIScopeServer::StreamLatencyTest(ServerContext* context, grpc::ServerRead
 
 //---------------------------------------------------------------------
 //---------------------------------------------------------------------
-Status NIScopeServer::Init(ServerContext* context, const niPerfTest::InitParameters* request, niPerfTest::InitResult* response)
+Status NIPerfTestServer::Init(ServerContext* context, const niPerfTest::InitParameters* request, niPerfTest::InitResult* response)
 {
 	response->set_status(request->id());
 	return Status::OK;	
@@ -108,7 +108,7 @@ Status NIScopeServer::Init(ServerContext* context, const niPerfTest::InitParamet
 
 //---------------------------------------------------------------------
 //---------------------------------------------------------------------
-Status NIScopeServer::InitWithOptions(ServerContext* context, const niPerfTest::InitWithOptionsParameters* request, niPerfTest::InitWithOptionsResult* response)
+Status NIPerfTestServer::InitWithOptions(ServerContext* context, const niPerfTest::InitWithOptionsParameters* request, niPerfTest::InitWithOptionsResult* response)
 {	
 	response->set_status(0);
 	niPerfTest::ViSession* session = new niPerfTest::ViSession();
@@ -120,7 +120,7 @@ Status NIScopeServer::InitWithOptions(ServerContext* context, const niPerfTest::
 
 //---------------------------------------------------------------------
 //---------------------------------------------------------------------
-Status NIScopeServer::Read(ServerContext* context, const niPerfTest::ReadParameters* request, niPerfTest::ReadResult* response)
+Status NIPerfTestServer::Read(ServerContext* context, const niPerfTest::ReadParameters* request, niPerfTest::ReadResult* response)
 {	
 	response->mutable_wfm()->Reserve(request->numsamples());
 	response->mutable_wfm()->Resize(request->numsamples(), 0.0);
@@ -130,7 +130,7 @@ Status NIScopeServer::Read(ServerContext* context, const niPerfTest::ReadParamet
 
 //---------------------------------------------------------------------
 //---------------------------------------------------------------------
-Status NIScopeServer::TestWrite(ServerContext* context, const niPerfTest::TestWriteParameters* request, niPerfTest::TestWriteResult* response)
+Status NIPerfTestServer::TestWrite(ServerContext* context, const niPerfTest::TestWriteParameters* request, niPerfTest::TestWriteResult* response)
 {
 	response->set_status(0);
 	return Status::OK;
@@ -138,7 +138,7 @@ Status NIScopeServer::TestWrite(ServerContext* context, const niPerfTest::TestWr
 
 //---------------------------------------------------------------------
 //---------------------------------------------------------------------
-Status NIScopeServer::TestWriteContinuously(ServerContext* context, ::grpc::ServerReaderWriter<niPerfTest::TestWriteResult, niPerfTest::TestWriteParameters>* stream)
+Status NIPerfTestServer::TestWriteContinuously(ServerContext* context, ::grpc::ServerReaderWriter<niPerfTest::TestWriteResult, niPerfTest::TestWriteParameters>* stream)
 {
     niPerfTest::TestWriteParameters readParameters;
     niPerfTest::TestWriteResult response;    
@@ -152,7 +152,7 @@ Status NIScopeServer::TestWriteContinuously(ServerContext* context, ::grpc::Serv
 
 //---------------------------------------------------------------------
 //---------------------------------------------------------------------
-Status NIScopeServer::ReadContinuously(ServerContext* context, const niPerfTest::ReadContinuouslyParameters* request, grpc::ServerWriter<niPerfTest::ReadContinuouslyResult>* writer)
+Status NIPerfTestServer::ReadContinuously(ServerContext* context, const niPerfTest::ReadContinuouslyParameters* request, grpc::ServerWriter<niPerfTest::ReadContinuouslyResult>* writer)
 {			
 	niPerfTest::ReadContinuouslyResult response;
 	response.mutable_wfm()->Reserve(request->numsamples());
@@ -321,7 +321,7 @@ void RunServer(int argc, char **argv, const char* saddress)
 	auto server_address = saddress; //GetServerAddress(argc, argv);
 	auto creds = CreateCredentials(argc, argv);
 
-	NIScopeServer service;
+	NIPerfTestServer service;
     MonikerServer monikerService;
 	grpc::EnableDefaultHealthCheckService(true);
 	grpc::reflection::InitProtoReflectionServerBuilderPlugin();

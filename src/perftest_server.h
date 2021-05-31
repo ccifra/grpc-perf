@@ -29,7 +29,7 @@ using namespace std;
 
 //---------------------------------------------------------------------
 //---------------------------------------------------------------------
-class NIScopeServer final : public niPerfTest::niPerfTestService::Service
+class NIPerfTestServer final : public niPerfTest::niPerfTestService::Service
 {
 public:
     ::grpc::Status StreamLatencyTest(::grpc::ServerContext* context, ::grpc::ServerReaderWriter< ::niPerfTest::StreamLatencyServer, ::niPerfTest::StreamLatencyClient>* stream) override;
