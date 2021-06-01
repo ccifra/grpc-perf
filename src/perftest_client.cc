@@ -571,7 +571,6 @@ void PerformLatencyPayloadWriteTest(NIPerfTestClient& client, int numSamples, st
 void PerformLatencyPayloadWriteStreamTest(NIPerfTestClient& client, int numSamples, std::string fileName)
 {    
     cout << "Start RPC Latency payload write stream test, iterations=" << LatencyTestIterations << " numSamples=" << numSamples << endl;
-    std::this_thread::sleep_for(std::chrono::milliseconds(1000));
 
     timeVector times;
     times.reserve(LatencyTestIterations);
@@ -580,16 +579,15 @@ void PerformLatencyPayloadWriteStreamTest(NIPerfTestClient& client, int numSampl
     request.mutable_wfm()->Reserve(numSamples);
     request.mutable_wfm()->Resize(numSamples, 0);
     TestWriteResult reply;
+    std::this_thread::sleep_for(std::chrono::milliseconds(1000));
 
     ClientContext context;
     auto stream = client.m_Stub->TestWriteContinuously(&context);
-
     for (int x=0; x<100; ++x)
     {
         stream->Write(request);
         stream->Read(&reply);
     }
-
     EnableTracing();
     for (int x=0; x<LatencyTestIterations; ++x)
     {
@@ -858,7 +856,7 @@ int main(int argc, char **argv)
 
     cpu_set_t cpuSet;
     CPU_ZERO(&cpuSet);
-    CPU_SET(1, &cpuSet);
+    CPU_SET(4, &cpuSet);
     sched_setaffinity(0, sizeof(cpu_set_t), &cpuSet);
 #endif
 
@@ -904,23 +902,23 @@ int main(int argc, char **argv)
     // PerformMessageLatencyTest(*client1, "latency5.txt");
 
     cout << "Start latency payload write tests" << endl;
-    PerformLatencyPayloadWriteTest(*client1, 1, "payloadlatency1.txt");
-    PerformLatencyPayloadWriteTest(*client1, 8, "payloadlatency8.txt");
-    PerformLatencyPayloadWriteTest(*client1, 16, "payloadlatency16.txt");
-    PerformLatencyPayloadWriteTest(*client1, 32, "payloadlatency32.txt");
-    PerformLatencyPayloadWriteTest(*client1, 64, "payloadlatency64.txt");
-    PerformLatencyPayloadWriteTest(*client1, 128, "payloadlatency128.txt");
-    PerformLatencyPayloadWriteTest(*client1, 1024, "payloadlatency1024.txt");
-    PerformLatencyPayloadWriteTest(*client1, 32768, "payloadlatency32768.txt");
+    // PerformLatencyPayloadWriteTest(*client1, 1, "payloadlatency1.txt");
+    // PerformLatencyPayloadWriteTest(*client1, 8, "payloadlatency8.txt");
+    // PerformLatencyPayloadWriteTest(*client1, 16, "payloadlatency16.txt");
+    // PerformLatencyPayloadWriteTest(*client1, 32, "payloadlatency32.txt");
+    // PerformLatencyPayloadWriteTest(*client1, 64, "payloadlatency64.txt");
+    // PerformLatencyPayloadWriteTest(*client1, 128, "payloadlatency128.txt");
+    // PerformLatencyPayloadWriteTest(*client1, 1024, "payloadlatency1024.txt");
+    // PerformLatencyPayloadWriteTest(*client1, 32768, "payloadlatency32768.txt");
 
-    // PerformLatencyPayloadWriteStreamTest(*client1, 1, "payloadstreamlatency1.txt");
-    // PerformLatencyPayloadWriteStreamTest(*client1, 8, "payloadstreamlatency8.txt");
-    // PerformLatencyPayloadWriteStreamTest(*client1, 16, "payloadstreamlatency16.txt");
-    // PerformLatencyPayloadWriteStreamTest(*client1, 32, "payloadstreamlatency32.txt");
-    // PerformLatencyPayloadWriteStreamTest(*client1, 64, "payloadstreamlatency64.txt");
-    // PerformLatencyPayloadWriteStreamTest(*client1, 128, "payloadstreamlatency128.txt");
-    // PerformLatencyPayloadWriteStreamTest(*client1, 1024, "payloadstreamlatency1024.txt");
-    // PerformLatencyPayloadWriteStreamTest(*client1, 32768, "payloadstreamlatency32768.txt");
+    PerformLatencyPayloadWriteStreamTest(*client1, 1, "payloadstreamlatency1.txt");
+    PerformLatencyPayloadWriteStreamTest(*client1, 8, "payloadstreamlatency8.txt");
+    PerformLatencyPayloadWriteStreamTest(*client1, 16, "payloadstreamlatency16.txt");
+    PerformLatencyPayloadWriteStreamTest(*client1, 32, "payloadstreamlatency32.txt");
+    PerformLatencyPayloadWriteStreamTest(*client1, 64, "payloadstreamlatency64.txt");
+    PerformLatencyPayloadWriteStreamTest(*client1, 128, "payloadstreamlatency128.txt");
+    PerformLatencyPayloadWriteStreamTest(*client1, 1024, "payloadstreamlatency1024.txt");
+    PerformLatencyPayloadWriteStreamTest(*client1, 32768, "payloadstreamlatency32768.txt");
 
     // PerformMessagePerformanceTest(*client1);
 
@@ -962,12 +960,16 @@ int main(int argc, char **argv)
     // PerformNStreamTest(clients, 1000);
     // PerformNStreamTest(clients, 10000);
     // PerformNStreamTest(clients, 100000);
-    // PerformLatencyStreamTest2(*client1, *client1, 1, "streamlatency1Stream.txt");
-    // PerformLatencyStreamTest2(*client1, *client1, 2, "streamlatency1Stream.txt");
-    // PerformLatencyStreamTest2(*client1, *client1, 3, "streamlatency1Stream.txt");
-    // PerformLatencyStreamTest2(*client1, *client1, 4, "streamlatency4Stream.txt");
-    // PerformLatencyStreamTest2(*client1, *client1, 5, "streamlatency4Stream.txt");
-    // PerformMessagePerformanceTest(*client1);
+
+
+    cout << "Start parallel stream latency test" << endl;
+    PerformLatencyStreamTest2(*client1, *client1, 1, "streamlatency1Stream.txt");
+    PerformLatencyStreamTest2(*client1, *client1, 2, "streamlatency1Stream.txt");
+    PerformLatencyStreamTest2(*client1, *client1, 3, "streamlatency1Stream.txt");
+    PerformLatencyStreamTest2(*client1, *client1, 4, "streamlatency4Stream.txt");
+    PerformLatencyStreamTest2(*client1, *client1, 5, "streamlatency4Stream.txt");
+    
+    PerformMessagePerformanceTest(*client1);
     
     cout << "Start streaming tests" << endl;
     // PerformStreamingTest(*client1, 10);

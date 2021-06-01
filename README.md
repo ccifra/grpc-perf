@@ -24,7 +24,7 @@ Download the repo and update submodules, this will pull the gRPC components and 
 > git submodule update --init --recursive
 ```
 
-Build Debug
+Build Debug - Do not build debug for profiling
 ```
 > mkdir build
 > cd build
@@ -50,17 +50,22 @@ Download the repo and update submodules, this will pull the gRPC components and 
 > git submodule update --init --recursive
 ```
 
-Build
+Build - Do not build debug for profiling
 
 ```
-> cmake .
+> mkdir -p cmake/build
+> cd cmake/build
+> cmake ../..
 > make
 ```
 
 Build Release
 
 ```
-> cmake -DCMAKE_BUILD_TYPE=Release .
+> mkdir -p cmake/build
+> cd cmake/build
+> cmake ../..
+> cmake -DCMAKE_BUILD_TYPE=Release ../..
 > make
 ```
 
@@ -85,10 +90,21 @@ Download the repo and update submodules, this will pull the gRPC components and 
 > git submodule update --init --recursive
 ```
 
-Build
+Build Debug - Do not build debug for profiling
 
 ```
-> cmake .
+> mkdir -p cmake/build
+> cd cmake/build
+> cmake ../..
+> make
+```
+
+Build Release
+
+```
+> mkdir -p cmake/build
+> cd cmake/build
+> cmake -DCMAKE_BUILD_TYPE=Release ../..
 > make
 ```
 
