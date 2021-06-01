@@ -29,6 +29,10 @@ using timeVector = vector<chrono::microseconds>;
 
 //---------------------------------------------------------------------
 //---------------------------------------------------------------------
+static int LatencyTestIterations = 200000;
+
+//---------------------------------------------------------------------
+//---------------------------------------------------------------------
 class NIPerfTestClient
 {
 public:
@@ -127,7 +131,6 @@ int NIPerfTestClient::Read(ViSession session, string channels, double timeout, i
         cout << status.error_code() << ": " << status.error_message() << endl;
     }
     memcpy(samples, reply.wfm().data(), numSamples * sizeof(double));
-    //*waveformInfo = reply.wfminfo()[0];
     return reply.status();
 }
 
@@ -406,13 +409,11 @@ void PerformMessagePerformanceTest(NIPerfTestClient& client)
 //---------------------------------------------------------------------
 void PerformLatencyStreamTest(NIPerfTestClient& client, std::string fileName)
 {    
-    int iterations = 100000;
-
-    cout << "Start RPC Stream latency test, iterations=" << iterations << endl;
+    cout << "Start RPC Stream latency test, iterations=" << LatencyTestIterations << endl;
     std::this_thread::sleep_for(std::chrono::milliseconds(1000));
 
     timeVector times;
-    times.reserve(iterations);
+    times.reserve(LatencyTestIterations);
 
 	niPerfTest::StreamLatencyClient clientData;
 	niPerfTest::StreamLatencyServer serverData;
@@ -426,7 +427,7 @@ void PerformLatencyStreamTest(NIPerfTestClient& client, std::string fileName)
     }
 
     EnableTracing();
-    for (int x=0; x<iterations; ++x)
+    for (int x=0; x<LatencyTestIterations; ++x)
     {
         TraceMarker("Start iteration");
         auto start = chrono::steady_clock::now();
@@ -452,13 +453,11 @@ void PerformLatencyStreamTest(NIPerfTestClient& client, std::string fileName)
 //---------------------------------------------------------------------
 void PerformMonikerLatencyReadWriteTest(NIMonikerClient& client, int numItems, std::string fileName)
 {    
-    int iterations = 100000;
-
-    cout << "Start Moniker Read Write latency test, items: " << numItems << " iterations:" << iterations << endl;
+    cout << "Start Moniker Read Write latency test, items: " << numItems << " iterations:" << LatencyTestIterations << endl;
     std::this_thread::sleep_for(std::chrono::milliseconds(1000));
 
     timeVector times;
-    times.reserve(iterations);
+    times.reserve(LatencyTestIterations);
 
 	niPerfTest::StreamLatencyClient clientData;
 	niPerfTest::StreamLatencyServer serverData;
@@ -503,7 +502,7 @@ void PerformMonikerLatencyReadWriteTest(NIMonikerClient& client, int numItems, s
         }
     }
 
-    for (int x=0; x<iterations; ++x)
+    for (int x=0; x<LatencyTestIterations; ++x)
     {
         auto start = chrono::steady_clock::now();
         MonikerWriteRequest writeRequest;
@@ -537,13 +536,11 @@ void PerformMonikerLatencyReadWriteTest(NIMonikerClient& client, int numItems, s
 //---------------------------------------------------------------------
 void PerformLatencyPayloadWriteTest(NIPerfTestClient& client, int numSamples, std::string fileName)
 {    
-    int iterations = 100000;
-
-    cout << "Start RPC Latency payload write test, iterations=" << iterations << " numSamples=" << numSamples << endl;
+    cout << "Start RPC Latency payload write test, iterations=" << LatencyTestIterations << " numSamples=" << numSamples << endl;
     std::this_thread::sleep_for(std::chrono::milliseconds(1000));
 
     timeVector times;
-    times.reserve(iterations);
+    times.reserve(LatencyTestIterations);
 
     TestWriteParameters request;
     request.mutable_wfm()->Reserve(numSamples);
@@ -555,9 +552,8 @@ void PerformLatencyPayloadWriteTest(NIPerfTestClient& client, int numSamples, st
         ClientContext context;
         client.m_Stub->TestWrite(&context, request, &reply);
     }
-
     EnableTracing();
-    for (int x=0; x<iterations; ++x)
+    for (int x=0; x<LatencyTestIterations; ++x)
     {
         TraceMarker("Start iteration");
         auto start = chrono::steady_clock::now();
@@ -574,13 +570,11 @@ void PerformLatencyPayloadWriteTest(NIPerfTestClient& client, int numSamples, st
 //---------------------------------------------------------------------
 void PerformLatencyPayloadWriteStreamTest(NIPerfTestClient& client, int numSamples, std::string fileName)
 {    
-    int iterations = 100000;
-
-    cout << "Start RPC Latency payload write stream test, iterations=" << iterations << " numSamples=" << numSamples << endl;
+    cout << "Start RPC Latency payload write stream test, iterations=" << LatencyTestIterations << " numSamples=" << numSamples << endl;
     std::this_thread::sleep_for(std::chrono::milliseconds(1000));
 
     timeVector times;
-    times.reserve(iterations);
+    times.reserve(LatencyTestIterations);
 
     TestWriteParameters request;
     request.mutable_wfm()->Reserve(numSamples);
@@ -597,7 +591,7 @@ void PerformLatencyPayloadWriteStreamTest(NIPerfTestClient& client, int numSampl
     }
 
     EnableTracing();
-    for (int x=0; x<iterations; ++x)
+    for (int x=0; x<LatencyTestIterations; ++x)
     {
         TraceMarker("Start iteration");
         auto start = chrono::steady_clock::now();
@@ -626,12 +620,10 @@ struct StreamInfo
 //---------------------------------------------------------------------
 void PerformLatencyStreamTest2(NIPerfTestClient& client, NIPerfTestClient& client2, int streamCount, std::string fileName)
 {    
-    int iterations = 100000;
-
-    cout << "Start RPC Stream latency test, streams:" << streamCount << ", iterations=" << iterations << endl;
+    cout << "Start RPC Stream latency test, streams:" << streamCount << ", iterations=" << LatencyTestIterations << endl;
 
     timeVector times;
-    times.reserve(iterations);
+    times.reserve(LatencyTestIterations);
 
     StreamInfo* streamInfos = new StreamInfo[streamCount];
 	niPerfTest::StreamLatencyServer serverData;
@@ -657,7 +649,7 @@ void PerformLatencyStreamTest2(NIPerfTestClient& client, NIPerfTestClient& clien
             streamInfos[i].rstream->Read(&serverData);
         }
     }
-    for (int x=0; x<iterations; ++x)
+    for (int x=0; x<LatencyTestIterations; ++x)
     {
         auto start = chrono::steady_clock::now();
         for (int i=0; i<streamCount; ++i)
@@ -686,12 +678,10 @@ void PerformLatencyStreamTest2(NIPerfTestClient& client, NIPerfTestClient& clien
 //---------------------------------------------------------------------
 void PerformMessageLatencyTest(NIPerfTestClient& client, std::string fileName)
 {
-    int iterations = 100000;
-
-    cout << "Start RPC latency test, iterations=" << iterations << endl;
+    cout << "Start RPC latency test, iterations=" << LatencyTestIterations << endl;
 
     timeVector times;
-    times.reserve(iterations);
+    times.reserve(LatencyTestIterations);
     std::this_thread::sleep_for(std::chrono::milliseconds(1000));
 
     InitParameters request;
@@ -704,7 +694,7 @@ void PerformMessageLatencyTest(NIPerfTestClient& client, std::string fileName)
         ClientContext context;
         client.m_Stub->Init(&context, request, &reply);
     }
-    for (int x=0; x<iterations; ++x)
+    for (int x=0; x<LatencyTestIterations; ++x)
     {
         auto start = chrono::steady_clock::now();
         ClientContext context;
