@@ -69,6 +69,8 @@ include_directories("${CMAKE_CURRENT_BINARY_DIR}" "./src" "./third_party/grpc")
 #----------------------------------------------------------------------
 add_executable(perftest_server
   src/perftest_server.cc
+  src/client_utilities.cc
+  src/performance_tests.cc
   ${perftest_proto_srcs}
   ${perftest_grpc_srcs}
   )
@@ -82,7 +84,9 @@ target_link_libraries(perftest_server
 # Example C++ application to talk to the perftest gRPC service
 #----------------------------------------------------------------------
 add_executable(perftest_client
-  "src/perftest_client.cc"
+  src/perftest_client.cc
+  src/client_utilities.cc
+  src/performance_tests.cc
   ${perftest_proto_srcs}
   ${perftest_grpc_srcs}
   )
