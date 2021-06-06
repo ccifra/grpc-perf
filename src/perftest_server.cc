@@ -33,6 +33,7 @@ using grpc::Status;
 //---------------------------------------------------------------------
 using namespace std;
 using namespace niPerfTest;
+using namespace google::protobuf;
 
 
 //---------------------------------------------------------------------
@@ -184,37 +185,39 @@ Status MonikerServer::InitiateMonikerStream(::grpc::ServerContext* context, cons
 
 //---------------------------------------------------------------------
 //---------------------------------------------------------------------
-Status MonikerServer::StreamReadWrite(::grpc::ServerContext* context, ::grpc::ServerReaderWriter< ::niPerfTest::MonikerReadResult, ::niPerfTest::MonikerWriteRequest>* stream)
+Status MonikerServer::StreamReadWrite(::grpc::ServerContext* context, ::grpc::ServerReaderWriter<MonikerReadResult, MonikerWriteRequest>* stream)
 {    
-	niPerfTest::MonikerWriteRequest client;
+	MonikerWriteRequest client;
+    Arena areana;
 	while (stream->Read(&client))
 	{
-        niPerfTest::MonikerReadResult server;
+        auto server = Arena::CreateMessage<MonikerReadResult>(&areana);
         for (int x=0; x<client.values().size(); ++x)
         {
-            auto newValue = server.add_values();
+            auto newValue = server->add_values();
             if (useAnyType)
             {
-                niPerfTest::StreamLatencyClient writeValue;
-                client.values()[x].values().UnpackTo(&writeValue);
+                auto writeValue = Arena::CreateMessage<StreamLatencyClient>(&areana);
+                client.values()[x].values().UnpackTo(writeValue);
 
-                niPerfTest::StreamLatencyServer readValue;
-                readValue.set_message(writeValue.message());
+                auto readValue = Arena::CreateMessage<StreamLatencyServer>(&areana);
+                readValue->set_message(writeValue->message());
 
-                auto anyValue = new google::protobuf::Any();
-                anyValue->PackFrom(readValue);
+                auto anyValue = Arena::CreateMessage<Any>(&areana);
+                anyValue->PackFrom(*readValue);
                 newValue->set_allocated_values(anyValue);
             }
             else
             {                
                 auto doubleValue = client.values()[x].doublearray().values(0);
 
-                auto doubleArray = new DoubleArray();
+                auto doubleArray = Arena::CreateMessage<DoubleArray>(&areana);
                 doubleArray->add_values(doubleValue);
                 newValue->set_allocated_doublearray(doubleArray);
             }
         }
-		stream->Write(server);
+		stream->Write(*server);
+        areana.Reset();
 	}
 	return Status::OK;
 }

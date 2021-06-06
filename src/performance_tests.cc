@@ -124,88 +124,92 @@ void PerformMonikerLatencyReadWriteTest(NIMonikerClient& client, int numItems, b
     writeRequest.set_monikerstreamid(monikerId.streamid());
     auto stream = client.m_Stub->StreamReadWrite(&streamContext);
 
+    google::protobuf::Arena areana;
+
     for (int x=0; x<100; ++x)
     {
-        MonikerWriteRequest writeRequest;
-        writeRequest.set_monikerstreamid(monikerId.streamid());
+        auto writeRequest = google::protobuf::Arena::CreateMessage<MonikerWriteRequest>(&areana);
+        writeRequest->set_monikerstreamid(monikerId.streamid());
         for (int i=0; i<numItems; ++i)
         {
-            niPerfTest::StreamLatencyClient writeValue;
-            writeValue.set_message(42 + i);
-            auto v = writeRequest.add_values();
+            auto writeValue = google::protobuf::Arena::CreateMessage<niPerfTest::StreamLatencyClient>(&areana);
+            writeValue->set_message(42 + i);
+            auto v = writeRequest->add_values();
             if (useAnyType)
             {
-                auto any = new google::protobuf::Any();
-                any->PackFrom(writeValue);
+                auto any = google::protobuf::Arena::CreateMessage<google::protobuf::Any>(&areana);
+                any->PackFrom(*writeValue);
                 v->set_allocated_values(any);
             }
             else
             {
-                auto doubleValue = new DoubleArray();
+                auto doubleValue = google::protobuf::Arena::CreateMessage<DoubleArray>(&areana);
                 doubleValue->add_values(42 + i);
                 v->set_allocated_doublearray(doubleValue);
             }
         }
-        stream->Write(writeRequest);
+        stream->Write(*writeRequest);
 
-        MonikerReadResult readResult;
-        stream->Read(&readResult);
+        auto readResult = google::protobuf::Arena::CreateMessage<MonikerReadResult>(&areana);
+        stream->Read(readResult);
         for (int i=0; i<numItems; ++i)
         {
             if (useAnyType)
             {
-                StreamLatencyServer readValue;
-                readResult.values()[i].values().UnpackTo(&readValue);
+                auto readValue = google::protobuf::Arena::CreateMessage<StreamLatencyServer>(&areana);
+                readResult->values()[i].values().UnpackTo(readValue);
             }
             else
             {
-                auto result = readResult.values()[i].doublearray().values(0);
+                auto result = readResult->values()[i].doublearray().values(0);
             }
         }
+        areana.Reset();
     }
 
     for (int x=0; x<LatencyTestIterations; ++x)
     {
         auto start = chrono::steady_clock::now();
-        MonikerWriteRequest writeRequest;
-        writeRequest.set_monikerstreamid(monikerId.streamid());
+        auto writeRequest = google::protobuf::Arena::CreateMessage<MonikerWriteRequest>(&areana);
+        writeRequest->set_monikerstreamid(monikerId.streamid());
         for (int i=0; i<numItems; ++i)
         {
-            niPerfTest::StreamLatencyClient writeValue;
-            writeValue.set_message(42 + i);
-            auto v = writeRequest.add_values();
+            auto writeValue = google::protobuf::Arena::CreateMessage<niPerfTest::StreamLatencyClient>(&areana);
+            writeValue->set_message(42 + i);
+            auto v = writeRequest->add_values();
             if (useAnyType)
             {
-                auto any = new google::protobuf::Any();
-                any->PackFrom(writeValue);
+                auto any = google::protobuf::Arena::CreateMessage<google::protobuf::Any>(&areana);
+                any->PackFrom(*writeValue);
                 v->set_allocated_values(any);
             }
             else
             {
-                auto doubleValue = new DoubleArray();
+                auto doubleValue = google::protobuf::Arena::CreateMessage<DoubleArray>(&areana);
                 doubleValue->add_values(42 + i);
                 v->set_allocated_doublearray(doubleValue);
             }
         }
-        stream->Write(writeRequest);
+        stream->Write(*writeRequest);
 
-        MonikerReadResult readResult;
-        stream->Read(&readResult);
+        auto readResult = google::protobuf::Arena::CreateMessage<MonikerReadResult>(&areana);
+        stream->Read(readResult);
         for (int i=0; i<numItems; ++i)
         {
             if (useAnyType)
             {
-                StreamLatencyServer readValue;
-                readResult.values()[i].values().UnpackTo(&readValue);
+                auto readValue = google::protobuf::Arena::CreateMessage<StreamLatencyServer>(&areana);
+                readResult->values()[i].values().UnpackTo(readValue);
             }
             else
             {
-                auto result = readResult.values()[i].doublearray().values(0);                
+                auto result = readResult->values()[i].doublearray().values(0);
             }
         }
         auto end = chrono::steady_clock::now();
         auto elapsed = chrono::duration_cast<chrono::microseconds>(end - start);
         times.emplace_back(elapsed);
+        areana.Reset();
     }
     std::this_thread::sleep_for(std::chrono::milliseconds(1000));
     WriteLatencyData(times, fileName);
