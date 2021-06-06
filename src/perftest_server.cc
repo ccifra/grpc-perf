@@ -1,5 +1,7 @@
 //---------------------------------------------------------------------
 //---------------------------------------------------------------------
+#include <client_utilities.h>
+#include <performance_tests.h>
 #include <thread>
 #include <sstream>
 #include <fstream>
@@ -169,10 +171,13 @@ Status NIPerfTestServer::ReadContinuously(ServerContext* context, const niPerfTe
 	return Status::OK;
 }
 
+static bool useAnyType;
+
 //---------------------------------------------------------------------
 //---------------------------------------------------------------------
 Status MonikerServer::InitiateMonikerStream(::grpc::ServerContext* context, const ::niPerfTest::MonikerList* request, ::niPerfTest::MonikerStreamId* response)
-{    
+{
+    useAnyType = request->useanytype();    
     response->set_streamid(1);
 	return Status::OK;
 }
@@ -187,13 +192,27 @@ Status MonikerServer::StreamReadWrite(::grpc::ServerContext* context, ::grpc::Se
         niPerfTest::MonikerReadResult server;
         for (int x=0; x<client.values().size(); ++x)
         {
-            niPerfTest::StreamLatencyClient writeValue;
-            client.values()[x].UnpackTo(&writeValue);
-
-            niPerfTest::StreamLatencyServer readValue;
-            readValue.set_message(writeValue.message());
             auto newValue = server.add_values();
-            newValue->PackFrom(readValue);
+            if (useAnyType)
+            {
+                niPerfTest::StreamLatencyClient writeValue;
+                client.values()[x].values().UnpackTo(&writeValue);
+
+                niPerfTest::StreamLatencyServer readValue;
+                readValue.set_message(writeValue.message());
+
+                auto anyValue = new google::protobuf::Any();
+                anyValue->PackFrom(readValue);
+                newValue->set_allocated_values(anyValue);
+            }
+            else
+            {                
+                auto doubleValue = client.values()[x].doublearray().values(0);
+
+                auto doubleArray = new DoubleArray();
+                doubleArray->add_values(doubleValue);
+                newValue->set_allocated_doublearray(doubleArray);
+            }
         }
 		stream->Write(server);
 	}
@@ -390,8 +409,10 @@ int main(int argc, char **argv)
     //     threads.push_back(t);
     // }
 	// std::this_thread::sleep_for(std::chrono::milliseconds(500));
-	// auto scope = NIScope(_inProcServer);
-	// PerformLatencyStreamTest2(scope, "inprocess.txt");
+
+	// auto client = NIPerfTestClient(_inProcServer);
+	// PerformLatencyStreamTest2(client, client, 1, "inprocess.txt");
+    
     // for (auto t: threads)
     // {
     //     t->join();

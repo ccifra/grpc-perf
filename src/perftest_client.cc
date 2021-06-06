@@ -178,11 +178,12 @@ int main(int argc, char **argv)
 
     cout << "Start moniker latency read write tests" << endl;
     auto monikerClient = new NIMonikerClient(grpc::CreateCustomChannel(target_str + port, creds, args));
-    PerformMonikerLatencyReadWriteTest(*monikerClient, 1, "monikerlatency1.txt");
-    PerformMonikerLatencyReadWriteTest(*monikerClient, 2, "monikerlatency2.txt");
-    PerformMonikerLatencyReadWriteTest(*monikerClient, 3, "monikerlatency3.txt");
-    PerformMonikerLatencyReadWriteTest(*monikerClient, 4, "monikerlatency4.txt");
-    PerformMonikerLatencyReadWriteTest(*monikerClient, 5, "monikerlatency5.txt");
+    PerformMonikerLatencyReadWriteTest(*monikerClient, 1, false, "monikerlatency1.txt");
+    PerformMonikerLatencyReadWriteTest(*monikerClient, 2, false, "monikerlatency2.txt");
+    PerformMonikerLatencyReadWriteTest(*monikerClient, 3, false, "monikerlatency3.txt");
+    PerformMonikerLatencyReadWriteTest(*monikerClient, 4, false, "monikerlatency4.txt");
+    PerformMonikerLatencyReadWriteTest(*monikerClient, 5, false, "monikerlatency5.txt");
+    PerformMonikerLatencyReadWriteTest(*monikerClient, 5, true, "monikerlatencyany5.txt");
 
     //PerformMessageLatencyTest(*client1, "latency1.txt");
     // PerformMessageLatencyTest(*client1, "latency2.txt");

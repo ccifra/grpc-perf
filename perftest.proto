@@ -51,18 +51,35 @@ message Moniker {
   string DataInstance = 3;
 }
 
+message DoubleArray {
+  repeated double values = 1;
+}
+
+message IntArray {
+  repeated sint32 values = 1;
+}
+
+message DataValue {
+  oneof value {
+    DoubleArray doubleArray = 1;
+    IntArray intArray = 2;
+    google.protobuf.Any Values = 3;
+  }
+}
+
 message MonikerWriteRequest {
   int32 monikerStreamId = 1;
-  repeated google.protobuf.Any Values = 2;
+  repeated DataValue Values = 2;
 }
 
 message MonikerReadResult {
-  repeated google.protobuf.Any Values = 1;
+  repeated DataValue Values = 1;
 }
 
 message MonikerList {
   repeated Moniker ReadMonikers = 1;
   repeated Moniker WriteMonikers = 2;
+  bool useAnyType = 3;
 }
 
 message MonikerStreamId {

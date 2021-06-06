@@ -94,9 +94,9 @@ void PerformLatencyStreamTest(NIPerfTestClient& client, std::string fileName)
 
 //---------------------------------------------------------------------
 //---------------------------------------------------------------------
-void PerformMonikerLatencyReadWriteTest(NIMonikerClient& client, int numItems, std::string fileName)
+void PerformMonikerLatencyReadWriteTest(NIMonikerClient& client, int numItems, bool useAnyType, std::string fileName)
 {    
-    cout << "Start Moniker Read Write latency test, items: " << numItems << " iterations:" << LatencyTestIterations << endl;
+    cout << "Start Moniker Read Write latency test, items: " << numItems << " use any: " << useAnyType << " iterations:" << LatencyTestIterations << endl;
     std::this_thread::sleep_for(std::chrono::milliseconds(1000));
 
     timeVector times;
@@ -107,6 +107,7 @@ void PerformMonikerLatencyReadWriteTest(NIMonikerClient& client, int numItems, s
 
     ClientContext context;
     niPerfTest::MonikerList monikerList;
+    monikerList.set_useanytype(useAnyType);
 
     for (int x=0; x<numItems; ++x)
     {
@@ -132,7 +133,18 @@ void PerformMonikerLatencyReadWriteTest(NIMonikerClient& client, int numItems, s
             niPerfTest::StreamLatencyClient writeValue;
             writeValue.set_message(42 + i);
             auto v = writeRequest.add_values();
-            v->PackFrom(writeValue);
+            if (useAnyType)
+            {
+                auto any = new google::protobuf::Any();
+                any->PackFrom(writeValue);
+                v->set_allocated_values(any);
+            }
+            else
+            {
+                auto doubleValue = new DoubleArray();
+                doubleValue->add_values(42 + i);
+                v->set_allocated_doublearray(doubleValue);
+            }
         }
         stream->Write(writeRequest);
 
@@ -140,8 +152,15 @@ void PerformMonikerLatencyReadWriteTest(NIMonikerClient& client, int numItems, s
         stream->Read(&readResult);
         for (int i=0; i<numItems; ++i)
         {
-            StreamLatencyServer readValue;
-            readResult.values()[i].UnpackTo(&readValue);
+            if (useAnyType)
+            {
+                StreamLatencyServer readValue;
+                readResult.values()[i].values().UnpackTo(&readValue);
+            }
+            else
+            {
+                auto result = readResult.values()[i].doublearray().values(0);
+            }
         }
     }
 
@@ -155,7 +174,18 @@ void PerformMonikerLatencyReadWriteTest(NIMonikerClient& client, int numItems, s
             niPerfTest::StreamLatencyClient writeValue;
             writeValue.set_message(42 + i);
             auto v = writeRequest.add_values();
-            v->PackFrom(writeValue);
+            if (useAnyType)
+            {
+                auto any = new google::protobuf::Any();
+                any->PackFrom(writeValue);
+                v->set_allocated_values(any);
+            }
+            else
+            {
+                auto doubleValue = new DoubleArray();
+                doubleValue->add_values(42 + i);
+                v->set_allocated_doublearray(doubleValue);
+            }
         }
         stream->Write(writeRequest);
 
@@ -163,8 +193,15 @@ void PerformMonikerLatencyReadWriteTest(NIMonikerClient& client, int numItems, s
         stream->Read(&readResult);
         for (int i=0; i<numItems; ++i)
         {
-            StreamLatencyServer readValue;
-            readResult.values()[i].UnpackTo(&readValue);
+            if (useAnyType)
+            {
+                StreamLatencyServer readValue;
+                readResult.values()[i].values().UnpackTo(&readValue);
+            }
+            else
+            {
+                auto result = readResult.values()[i].doublearray().values(0);                
+            }
         }
         auto end = chrono::steady_clock::now();
         auto elapsed = chrono::duration_cast<chrono::microseconds>(end - start);
