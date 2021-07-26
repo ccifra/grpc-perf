@@ -169,29 +169,29 @@ int main(int argc, char **argv)
     cout << "Init result: " << result << endl;
 
     // EnableTracing();
-    PerformLatencyStreamTest(*client1, "streamlatency1.txt");
-    PerformLatencyStreamTest(*client1, "streamlatency2.txt");
-    PerformLatencyStreamTest(*client1, "streamlatency3.txt");
-    PerformLatencyStreamTest(*client1, "streamlatency4.txt");
-    PerformLatencyStreamTest(*client1, "streamlatency5.txt");
+    //PerformLatencyStreamTest(*client1, "streamlatency1.txt");
+    // PerformLatencyStreamTest(*client1, "streamlatency2.txt");
+    // PerformLatencyStreamTest(*client1, "streamlatency3.txt");
+    // PerformLatencyStreamTest(*client1, "streamlatency4.txt");
+    // PerformLatencyStreamTest(*client1, "streamlatency5.txt");
     // DisableTracing();
 
-    cout << "Start moniker latency read write tests" << endl;
-    auto monikerClient = new NIMonikerClient(grpc::CreateCustomChannel(target_str + port, creds, args));
-    PerformMonikerLatencyReadWriteTest(*monikerClient, 1, false, "monikerlatency1.txt");
-    PerformMonikerLatencyReadWriteTest(*monikerClient, 2, false, "monikerlatency2.txt");
-    PerformMonikerLatencyReadWriteTest(*monikerClient, 3, false, "monikerlatency3.txt");
-    PerformMonikerLatencyReadWriteTest(*monikerClient, 4, false, "monikerlatency4.txt");
-    PerformMonikerLatencyReadWriteTest(*monikerClient, 5, false, "monikerlatency5.txt");
-    PerformMonikerLatencyReadWriteTest(*monikerClient, 5, true, "monikerlatencyany5.txt");
+    // cout << "Start moniker latency read write tests" << endl;
+    // auto monikerClient = new NIMonikerClient(grpc::CreateCustomChannel(target_str + port, creds, args));
+    // PerformMonikerLatencyReadWriteTest(*monikerClient, 1, false, "monikerlatency1.txt");
+    // PerformMonikerLatencyReadWriteTest(*monikerClient, 2, false, "monikerlatency2.txt");
+    // PerformMonikerLatencyReadWriteTest(*monikerClient, 3, false, "monikerlatency3.txt");
+    // PerformMonikerLatencyReadWriteTest(*monikerClient, 4, false, "monikerlatency4.txt");
+    // PerformMonikerLatencyReadWriteTest(*monikerClient, 5, false, "monikerlatency5.txt");
+    // PerformMonikerLatencyReadWriteTest(*monikerClient, 5, true, "monikerlatencyany5.txt");
 
-    //PerformMessageLatencyTest(*client1, "latency1.txt");
+    // PerformMessageLatencyTest(*client1, "latency1.txt");
     // PerformMessageLatencyTest(*client1, "latency2.txt");
     // PerformMessageLatencyTest(*client1, "latency3.txt");
     // PerformMessageLatencyTest(*client1, "latency4.txt");
     // PerformMessageLatencyTest(*client1, "latency5.txt");
 
-    cout << "Start latency payload write tests" << endl;
+    // cout << "Start latency payload write tests" << endl;
     // PerformLatencyPayloadWriteTest(*client1, 1, "payloadlatency1.txt");
     // PerformLatencyPayloadWriteTest(*client1, 8, "payloadlatency8.txt");
     // PerformLatencyPayloadWriteTest(*client1, 16, "payloadlatency16.txt");
@@ -201,24 +201,16 @@ int main(int argc, char **argv)
     // PerformLatencyPayloadWriteTest(*client1, 1024, "payloadlatency1024.txt");
     // PerformLatencyPayloadWriteTest(*client1, 32768, "payloadlatency32768.txt");
 
-    PerformLatencyPayloadWriteStreamTest(*client1, 1, "payloadstreamlatency1.txt");
-    PerformLatencyPayloadWriteStreamTest(*client1, 8, "payloadstreamlatency8.txt");
-    PerformLatencyPayloadWriteStreamTest(*client1, 16, "payloadstreamlatency16.txt");
-    PerformLatencyPayloadWriteStreamTest(*client1, 32, "payloadstreamlatency32.txt");
-    PerformLatencyPayloadWriteStreamTest(*client1, 64, "payloadstreamlatency64.txt");
-    PerformLatencyPayloadWriteStreamTest(*client1, 128, "payloadstreamlatency128.txt");
-    PerformLatencyPayloadWriteStreamTest(*client1, 1024, "payloadstreamlatency1024.txt");
-    PerformLatencyPayloadWriteStreamTest(*client1, 32768, "payloadstreamlatency32768.txt");
+    // PerformLatencyPayloadWriteStreamTest(*client1, 1, "payloadstreamlatency1.txt");
+    // PerformLatencyPayloadWriteStreamTest(*client1, 8, "payloadstreamlatency8.txt");
+    // PerformLatencyPayloadWriteStreamTest(*client1, 16, "payloadstreamlatency16.txt");
+    // PerformLatencyPayloadWriteStreamTest(*client1, 32, "payloadstreamlatency32.txt");
+    // PerformLatencyPayloadWriteStreamTest(*client1, 64, "payloadstreamlatency64.txt");
+    // PerformLatencyPayloadWriteStreamTest(*client1, 128, "payloadstreamlatency128.txt");
+    // PerformLatencyPayloadWriteStreamTest(*client1, 1024, "payloadstreamlatency1024.txt");
+    // PerformLatencyPayloadWriteStreamTest(*client1, 32768, "payloadstreamlatency32768.txt");
 
-    // PerformMessagePerformanceTest(*client1);
-
-    // cout << "Start streaming tests" << endl;
-    // PerformStreamingTest(*client1, 10);
-    // PerformStreamingTest(*client1, 100);
-    // PerformStreamingTest(*client1, 1000);
-    // PerformStreamingTest(*client1, 10000);
-    // PerformStreamingTest(*client1, 100000);
-    // PerformStreamingTest(*client1, 200000);
+    //PerformMessagePerformanceTest(*client1);
 
     // client2 = new NIScope(grpc::CreateChannel(target_str + ":50052", creds));
     // result = client2->Init(42);
@@ -252,20 +244,23 @@ int main(int argc, char **argv)
     // PerformNStreamTest(clients, 100000);
 
 
-    cout << "Start parallel stream latency test" << endl;
-    PerformLatencyStreamTest2(*client1, *client1, 1, "streamlatency1Stream.txt");
-    PerformLatencyStreamTest2(*client1, *client1, 2, "streamlatency1Stream.txt");
-    PerformLatencyStreamTest2(*client1, *client1, 3, "streamlatency1Stream.txt");
-    PerformLatencyStreamTest2(*client1, *client1, 4, "streamlatency4Stream.txt");
-    PerformLatencyStreamTest2(*client1, *client1, 5, "streamlatency4Stream.txt");
+    // cout << "Start parallel stream latency test" << endl;
+    // PerformLatencyStreamTest2(*client1, *client1, 1, "streamlatency1Stream.txt");
+    // PerformLatencyStreamTest2(*client1, *client1, 2, "streamlatency1Stream.txt");
+    // PerformLatencyStreamTest2(*client1, *client1, 3, "streamlatency1Stream.txt");
+    // PerformLatencyStreamTest2(*client1, *client1, 4, "streamlatency4Stream.txt");
+    // PerformLatencyStreamTest2(*client1, *client1, 5, "streamlatency4Stream.txt");
     
-    PerformMessagePerformanceTest(*client1);
+    // PerformMessagePerformanceTest(*client1);
     
     cout << "Start streaming tests" << endl;
     // PerformStreamingTest(*client1, 10);
     // PerformStreamingTest(*client1, 100);
     // PerformStreamingTest(*client1, 1000);
     // PerformStreamingTest(*client1, 10000);
+    // PerformStreamingTest(*client1, 100000);
+    PerformStreamingTest(*client1, 100000);
+    PerformStreamingTest(*client1, 100000);
     PerformStreamingTest(*client1, 100000);
     // PerformStreamingTest(*client1, 200000);
 

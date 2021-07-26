@@ -7,7 +7,7 @@ namespace PerfTestServer
 {
     public class PerftestServiceImpl : NiPerfTest.niPerfTestService.niPerfTestServiceBase
     {
-        static List<double> data = new List<double>();
+        private static List<double> _data = new List<double>();
 
         public override Task<InitResult> Init(InitParameters request, ServerCallContext context)
         {
@@ -36,12 +36,12 @@ namespace PerfTestServer
 
         private void InitData(int numSamples)
         {
-            if (data.Count != numSamples)
+            if (_data.Count != numSamples)
             {
-                data = new List<double>(numSamples);
+                _data = new List<double>(numSamples);
                 for (int x = 0; x < numSamples; ++x)
                 {
-                    data.Add(1.1 + x);
+                    _data.Add(1.1 + x);
                 }
             }
         }
@@ -51,7 +51,7 @@ namespace PerfTestServer
             var result = new ReadContinuouslyResult();
 
             InitData(request.NumSamples);
-            result.Wfm.AddRange(data);
+            result.Wfm.AddRange(_data);
 
             for (int x=0; x<10000; ++x)
             {
@@ -62,9 +62,8 @@ namespace PerfTestServer
         public override Task<ReadResult> Read(ReadParameters request, ServerCallContext context)
         {
             InitData(request.NumSamples);
-
             var response = new ReadResult();
-            response.Wfm.AddRange(data);
+            response.Wfm.AddRange(_data);
             response.Status = 0;
 
             return Task.FromResult(response);

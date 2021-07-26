@@ -92,6 +92,15 @@ void PerformLatencyStreamTest(NIPerfTestClient& client, std::string fileName)
     std::this_thread::sleep_for(std::chrono::milliseconds(1000));
 }
 
+std::unique_ptr<grpc::ByteBuffer> SerializeToByteBuffer(
+    const grpc::protobuf::Message& message)
+{
+    std::string buf;
+    message.SerializeToString(&buf);
+    grpc::Slice slice(buf);
+    return std::unique_ptr<grpc::ByteBuffer>(new grpc::ByteBuffer(&slice, 1));
+}
+
 //---------------------------------------------------------------------
 //---------------------------------------------------------------------
 void PerformMonikerLatencyReadWriteTest(NIMonikerClient& client, int numItems, bool useAnyType, std::string fileName)
@@ -148,6 +157,13 @@ void PerformMonikerLatencyReadWriteTest(NIMonikerClient& client, int numItems, b
                 v->set_allocated_doublearray(doubleValue);
             }
         }
+
+        if (x == 0)
+        {                
+            auto buffer = SerializeToByteBuffer(*writeRequest);
+            cout << "Data Size: " << buffer->Length() << endl;
+        }
+
         stream->Write(*writeRequest);
 
         auto readResult = google::protobuf::Arena::CreateMessage<MonikerReadResult>(&areana);

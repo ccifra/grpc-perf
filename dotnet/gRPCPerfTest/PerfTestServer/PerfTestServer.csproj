@@ -12,8 +12,8 @@
   </ItemGroup>
 
   <ItemGroup>
-    <Protobuf Include="..\..\..\niScope.proto">
-      <Link>niScope.proto</Link>
+    <Protobuf Include="..\..\..\perftest.proto">
+      <Link>perftest.proto</Link>
     </Protobuf>
   </ItemGroup>
 
