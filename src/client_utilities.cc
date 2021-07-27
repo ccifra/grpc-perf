@@ -29,34 +29,9 @@ int NIPerfTestClient::Init(int id)
 
 //---------------------------------------------------------------------
 //---------------------------------------------------------------------
-int NIPerfTestClient::InitWithOptions(string resourceName, bool idQuery, bool resetDevice, string options, ViSession* session)
-{
-    InitWithOptionsParameters request;
-    request.set_resourcename(resourceName.c_str());
-    request.set_idquery(idQuery);
-    request.set_resetdevice(resetDevice);
-    request.set_optionstring(options.c_str());
-
-    ClientContext context;
-    InitWithOptionsResult reply;
-    Status status = m_Stub->InitWithOptions(&context, request, &reply);
-    if (!status.ok())
-    {
-        cout << status.error_code() << ": " << status.error_message() << endl;
-    }
-    *session = reply.newvi();
-    return reply.status();
-}
-
-//---------------------------------------------------------------------
-//---------------------------------------------------------------------
-int NIPerfTestClient::Read(ViSession session, string channels, double timeout, int numSamples, double* samples, WaveformInfo* waveformInfo)
+int NIPerfTestClient::Read(double timeout, int numSamples, double* samples)
 {
     ReadParameters request;
-    auto requestSession = new ViSession;
-    requestSession->set_id(session.id());
-    request.set_allocated_vi(requestSession);
-    request.set_channellist(channels.c_str());
     request.set_timeout(timeout);
     request.set_numsamples(numSamples);
 
@@ -67,7 +42,7 @@ int NIPerfTestClient::Read(ViSession session, string channels, double timeout, i
     {
         cout << status.error_code() << ": " << status.error_message() << endl;
     }
-    memcpy(samples, reply.wfm().data(), numSamples * sizeof(double));
+    memcpy(samples, reply.samples().data(), numSamples * sizeof(double));
     return reply.status();
 }
 
@@ -76,8 +51,8 @@ int NIPerfTestClient::Read(ViSession session, string channels, double timeout, i
 int NIPerfTestClient::TestWrite(int numSamples, double* samples)
 {   
     TestWriteParameters request;
-    request.mutable_wfm()->Reserve(numSamples);
-    request.mutable_wfm()->Resize(numSamples, 0);
+    request.mutable_samples()->Reserve(numSamples);
+    request.mutable_samples()->Resize(numSamples, 0);
 
     ClientContext context;
     TestWriteResult reply;
@@ -91,11 +66,9 @@ int NIPerfTestClient::TestWrite(int numSamples, double* samples)
 
 //---------------------------------------------------------------------
 //---------------------------------------------------------------------
-unique_ptr<grpc::ClientReader<niPerfTest::ReadContinuouslyResult>> NIPerfTestClient::ReadContinuously(grpc::ClientContext* context, ViSession session, string channels, double timeout, int numSamples)
+unique_ptr<grpc::ClientReader<niPerfTest::ReadContinuouslyResult>> NIPerfTestClient::ReadContinuously(grpc::ClientContext* context, double timeout, int numSamples)
 {    
     ReadContinuouslyParameters request;
-    auto requestSession = new ViSession;
-    requestSession->set_id(session.id());
     request.set_numsamples(numSamples);
     request.set_numiterations(10000);
 
@@ -157,10 +130,9 @@ void WriteLatencyData(timeVector times, const string& fileName)
 //---------------------------------------------------------------------
 void ReadSamples(NIPerfTestClient* client, int numSamples)
 {    
-    ViSession session;
     int index = 0;
     grpc::ClientContext context;
-    auto readResult = client->ReadContinuously(&context, session, (char*)"0", 5.0, numSamples);
+    auto readResult = client->ReadContinuously(&context, 5.0, numSamples);
     ReadContinuouslyResult cresult;
     while(readResult->Read(&cresult))
     {

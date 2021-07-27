@@ -16,14 +16,6 @@ namespace PerfTestServer
             return Task.FromResult(response);
         }
 
-        public override Task<InitWithOptionsResult> InitWithOptions(InitWithOptionsParameters request, ServerCallContext context)
-        {
-            var response = new InitWithOptionsResult();
-            response.Status = 0;
-            response.NewVi = new ViSession() { Id = 1 };
-            return Task.FromResult(response);
-        }
-
         public override async Task StreamLatencyTest(IAsyncStreamReader<StreamLatencyClient> requestStream, IServerStreamWriter<StreamLatencyServer> responseStream, ServerCallContext context)
         {
             StreamLatencyServer response = new StreamLatencyServer();
@@ -63,7 +55,7 @@ namespace PerfTestServer
         {
             InitData(request.NumSamples);
             var response = new ReadResult();
-            response.Wfm.AddRange(_data);
+            response.Samples.AddRange(_data);
             response.Status = 0;
 
             return Task.FromResult(response);

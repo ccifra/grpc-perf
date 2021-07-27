@@ -8,11 +8,6 @@ import "google/protobuf/any.proto";
 
 //---------------------------------------------------------------------
 //---------------------------------------------------------------------
-option java_multiple_files = true;
-option java_package = "ni.preftest";
-option java_outer_classname = "preftest";
-option objc_class_prefix = "NI";
-
 option cc_enable_arenas = true;
 
 //---------------------------------------------------------------------
@@ -27,9 +22,6 @@ service niPerfTestService {
     rpc StreamLatencyTestClient(stream StreamLatencyClient) returns (StreamLatencyServer) {};
     rpc StreamLatencyTestServer(StreamLatencyClient) returns (stream StreamLatencyServer) {};
     rpc Init(InitParameters) returns (InitResult) {};
-    rpc InitWithOptions(InitWithOptionsParameters) returns (InitWithOptionsResult) {};
-    rpc AutoSetup(AutoSetupParameters) returns (AutoSetupResult) {};
-    rpc ConfigureHorizontalTiming(ConfigureHorizontalTimingParameters) returns (ConfigureHorizontalTimingResult) {};
     rpc TestWrite(TestWriteParameters) returns (TestWriteResult) {};
     rpc TestWriteContinuously(stream TestWriteParameters) returns (stream TestWriteResult) {};
     rpc Read(ReadParameters) returns (ReadResult) {};
@@ -94,10 +86,6 @@ message StreamLatencyServer {
   uint32 message = 1;
 }
 
-message ViSession {
-  uint32 id = 1;
-}
-
 message InitParameters {
   int32 id = 1;
 }
@@ -106,54 +94,18 @@ message InitResult {
   int32 status = 1;
 }
 
-message InitWithOptionsParameters {
-  string resourceName = 1;
-  bool IDQuery = 2;
-  bool resetDevice = 3;
-  string optionString = 4;
-}
-    
-message InitWithOptionsResult {
-  int32 status = 1;
-  ViSession newVi = 2;
-}
-
-message AutoSetupParameters {
-  ViSession vi = 1;
-}
-    
-message AutoSetupResult {
-  int32 status = 1;
-}
-
-message ConfigureHorizontalTimingParameters {
-  ViSession vi = 1;
-  double minSampleRate = 2;
-  int32 minNumPts = 3;
-  double refPosition = 4;
-  int32 numRecords = 5;
-  bool enforceRealtime = 6;
-}
-    
-message ConfigureHorizontalTimingResult {
-  int32 status = 1;
-}
 message ReadParameters {
-  ViSession vi = 1;
-  string channelList = 2;
-  double timeout = 3;
-  int32 numSamples = 4;
+  double timeout = 1;
+  int32 numSamples = 2;
 }
     
 message ReadResult {
   int32 status = 1;
-  repeated double wfm = 5;
-  repeated WaveformInfo wfmInfo = 2;
+  repeated double samples = 2;
 }
 
 message TestWriteParameters {
-  ViSession vi = 1;
-  repeated double wfm = 2;
+  repeated double samples = 2;
 }
     
 message TestWriteResult {
@@ -168,13 +120,4 @@ message ReadContinuouslyParameters {
 message ReadContinuouslyResult {
   int32 status = 1;
   repeated double wfm = 2;
-}
-
-message WaveformInfo {
-  double absoluteInitialX = 1;
-  double relativeInitialX = 2;
-  double xIncrement = 3;
-  int32 actualNumberOfSamples = 4;
-  double offset = 5;
-  double gain = 6;
 }

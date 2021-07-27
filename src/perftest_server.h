@@ -36,7 +36,6 @@ public:
     ::grpc::Status StreamLatencyTestClient(::grpc::ServerContext* context, ::grpc::ServerReader< ::niPerfTest::StreamLatencyClient>* reader, ::niPerfTest::StreamLatencyServer* response) override;
     ::grpc::Status StreamLatencyTestServer(::grpc::ServerContext* context, const ::niPerfTest::StreamLatencyClient* request, ::grpc::ServerWriter< ::niPerfTest::StreamLatencyServer>* writer) override;
     Status Init(ServerContext* context, const niPerfTest::InitParameters*, niPerfTest::InitResult* response) override;
-    Status InitWithOptions(ServerContext* context, const niPerfTest::InitWithOptionsParameters* request, niPerfTest::InitWithOptionsResult* response) override;
     Status Read(ServerContext* context, const niPerfTest::ReadParameters* request, niPerfTest::ReadResult* response) override;
     Status ReadContinuously(ServerContext* context, const niPerfTest::ReadContinuouslyParameters* request, grpc::ServerWriter<niPerfTest::ReadContinuouslyResult>* writer) override;
     Status TestWrite(ServerContext* context, const niPerfTest::TestWriteParameters* request, niPerfTest::TestWriteResult* response) override;

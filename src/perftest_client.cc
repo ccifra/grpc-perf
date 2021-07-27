@@ -164,7 +164,6 @@ int main(int argc, char **argv)
     auto client1 = new NIPerfTestClient(grpc::CreateCustomChannel(target_str + port, creds, args));
     //client2 = new NIScope(grpc::CreateCustomChannel(target_str + port, creds, args));
 
-    ViSession session;
     auto result = client1->Init(42);
     cout << "Init result: " << result << endl;
 

@@ -25,10 +25,9 @@ public:
 
 public:
     int Init(int id);
-    int InitWithOptions(string resourceName, bool idQuery, bool resetDevice, string options, ViSession* session);
-    int Read(ViSession session, string channels, double timeout, int numSamples, double* samples, WaveformInfo* waveformInfo);
+    int Read(double timeout, int numSamples, double* samples);
     int TestWrite(int numSamples, double* samples);
-    unique_ptr<grpc::ClientReader<niPerfTest::ReadContinuouslyResult>> ReadContinuously(grpc::ClientContext* context, ViSession session, string channels, double timeout, int numSamples);
+    unique_ptr<grpc::ClientReader<niPerfTest::ReadContinuouslyResult>> ReadContinuously(grpc::ClientContext* context, double timeout, int numSamples);
 public:
     unique_ptr<niPerfTestService::Stub> m_Stub;
 };
