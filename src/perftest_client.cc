@@ -169,7 +169,7 @@ int main(int argc, char **argv)
     cout << "Init result: " << result << endl;
 
     // EnableTracing();
-    //PerformLatencyStreamTest(*client1, "streamlatency1.txt");
+    // PerformLatencyStreamTest(*client1, "streamlatency1.txt");
     // PerformLatencyStreamTest(*client1, "streamlatency2.txt");
     // PerformLatencyStreamTest(*client1, "streamlatency3.txt");
     // PerformLatencyStreamTest(*client1, "streamlatency4.txt");
@@ -220,7 +220,6 @@ int main(int argc, char **argv)
     // PerformTwoStreamTest(*client1, *client2, 100000);
     // PerformTwoStreamTest(*client1, *client2, 200000);
 
-
     // client3 = new NIScope(grpc::CreateChannel(target_str + ":50053", creds));
     // client4 = new NIScope(grpc::CreateChannel(target_str + ":50054", creds));
     // result = client3->Init(32);
@@ -243,7 +242,6 @@ int main(int argc, char **argv)
     // PerformNStreamTest(clients, 10000);
     // PerformNStreamTest(clients, 100000);
 
-
     // cout << "Start parallel stream latency test" << endl;
     // PerformLatencyStreamTest2(*client1, *client1, 1, "streamlatency1Stream.txt");
     // PerformLatencyStreamTest2(*client1, *client1, 2, "streamlatency1Stream.txt");
@@ -251,18 +249,14 @@ int main(int argc, char **argv)
     // PerformLatencyStreamTest2(*client1, *client1, 4, "streamlatency4Stream.txt");
     // PerformLatencyStreamTest2(*client1, *client1, 5, "streamlatency4Stream.txt");
     
-    // PerformMessagePerformanceTest(*client1);
+    PerformMessagePerformanceTest(*client1);
     
     cout << "Start streaming tests" << endl;
-    // PerformStreamingTest(*client1, 10);
-    // PerformStreamingTest(*client1, 100);
-    // PerformStreamingTest(*client1, 1000);
-    // PerformStreamingTest(*client1, 10000);
-    // PerformStreamingTest(*client1, 100000);
+    PerformStreamingTest(*client1, 10);
+    PerformStreamingTest(*client1, 100);
+    PerformStreamingTest(*client1, 1000);
+    PerformStreamingTest(*client1, 10000);
     PerformStreamingTest(*client1, 100000);
-    PerformStreamingTest(*client1, 100000);
-    PerformStreamingTest(*client1, 100000);
-    // PerformStreamingTest(*client1, 200000);
 
     // PerformReadTest(*client1, 100);
     // PerformReadTest(*client1, 1000);
