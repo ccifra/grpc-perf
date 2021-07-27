@@ -5,6 +5,6 @@ https://go.microsoft.com/fwlink/?LinkID=208121.
 <Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <PropertyGroup>
     <_PublishTargetUrl>D:\dev\chrisc-grpc-perf\dotnet\gRPCPerfTest\PerfTestServer\bin\Release\net5.0\publish\</_PublishTargetUrl>
-    <History>True|2021-07-26T17:47:43.3872469Z;</History>
+    <History>True|2021-07-27T18:52:04.2318324Z;False|2021-07-27T13:50:45.9149424-05:00;True|2021-07-27T09:17:57.6497691-05:00;True|2021-07-27T09:16:19.4737258-05:00;True|2021-07-27T09:14:50.5232616-05:00;True|2021-07-26T12:47:43.3872469-05:00;</History>
   </PropertyGroup>
 </Project>

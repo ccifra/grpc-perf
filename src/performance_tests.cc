@@ -243,8 +243,8 @@ void PerformLatencyPayloadWriteTest(NIPerfTestClient& client, int numSamples, st
     times.reserve(LatencyTestIterations);
 
     TestWriteParameters request;
-    request.mutable_wfm()->Reserve(numSamples);
-    request.mutable_wfm()->Resize(numSamples, 0);
+    request.mutable_samples()->Reserve(numSamples);
+    request.mutable_samples()->Resize(numSamples, 0);
     TestWriteResult reply;
 
     for (int x=0; x<100; ++x)
@@ -276,8 +276,8 @@ void PerformLatencyPayloadWriteStreamTest(NIPerfTestClient& client, int numSampl
     times.reserve(LatencyTestIterations);
 
     TestWriteParameters request;
-    request.mutable_wfm()->Reserve(numSamples);
-    request.mutable_wfm()->Resize(numSamples, 0);
+    request.mutable_samples()->Reserve(numSamples);
+    request.mutable_samples()->Resize(numSamples, 0);
     TestWriteResult reply;
     std::this_thread::sleep_for(std::chrono::milliseconds(1000));
 
@@ -410,15 +410,13 @@ void PerformReadTest(NIPerfTestClient& client, int numSamples)
 {    
     cout << "Start " << numSamples << " Read Test" << endl;
 
-    ViSession session;
-    WaveformInfo info;
     int index = 0;
     double* samples = new double[numSamples];
 
     auto start = chrono::steady_clock::now();
     for (int x=0; x<1000; ++x)
     {
-        client.Read(session, "", 1000, numSamples, samples, &info);
+        client.Read(1000, numSamples, samples);
     }
     auto end = chrono::steady_clock::now();
     auto elapsed = chrono::duration_cast<chrono::microseconds>(end - start);
@@ -434,8 +432,6 @@ void PerformWriteTest(NIPerfTestClient& client, int numSamples)
 {   
     cout << "Start " << numSamples << " Write Test" << endl;
 
-    ViSession session;
-    WaveformInfo info;
     int index = 0;
     double* samples = new double[numSamples];
 

@@ -111,22 +111,10 @@ Status NIPerfTestServer::Init(ServerContext* context, const niPerfTest::InitPara
 
 //---------------------------------------------------------------------
 //---------------------------------------------------------------------
-Status NIPerfTestServer::InitWithOptions(ServerContext* context, const niPerfTest::InitWithOptionsParameters* request, niPerfTest::InitWithOptionsResult* response)
-{	
-	response->set_status(0);
-	niPerfTest::ViSession* session = new niPerfTest::ViSession();
-	session->set_id(1);
-	response->set_allocated_newvi(session);
-	response->set_status(0);
-	return Status::OK;
-}
-
-//---------------------------------------------------------------------
-//---------------------------------------------------------------------
 Status NIPerfTestServer::Read(ServerContext* context, const niPerfTest::ReadParameters* request, niPerfTest::ReadResult* response)
 {	
-	response->mutable_wfm()->Reserve(request->numsamples());
-	response->mutable_wfm()->Resize(request->numsamples(), 0.0);
+	response->mutable_samples()->Reserve(request->numsamples());
+	response->mutable_samples()->Resize(request->numsamples(), 0.0);
 	response->set_status(0);
 	return Status::OK;
 }
