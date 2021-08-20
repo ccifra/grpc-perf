@@ -38,6 +38,11 @@ using namespace google::protobuf;
 
 //---------------------------------------------------------------------
 //---------------------------------------------------------------------
+void InitDetours();
+
+
+//---------------------------------------------------------------------
+//---------------------------------------------------------------------
 static ::grpc::ServerWriter< ::niPerfTest::StreamLatencyServer>* _writers [32];
 
 //---------------------------------------------------------------------
@@ -374,6 +379,8 @@ using timeVector = vector<chrono::microseconds>;
 //---------------------------------------------------------------------
 int main(int argc, char **argv)
 {
+    InitDetours();
+
 #ifndef _WIN32    
     sched_param schedParam;
     schedParam.sched_priority = 95;
@@ -385,30 +392,40 @@ int main(int argc, char **argv)
     sched_setaffinity(1, sizeof(cpu_set_t), &cpuSet);
 #endif
 
-    // std::vector<thread*> threads;
-    // std::vector<string> ports;
-    // for (int x=0; x<20; ++x)
-    // {
-    //     auto port = 50051 + x;
-    //     auto portStr = string("0.0.0.0:") + to_string(port);
-    //     ports.push_back(portStr);
-    // } 
-    // for (auto port: ports)
-    // {
-    //     auto p = new string(port.c_str());
-    // 	auto t = new std::thread(RunServer, argc, argv, p->c_str());
-    //     threads.push_back(t);
-    // }
-	// std::this_thread::sleep_for(std::chrono::milliseconds(500));
+    std::vector<thread*> threads;
+    std::vector<string> ports;
+    for (int x=0; x<1; ++x)
+    {
+        auto port = 50051 + x;
+        auto portStr = string("0.0.0.0:") + to_string(port);
+        ports.push_back(portStr);
+    } 
+    for (auto port: ports)
+    {
+        auto p = new string(port.c_str());
+        auto t = new std::thread(RunServer, argc, argv, p->c_str());
+        threads.push_back(t);
+    }
+    std::this_thread::sleep_for(std::chrono::milliseconds(2000));
 
-	// auto client = NIPerfTestClient(_inProcServer);
-	// PerformLatencyStreamTest2(client, client, 1, "inprocess.txt");
+    auto target_str = std::string("localhost");
+    auto creds = grpc::InsecureChannelCredentials();
+    auto port = ":50051";
+    ::grpc::ChannelArguments args;
+    args.SetInt(GRPC_ARG_MINIMAL_STACK, 1);
+    auto client = new NIPerfTestClient(grpc::CreateCustomChannel(target_str + port, creds, args));
+
+    auto result = client->Init(42);
+    cout << "Init result: " << result << endl;
+
+    //cout << "Performing streaming test" << endl;
+    //PerformStreamingTest(*client, 100000);
     
-    // for (auto t: threads)
-    // {
-    //     t->join();
-    // }
+    for (auto t: threads)
+    {
+        t->join();
+    }
 
-    RunServer(argc, argv, "0.0.0.0:50051");
+    //RunServer(argc, argv, "0.0.0.0:50051");
 	return 0;
 }

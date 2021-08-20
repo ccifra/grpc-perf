@@ -5,6 +5,6 @@
   </PropertyGroup>
   <PropertyGroup>
     <ActiveDebugProfile>PerfTestServer</ActiveDebugProfile>
-    <NameOfLastUsedPublishProfile>D:\dev\chrisc-grpc-perf\dotnet\gRPCPerfTest\PerfTestServer\Properties\PublishProfiles\FolderProfile.pubxml</NameOfLastUsedPublishProfile>
+    <NameOfLastUsedPublishProfile>FolderProfile</NameOfLastUsedPublishProfile>
   </PropertyGroup>
 </Project>
