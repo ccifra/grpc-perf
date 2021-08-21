@@ -100,6 +100,7 @@ Status NIPerfTestServer::StreamLatencyTest(ServerContext* context, grpc::ServerR
 	niPerfTest::StreamLatencyServer server;
 	while (stream->Read(&client))
 	{
+        //server.set_message(client.message());
 		stream->Write(server);
 	}
 	return Status::OK;
@@ -417,7 +418,12 @@ int main(int argc, char **argv)
 
     auto result = client->Init(42);
     cout << "Init result: " << result << endl;
+    result = client->Init(43);
+    cout << "Init result: " << result << endl;
+    result = client->Init(44);
+    cout << "Init result: " << result << endl;
 
+    PerformLatencyStreamTest(*client, "streamlatency1.txt");
     //cout << "Performing streaming test" << endl;
     //PerformStreamingTest(*client, 100000);
     

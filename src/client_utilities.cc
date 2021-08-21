@@ -214,6 +214,12 @@ void TraceMarker(const char* marker)
 // 
 //---------------------------------------------------------------------
 
+#ifdef _DEBUG
+#define NetTrace(x) std::cout << x
+#else
+#define NetTrace(x) 
+#endif
+
 //---------------------------------------------------------------------
 //---------------------------------------------------------------------
 typedef int (WSAAPI* pWSASend)(
@@ -267,19 +273,11 @@ typedef BOOL(*pConnectEx)(
 
 //---------------------------------------------------------------------
 //---------------------------------------------------------------------
-typedef BOOL (WSAAPI* pWSAGetOverlappedResult)(
-    SOCKET          s,
-    LPWSAOVERLAPPED lpOverlapped,
-    LPDWORD         lpcbTransfer,
-    BOOL            fWait,
-    LPDWORD         lpdwFlags
-);
+typedef BOOL (WSAAPI* pWSAGetOverlappedResult)(SOCKET s, LPWSAOVERLAPPED lpOverlapped, LPDWORD lpcbTransfer, BOOL fWait, LPDWORD lpdwFlags);
 
 //---------------------------------------------------------------------
 //---------------------------------------------------------------------
-typedef int (*pClosesocket)(
-    SOCKET s
-    );
+typedef int (*pClosesocket)(SOCKET s);
 
 //---------------------------------------------------------------------
 //---------------------------------------------------------------------
@@ -304,8 +302,7 @@ typedef BOOL (* pAcceptEx)(
     DWORD        dwLocalAddressLength,
     DWORD        dwRemoteAddressLength,
     LPDWORD      lpdwBytesReceived,
-    LPOVERLAPPED lpOverlapped
-);
+    LPOVERLAPPED lpOverlapped);
 
 //---------------------------------------------------------------------
 //---------------------------------------------------------------------
@@ -314,8 +311,7 @@ typedef BOOL(*pGetQueuedCompletionStatus)(
     LPDWORD      lpNumberOfBytesTransferred,
     PULONG_PTR   lpCompletionKey,
     LPOVERLAPPED* lpOverlapped,
-    DWORD        dwMilliseconds
-    );
+    DWORD        dwMilliseconds);
 
 //---------------------------------------------------------------------
 //---------------------------------------------------------------------
@@ -430,7 +426,7 @@ void SocketInfo::AddWriteBuffer(LPWSABUF buffer)
 //---------------------------------------------------------------------
 int SocketInfo::CompleteRead()
 {
-    cout << "Completing Read: " << _s << endl;
+    NetTrace("Completing Read: " << _s << endl);
 
     if (_currentPos == nullptr)
     {
@@ -473,7 +469,7 @@ int SocketInfo::CompleteRead()
     }
     _readOverlapped = nullptr;
     _readBuffers.clear();
-    cout << "Complete Read, total written: " << totalWritten << endl;
+    NetTrace("Complete Read, total written: " << totalWritten << endl);
     return totalWritten;
 }
 
@@ -508,16 +504,17 @@ BOOL SocketManager::GetOverlappedByteCount(SOCKET s, LPWSAOVERLAPPED lpOverlappe
     if (found != _overlappedByteCounts.end())
     {
         *lpcbTransfer = (*found).second;
-        cout << "Transfer complete: " << *lpcbTransfer << endl;
+        NetTrace("Transfer complete: " << *lpcbTransfer << endl);
+        _overlappedByteCounts.erase(found);
         return TRUE;
     }
     if (_registeredByteCounts.find(lpOverlapped) == _registeredByteCounts.end())
     {
         auto result = _wsaGetOverlappedResult(s, lpOverlapped, lpcbTransfer, fWait, lpdwFlags);
-        cout << "OS get overlapped result: " << result << endl;
+        NetTrace("OS get overlapped result: " << result << endl);
         return result;
     }
-    cout << "Setting overlapped is incomplete!!!" << endl;
+    NetTrace("Setting overlapped is incomplete!!!" << endl);
     WSASetLastError(WSA_IO_INCOMPLETE);
     *lpcbTransfer = 0;
     return FALSE;
@@ -527,6 +524,11 @@ BOOL SocketManager::GetOverlappedByteCount(SOCKET s, LPWSAOVERLAPPED lpOverlappe
 //---------------------------------------------------------------------
 void SocketManager::SetOverlappedByteCount(int count, LPWSAOVERLAPPED overlapped)
 {
+    auto found = _registeredByteCounts.find(overlapped);
+    if (found != _registeredByteCounts.end())
+    {
+        _registeredByteCounts.erase(found);
+    }
     _overlappedByteCounts.emplace(overlapped, count);
 }
 
@@ -559,7 +561,7 @@ SocketInfo* SocketManager::AddSocket(SOCKET s, bool acceptSocket, int port)
     {
         if (port != 0 && port != 50051)
         {
-            cout << "Oddness when adding, socket: " << s << ", port: " << port << endl;
+            NetTrace("Oddness when adding, socket: " << s << ", port: " << port << endl);
         }
 
         auto info = new SocketInfo();
@@ -573,7 +575,7 @@ SocketInfo* SocketManager::AddSocket(SOCKET s, bool acceptSocket, int port)
     {
         if (port != 0 && port != 50051)
         {
-            cout << "Oddness when updating, socket: " << s << ", port: " << port << endl;
+            NetTrace("Oddness when updating, socket: " << s << ", port: " << port << endl);
         }
 
         (*found).second->_port = port;
@@ -673,7 +675,7 @@ int SocketManager::SocketRead(SOCKET s, LPWSABUF buffers, DWORD numBuffers, LPWS
 int SocketManager::SocketWrite(SOCKET s, LPWSABUF buffers, DWORD numBuffers, LPWSAOVERLAPPED overlapped)
 {
     auto other = GetPairedSocket(s);
-    cout << "Writing from socket: " << s << " to socket: " << other->_s << " with " << _socketManager._sockets.size() << " total sockets" << endl;
+    NetTrace("Writing from socket: " << s << " to socket: " << other->_s << " with " << _socketManager._sockets.size() << " total sockets" << endl);
     if (other == nullptr || other->_port != 50051)
     {
         DWORD w = 0;
@@ -704,6 +706,7 @@ int SocketManager::SocketWrite(SOCKET s, LPWSABUF buffers, DWORD numBuffers, LPW
     auto pending = new WSABUF();
     pending->buf = buffer;
     pending->len = totalCount;
+    NetTrace("Wrote: " << totalCount << " bytes" << endl);
     other->AddWriteBuffer(pending);
     return totalCount;
 }
@@ -717,7 +720,7 @@ int WSAAPI DetouredConnect(
     int            namelen
 )
 {
-    cout << "Connect: " << s << endl;
+    NetTrace("Connect: " << s << endl);
 
     sockaddr_in6* address = (sockaddr_in6*)name;
     sockaddr_in* address4 = (sockaddr_in*)name;
@@ -749,7 +752,7 @@ BOOL DetouredConnectEx(
     LPOVERLAPPED lpOverlapped
 )
 {
-    cout << "ConnectEx: " << s << endl;
+    NetTrace("ConnectEx: " << s << endl);
 
     sockaddr_in6* address = (sockaddr_in6*)name;
     sockaddr_in* address4 = (sockaddr_in*)name;
@@ -798,14 +801,12 @@ int WSAAPI DetouredWSASend(
     LPWSAOVERLAPPED_COMPLETION_ROUTINE lpCompletionRoutine
 )
 {
-    cout << "DetouredWSASend: " << s << ", buffers:" << dwBufferCount << endl;
+    NetTrace("DetouredWSASend: " << s << ", buffers:" << dwBufferCount << endl);
 
-    WSASetLastError(0);
     if (_detourEnable)
     {
         std::lock_guard<std::mutex> lock(_lock);
-        _socketManager.AddSocket(s, false, 0);
-
+        WSASetLastError(0);
         auto written = _socketManager.SocketWrite(s, lpBuffers, dwBufferCount, lpOverlapped);
         if (lpNumberOfBytesSent != nullptr)
         {
@@ -814,7 +815,7 @@ int WSAAPI DetouredWSASend(
         return 0;
     }
     auto result = _wsaSend(s, lpBuffers, dwBufferCount, lpNumberOfBytesSent, dwFlags, lpOverlapped, lpCompletionRoutine);
-    cout << "Result: " << result << ", bytes sent: " << *lpNumberOfBytesSent << endl;
+    NetTrace("Result: " << result << ", bytes sent: " << *lpNumberOfBytesSent << endl);
     return result;
 }
 
@@ -833,7 +834,7 @@ BOOL DetouredAcceptEx(
     LPOVERLAPPED lpOverlapped
 )
 {
-    cout << "AcceptEx: " << sListenSocket << " : " << sAcceptSocket << endl;
+    NetTrace("AcceptEx: " << sListenSocket << " : " << sAcceptSocket << endl);
     {
         std::lock_guard<std::mutex> lock(_lock);
         if (!_didAccept)
@@ -859,12 +860,11 @@ int WSAAPI DetouredWSARecv(
     LPWSAOVERLAPPED_COMPLETION_ROUTINE lpCompletionRoutine
 )
 {
-    cout << "DetouredWSARecv: " << s << " ov: " << lpOverlapped << endl;
-    WSASetLastError(0);
-
+    NetTrace("DetouredWSARecv: " << s << " ov: " << lpOverlapped << endl);
     if (_detourEnable)
     {
         std::lock_guard<std::mutex> lock(_lock);
+        WSASetLastError(0);
         _socketManager.AddSocket(s, false, 0);
 
         int count = _socketManager.SocketRead(s, lpBuffers, dwBufferCount, lpOverlapped);
@@ -874,6 +874,10 @@ int WSAAPI DetouredWSARecv(
         }
         if (count == 0)
         {
+            if (lpNumberOfBytesRecvd != nullptr)
+            {
+                *lpNumberOfBytesRecvd = 0;
+            }
             if (lpOverlapped != nullptr)
             {
                 WSASetLastError(ERROR_IO_PENDING);
@@ -883,20 +887,15 @@ int WSAAPI DetouredWSARecv(
                 WSASetLastError(WSAEWOULDBLOCK);
             }
             auto error = WSAGetLastError();
-            cout << "wsaRecv would block: -1, error: " << error << endl;
+            NetTrace("wsaRecv would block: -1, error: " << error << endl);
             return -1;
         }
-        cout << "WSARecv did not block" << endl;
+        NetTrace("WSARecv did not block" << endl);
         return 0;
-    }
-    {
-        std::lock_guard<std::mutex> lock(_lock);
-        auto info = _socketManager.AddSocket(s, false, 0);
-        auto port = info->_port;
     }
     auto result = _wsaRecv(s, lpBuffers, dwBufferCount, lpNumberOfBytesRecvd, lpFlags, lpOverlapped, lpCompletionRoutine);
     auto error = WSAGetLastError();
-    cout << "wsaRecv result: " << result << ", error: " << error << endl;
+    NetTrace("wsaRecv result: " << result << ", error: " << error << endl);
     return result;
 }
 
@@ -910,19 +909,17 @@ BOOL WSAAPI DetouredWSAGetOverlappedResult(
     LPDWORD         lpdwFlags
 )
 {
-    cout << "DetouredWSAGetOverlappedResult: " << s << ", ov: " << lpOverlapped << endl;
-    WSASetLastError(0);
+    NetTrace("DetouredWSAGetOverlappedResult: " << s << ", ov: " << lpOverlapped << endl);
     if (_detourEnable)
     {
         std::lock_guard<std::mutex> lock(_lock);
-
         WSASetLastError(0);
         return _socketManager.GetOverlappedByteCount(s, lpOverlapped, lpcbTransfer, fWait, lpdwFlags);
     }
 
     auto result = _wsaGetOverlappedResult(s, lpOverlapped, lpcbTransfer, fWait, lpdwFlags);
     auto error = WSAGetLastError();
-    cout << "Get overlapped result: " << result << ", error: " << error << " count: " << *lpcbTransfer << endl;
+    NetTrace("Get overlapped result: " << result << ", error: " << error << " count: " << *lpcbTransfer << endl);
     return result;
 }
 
@@ -932,7 +929,7 @@ int DetouredClosesocket(
     SOCKET s
 )
 {
-    cout << "Close Socket: " << s << endl;
+    NetTrace("Close Socket: " << s << endl);
     {
         std::lock_guard<std::mutex> lock(_lock);
         _socketManager.RemoveSocket(s);
@@ -962,13 +959,13 @@ int WSAAPI DetouredWSAIoctl(
         {
             _acceptEx = *(pAcceptEx*)lpvOutBuffer;
             *((pAcceptEx*)lpvOutBuffer) = DetouredAcceptEx;
-            cout << "Got acceptex" << endl;
+            NetTrace("Got acceptex" << endl);
         }
         if (in == connectId)
         {
             _connectEx = *(pConnectEx*)lpvOutBuffer;
             *((pConnectEx*)lpvOutBuffer) = DetouredConnectEx;
-            cout << "Got connect" << endl;
+            NetTrace("Got connect" << endl);
         }
     }
     return result;
