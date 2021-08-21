@@ -559,10 +559,10 @@ SocketInfo* SocketManager::AddSocket(SOCKET s, bool acceptSocket, int port)
 
     if (found == _sockets.end())
     {
-        if (port != 0 && port != 50051)
-        {
-            NetTrace("Oddness when adding, socket: " << s << ", port: " << port << endl);
-        }
+        //if (port != 0 && port != 50051)
+        //{
+        //    NetTrace("Oddness when adding, socket: " << s << ", port: " << port << endl);
+        //}
 
         auto info = new SocketInfo();
         info->_s = s;
@@ -573,10 +573,10 @@ SocketInfo* SocketManager::AddSocket(SOCKET s, bool acceptSocket, int port)
     }
     if ((*found).second->_port == 0)
     {
-        if (port != 0 && port != 50051)
-        {
-            NetTrace("Oddness when updating, socket: " << s << ", port: " << port << endl);
-        }
+        //if (port != 0 && port != 50051)
+        //{
+        //    NetTrace("Oddness when updating, socket: " << s << ", port: " << port << endl);
+        //}
 
         (*found).second->_port = port;
     }
@@ -606,7 +606,7 @@ SocketInfo* SocketManager::GetPairedSocket(SOCKET s)
     bool found0 = false;
     for (auto it : _sockets)
     {
-        AddSocket(it.first, false, 0);
+        //AddSocket(it.first, false, 0);
         if ((it.second->_acceptSocket == false) && (it.first != s) && (it.second->_port == socket->_port))
         {
             return it.second;
@@ -676,13 +676,12 @@ int SocketManager::SocketWrite(SOCKET s, LPWSABUF buffers, DWORD numBuffers, LPW
 {
     auto other = GetPairedSocket(s);
     NetTrace("Writing from socket: " << s << " to socket: " << other->_s << " with " << _socketManager._sockets.size() << " total sockets" << endl);
-    if (other == nullptr || other->_port != 50051)
-    {
-        DWORD w = 0;
-        _wsaSend(s, buffers, numBuffers, &w, 0, overlapped, nullptr);
-        return w;
-    }
-
+    //if (other == nullptr || other->_port != 50051)
+    //{
+    //    DWORD w = 0;
+    //    _wsaSend(s, buffers, numBuffers, &w, 0, overlapped, nullptr);
+    //    return w;
+    //}
     int byteCount = 0;
     for (int x = 0; x < numBuffers; ++x)
     {
@@ -693,7 +692,6 @@ int SocketManager::SocketWrite(SOCKET s, LPWSABUF buffers, DWORD numBuffers, LPW
     {
         return 0;
     }
-
     auto buffer = new CHAR[byteCount];
     auto start = buffer;
     auto totalCount = byteCount;
@@ -865,7 +863,7 @@ int WSAAPI DetouredWSARecv(
     {
         std::lock_guard<std::mutex> lock(_lock);
         WSASetLastError(0);
-        _socketManager.AddSocket(s, false, 0);
+        //_socketManager.AddSocket(s, false, 0);
 
         int count = _socketManager.SocketRead(s, lpBuffers, dwBufferCount, lpOverlapped);
         if (lpOverlapped == nullptr)
@@ -886,8 +884,7 @@ int WSAAPI DetouredWSARecv(
             {
                 WSASetLastError(WSAEWOULDBLOCK);
             }
-            auto error = WSAGetLastError();
-            NetTrace("wsaRecv would block: -1, error: " << error << endl);
+            NetTrace("wsaRecv would block: -1, error: " << WSAGetLastError() << endl);
             return -1;
         }
         NetTrace("WSARecv did not block" << endl);
@@ -918,16 +915,13 @@ BOOL WSAAPI DetouredWSAGetOverlappedResult(
     }
 
     auto result = _wsaGetOverlappedResult(s, lpOverlapped, lpcbTransfer, fWait, lpdwFlags);
-    auto error = WSAGetLastError();
-    NetTrace("Get overlapped result: " << result << ", error: " << error << " count: " << *lpcbTransfer << endl);
+    NetTrace("Get overlapped result: " << result << ", error: " << WSAGetLastError() << " count: " << *lpcbTransfer << endl);
     return result;
 }
 
 //---------------------------------------------------------------------
 //---------------------------------------------------------------------
-int DetouredClosesocket(
-    SOCKET s
-)
+int DetouredClosesocket(SOCKET s)
 {
     NetTrace("Close Socket: " << s << endl);
     {
@@ -937,6 +931,8 @@ int DetouredClosesocket(
     return _closesocket(s);
 }
 
+//---------------------------------------------------------------------
+//---------------------------------------------------------------------
 int WSAAPI DetouredWSAIoctl(
     SOCKET                             s,
     DWORD                              dwIoControlCode,
@@ -987,10 +983,10 @@ BOOL DetouredGetQueuedCompletionStatus(
 //---------------------------------------------------------------------
 //---------------------------------------------------------------------
 HANDLE WINAPI DetouredCreateIoCompletionPort(
-    _In_     HANDLE    FileHandle,
-    _In_opt_ HANDLE    ExistingCompletionPort,
-    _In_     ULONG_PTR CompletionKey,
-    _In_     DWORD     NumberOfConcurrentThreads
+    HANDLE    FileHandle,
+    HANDLE    ExistingCompletionPort,
+    ULONG_PTR CompletionKey,
+    DWORD     NumberOfConcurrentThreads
 )
 {
     auto result = _createIoCompletionPort(FileHandle, ExistingCompletionPort, CompletionKey, NumberOfConcurrentThreads);
@@ -1006,6 +1002,10 @@ HANDLE WINAPI DetouredCreateIoCompletionPort(
 //---------------------------------------------------------------------
 void InitDetours()
 {
+    if (!_detourEnable)
+    {
+        return;
+    }
     DetourTransactionBegin();
     DetourUpdateThread(GetCurrentThread());
     DetourAttach(&(PVOID&)_connect, DetouredConnect);

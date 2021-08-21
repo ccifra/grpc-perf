@@ -393,6 +393,8 @@ int main(int argc, char **argv)
     sched_setaffinity(1, sizeof(cpu_set_t), &cpuSet);
 #endif
 
+    SetPriorityClass(GetCurrentProcess(), ABOVE_NORMAL_PRIORITY_CLASS);
+
     std::vector<thread*> threads;
     std::vector<string> ports;
     for (int x=0; x<1; ++x)

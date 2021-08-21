@@ -74,7 +74,7 @@ void PerformLatencyStreamTest(NIPerfTestClient& client, std::string fileName)
     for (int x=0; x<LatencyTestIterations; ++x)
     {
         TraceMarker("Start iteration");
-        clientData.set_message(x);
+        //clientData.set_message(x);
         auto start = chrono::steady_clock::now();
         stream->Write(clientData);
         stream->Read(&serverData);
