@@ -160,7 +160,9 @@ int main(int argc, char **argv)
     ::grpc::ChannelArguments args;
     // Set a dummy (but distinct) channel arg on each channel so that
     // every channel gets its own connection
-    args.SetInt(GRPC_ARG_MINIMAL_STACK, 1);
+    //args.SetInt(GRPC_ARG_MINIMAL_STACK, 1);
+    args.SetMaxReceiveMessageSize(10 * 100 * 1024 * 1024);
+    args.SetMaxSendMessageSize(10 * 100 * 1024 * 1024);
     auto client1 = new NIPerfTestClient(grpc::CreateCustomChannel(target_str + port, creds, args));
     //client2 = new NIScope(grpc::CreateCustomChannel(target_str + port, creds, args));
 
@@ -168,7 +170,7 @@ int main(int argc, char **argv)
     cout << "Init result: " << result << endl;
 
     // EnableTracing();
-    //PerformLatencyStreamTest(*client1, "streamlatency1.txt");
+    // PerformLatencyStreamTest(*client1, "streamlatency1.txt");
     // PerformLatencyStreamTest(*client1, "streamlatency2.txt");
     // PerformLatencyStreamTest(*client1, "streamlatency3.txt");
     // PerformLatencyStreamTest(*client1, "streamlatency4.txt");
@@ -258,9 +260,9 @@ int main(int argc, char **argv)
     // PerformStreamingTest(*client1, 1000);
     // PerformStreamingTest(*client1, 10000);
     // PerformStreamingTest(*client1, 100000);
-    PerformStreamingTest(*client1, 100000);
-    PerformStreamingTest(*client1, 100000);
-    PerformStreamingTest(*client1, 100000);
+    // PerformStreamingTest(*client1, 100000);
+    //PerformStreamingTest(*client1, 100000);
+    //PerformStreamingTest(*client1, 100000);
     // PerformStreamingTest(*client1, 200000);
 
     // PerformReadTest(*client1, 100);
@@ -269,6 +271,10 @@ int main(int argc, char **argv)
     // PerformReadTest(*client1, 100000);
     // PerformReadTest(*client1, 200000);
     // PerformReadTest(*client1, 393216);
+
+    //PerformReadTest(*client1, 100 * 1024 * 1024);
+    PerformReadTest(*client1, 10, 100000);
+    PerformAsyncInitTest(*client1, 10, 10000);
     
     // PerformWriteTest(*client1, 100);
     // PerformWriteTest(*client1, 1000);

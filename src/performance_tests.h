@@ -12,9 +12,10 @@ void PerformLatencyPayloadWriteTest(NIPerfTestClient& client, int numSamples, st
 void PerformLatencyPayloadWriteStreamTest(NIPerfTestClient& client, int numSamples, std::string fileName);
 void PerformLatencyStreamTest2(NIPerfTestClient& client, NIPerfTestClient& client2, int streamCount, std::string fileName);
 void PerformMessageLatencyTest(NIPerfTestClient& client, std::string fileName);
-void PerformReadTest(NIPerfTestClient& client, int numSamples);
+void PerformReadTest(NIPerfTestClient& client, int numSamples, int numIterations);
 void PerformWriteTest(NIPerfTestClient& client, int numSamples);
 void PerformStreamingTest(NIPerfTestClient& client, int numSamples);
 void PerformTwoStreamTest(NIPerfTestClient& client, NIPerfTestClient& client2, int numSamples);
 void PerformFourStreamTest(NIPerfTestClient& client, NIPerfTestClient& client2, NIPerfTestClient& client3, NIPerfTestClient& client4, int numSamples);
 void PerformNStreamTest(std::vector<NIPerfTestClient*>& clients, int numSamples);
+void PerformAsyncInitTest(NIPerfTestClient& client, int numCommands, int numIterations);

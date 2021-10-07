@@ -28,18 +28,11 @@ using grpc::Channel;
 using grpc::ClientContext;
 using grpc::Status;
 
-
 //---------------------------------------------------------------------
 //---------------------------------------------------------------------
 using namespace std;
 using namespace niPerfTest;
 using namespace google::protobuf;
-
-
-//---------------------------------------------------------------------
-//---------------------------------------------------------------------
-void InitDetours();
-
 
 //---------------------------------------------------------------------
 //---------------------------------------------------------------------
@@ -120,7 +113,7 @@ Status NIPerfTestServer::Init(ServerContext* context, const niPerfTest::InitPara
 Status NIPerfTestServer::Read(ServerContext* context, const niPerfTest::ReadParameters* request, niPerfTest::ReadResult* response)
 {	
 	response->mutable_samples()->Reserve(request->numsamples());
-	response->mutable_samples()->Resize(request->numsamples(), 0.0);
+	response->mutable_samples()->Resize(request->numsamples(), 546456.45645645645);
 	response->set_status(0);
 	return Status::OK;
 }
@@ -348,8 +341,8 @@ void RunServer(int argc, char **argv, const char* saddress)
 
     builder.AddChannelArgument(GRPC_ARG_MINIMAL_STACK, 1);
 	builder.SetDefaultCompressionAlgorithm(GRPC_COMPRESS_NONE);
-	builder.SetMaxMessageSize(4 * 1024 * 1024);
-	builder.SetMaxReceiveMessageSize(4 * 1024 * 1024);
+	builder.SetMaxMessageSize(1 * 1024 * 1024);
+	builder.SetMaxReceiveMessageSize(1 * 1024 * 1024);
     
     // GRPC_ARG_ENABLE_CHANNELZ
     // GRPC_ARG_ENABLE_CENSUS
@@ -380,7 +373,10 @@ using timeVector = vector<chrono::microseconds>;
 //---------------------------------------------------------------------
 int main(int argc, char **argv)
 {
-    InitDetours();
+    //grpc_init();
+    //grpc_timer_manager_set_threading(false);
+    //::grpc_core::Executor::SetThreadingDefault(false);
+    //::grpc_core::Executor::SetThreadingAll(false);
 
 #ifndef _WIN32    
     sched_param schedParam;
@@ -393,7 +389,7 @@ int main(int argc, char **argv)
     sched_setaffinity(1, sizeof(cpu_set_t), &cpuSet);
 #endif
 
-    SetPriorityClass(GetCurrentProcess(), ABOVE_NORMAL_PRIORITY_CLASS);
+    SetPriorityClass(GetCurrentProcess(), REALTIME_PRIORITY_CLASS);
 
     std::vector<thread*> threads;
     std::vector<string> ports;
@@ -406,26 +402,33 @@ int main(int argc, char **argv)
     for (auto port: ports)
     {
         auto p = new string(port.c_str());
-        auto t = new std::thread(RunServer, argc, argv, p->c_str());
+        auto t = new std::thread(RunServer, 0, argv, p->c_str());
         threads.push_back(t);
     }
     std::this_thread::sleep_for(std::chrono::milliseconds(2000));
 
+    // localhost testing
     auto target_str = std::string("localhost");
     auto creds = grpc::InsecureChannelCredentials();
     auto port = ":50051";
     ::grpc::ChannelArguments args;
     args.SetInt(GRPC_ARG_MINIMAL_STACK, 1);
     auto client = new NIPerfTestClient(grpc::CreateCustomChannel(target_str + port, creds, args));
+    
+    // inprocess server
+    //auto client = new NIPerfTestClient(_inProcServer);
 
-    auto result = client->Init(42);
-    cout << "Init result: " << result << endl;
-    result = client->Init(43);
-    cout << "Init result: " << result << endl;
-    result = client->Init(44);
-    cout << "Init result: " << result << endl;
+    // auto result = client->Init(42);
+    // cout << "Init result: " << result << endl;
+    // result = client->Init(43);
+    // cout << "Init result: " << result << endl;
+    // result = client->Init(44);
+    // cout << "Init result: " << result << endl;
 
-    PerformLatencyStreamTest(*client, "streamlatency1.txt");
+    // cout << "Start streaming tests" << endl;
+    //PerformStreamingTest(*client, 100000);
+
+    //PerformLatencyStreamTest(*client, "streamlatency1.txt");
     //cout << "Performing streaming test" << endl;
     //PerformStreamingTest(*client, 100000);
     
@@ -433,7 +436,5 @@ int main(int argc, char **argv)
     {
         t->join();
     }
-
-    //RunServer(argc, argv, "0.0.0.0:50051");
 	return 0;
 }

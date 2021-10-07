@@ -32,6 +32,52 @@ static int LatencyTestIterations = 300000;
 
 //---------------------------------------------------------------------
 //---------------------------------------------------------------------
+void PerformAsyncInitTest(NIPerfTestClient& client, int numCommands, int numIterations)
+{
+    cout << "Start async init test, num commands: " << numCommands << endl;
+
+    auto start = chrono::steady_clock::now();
+    for (int i=0; i<numIterations; ++i)
+    {
+        AsyncInitResults* results = new AsyncInitResults[numCommands];
+        grpc::CompletionQueue cq;
+        for (int x=0; x<numCommands; ++x)
+        {
+            client.InitAsync(42+x, "This is a command", cq, &results[x]);
+        }
+        std::vector<AsyncInitResults*> completedList;
+        while (completedList.size() != numCommands)
+        {
+            AsyncInitResults* completed;
+            bool ok;
+            cq.Next((void**)&completed, &ok);
+            completedList.push_back(completed);
+            if (!ok)
+            {
+                cout << "Completion Queue returned error!" << endl;
+                return;
+            }
+            if (completed->reply.status() < 42 || completed->reply.status() > (42+numCommands))
+            {
+                cout << "BAD REPLY!" << endl;
+            }
+            if (!completed->status.ok())
+            {
+                cout << completed->status.error_code() << ": " << completed->status.error_message() << endl;
+            }
+        }
+        delete[] results;
+    }
+    auto end = chrono::steady_clock::now();
+    auto elapsed = chrono::duration_cast<chrono::microseconds>(end - start);
+
+    double msgsPerSecond = (numCommands * numIterations * 1000.0 * 1000.0) / (double)elapsed.count();
+    double timePerMessage = elapsed.count() / (numCommands * numIterations);
+    cout << "Result: " << msgsPerSecond << " reads per second, Microseconds per read: " << timePerMessage << endl << endl;
+}
+
+//---------------------------------------------------------------------
+//---------------------------------------------------------------------
 void PerformMessagePerformanceTest(NIPerfTestClient& client)
 {
     cout << "Start Messages per second test" << endl;
@@ -408,7 +454,7 @@ void PerformMessageLatencyTest(NIPerfTestClient& client, std::string fileName)
 
 //---------------------------------------------------------------------
 //---------------------------------------------------------------------
-void PerformReadTest(NIPerfTestClient& client, int numSamples)
+void PerformReadTest(NIPerfTestClient& client, int numSamples, int numIterations)
 {    
     cout << "Start " << numSamples << " Read Test" << endl;
 
@@ -416,16 +462,17 @@ void PerformReadTest(NIPerfTestClient& client, int numSamples)
     double* samples = new double[numSamples];
 
     auto start = chrono::steady_clock::now();
-    for (int x=0; x<1000; ++x)
+    for (int x=0; x<numIterations; ++x)
     {
         client.Read(1000, numSamples, samples);
     }
     auto end = chrono::steady_clock::now();
     auto elapsed = chrono::duration_cast<chrono::microseconds>(end - start);
-    double msgsPerSecond = (1000.0 * 1000.0 * 1000.0) / (double)elapsed.count();
+    double msgsPerSecond = (numIterations * 1000.0 * 1000.0) / (double)elapsed.count();
+    double timePerMessage = elapsed.count() / numIterations;
 
     delete [] samples;
-    cout << "Result: " << msgsPerSecond << " reads per second" << endl << endl;
+    cout << "Result: " << msgsPerSecond << " reads per second, Microseconds per read: " << timePerMessage << endl << endl;
 }
 
 //---------------------------------------------------------------------
