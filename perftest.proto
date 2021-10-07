@@ -87,7 +87,8 @@ message StreamLatencyServer {
 }
 
 message InitParameters {
-  int32 id = 1;
+  string command = 1;
+  int32 id = 2;
 }
     
 message InitResult {

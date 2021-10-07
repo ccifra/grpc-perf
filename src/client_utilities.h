@@ -16,6 +16,13 @@ using namespace niPerfTest;
 //---------------------------------------------------------------------
 using timeVector = vector<chrono::microseconds>;
 
+struct AsyncInitResults
+{
+    Status status;
+    ClientContext context;
+    InitResult reply;
+};
+
 //---------------------------------------------------------------------
 //---------------------------------------------------------------------
 class NIPerfTestClient
@@ -25,6 +32,8 @@ public:
 
 public:
     int Init(int id);
+    int Init(int id, string command);
+    int InitAsync(int id, string command, grpc::CompletionQueue& cq,  AsyncInitResults* results);
     int Read(double timeout, int numSamples, double* samples);
     int TestWrite(int numSamples, double* samples);
     unique_ptr<grpc::ClientReader<niPerfTest::ReadContinuouslyResult>> ReadContinuously(grpc::ClientContext* context, double timeout, int numSamples);

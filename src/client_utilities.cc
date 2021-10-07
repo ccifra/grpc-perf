@@ -2,6 +2,10 @@
 //---------------------------------------------------------------------
 #include "client_utilities.h"
 #include <fstream>
+#include <WinSock2.h>
+#include <in6addr.h>
+#include <ws2ipdef.h>
+#include <Mswsock.h>
 
 //---------------------------------------------------------------------
 //---------------------------------------------------------------------
@@ -29,6 +33,38 @@ int NIPerfTestClient::Init(int id)
 
 //---------------------------------------------------------------------
 //---------------------------------------------------------------------
+int NIPerfTestClient::Init(int id, string command)
+{
+    InitParameters request;
+    request.set_id(id);
+    request.set_command(command);
+
+    ClientContext context;
+    InitResult reply;
+    Status status = m_Stub->Init(&context, request, &reply);
+    if (!status.ok())
+    {
+        cout << status.error_code() << ": " << status.error_message() << endl;
+    }
+    return reply.status();
+}
+
+//---------------------------------------------------------------------
+//---------------------------------------------------------------------
+int NIPerfTestClient::InitAsync(int id, string command, grpc::CompletionQueue& cq,  AsyncInitResults* results)
+{
+    InitParameters request;
+    request.set_id(id);
+    request.set_command(command);
+    
+    auto rpc = m_Stub->PrepareAsyncInit(&results->context, request, &cq);
+    rpc->StartCall();
+    rpc->Finish(&results->reply, &results->status, (void*)results);
+    return 0;
+}
+
+//---------------------------------------------------------------------
+//---------------------------------------------------------------------
 int NIPerfTestClient::Read(double timeout, int numSamples, double* samples)
 {
     ReadParameters request;
@@ -41,6 +77,10 @@ int NIPerfTestClient::Read(double timeout, int numSamples, double* samples)
     if (!status.ok())
     {
         cout << status.error_code() << ": " << status.error_message() << endl;
+    }
+    if (reply.samples().size() != numSamples)
+    {
+        cout << "ERROR, wrong number of samples";
     }
     memcpy(samples, reply.samples().data(), numSamples * sizeof(double));
     return reply.status();

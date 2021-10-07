@@ -28,13 +28,11 @@ using grpc::Channel;
 using grpc::ClientContext;
 using grpc::Status;
 
-
 //---------------------------------------------------------------------
 //---------------------------------------------------------------------
 using namespace std;
 using namespace niPerfTest;
 using namespace google::protobuf;
-
 
 //---------------------------------------------------------------------
 //---------------------------------------------------------------------
@@ -95,6 +93,7 @@ Status NIPerfTestServer::StreamLatencyTest(ServerContext* context, grpc::ServerR
 	niPerfTest::StreamLatencyServer server;
 	while (stream->Read(&client))
 	{
+        //server.set_message(client.message());
 		stream->Write(server);
 	}
 	return Status::OK;
@@ -114,7 +113,7 @@ Status NIPerfTestServer::Init(ServerContext* context, const niPerfTest::InitPara
 Status NIPerfTestServer::Read(ServerContext* context, const niPerfTest::ReadParameters* request, niPerfTest::ReadResult* response)
 {	
 	response->mutable_samples()->Reserve(request->numsamples());
-	response->mutable_samples()->Resize(request->numsamples(), 0.0);
+	response->mutable_samples()->Resize(request->numsamples(), 546456.45645645645);
 	response->set_status(0);
 	return Status::OK;
 }
@@ -342,8 +341,8 @@ void RunServer(int argc, char **argv, const char* saddress)
 
     builder.AddChannelArgument(GRPC_ARG_MINIMAL_STACK, 1);
 	builder.SetDefaultCompressionAlgorithm(GRPC_COMPRESS_NONE);
-	builder.SetMaxMessageSize(4 * 1024 * 1024);
-	builder.SetMaxReceiveMessageSize(4 * 1024 * 1024);
+	builder.SetMaxMessageSize(1 * 1024 * 1024);
+	builder.SetMaxReceiveMessageSize(1 * 1024 * 1024);
     
     // GRPC_ARG_ENABLE_CHANNELZ
     // GRPC_ARG_ENABLE_CENSUS
@@ -374,6 +373,11 @@ using timeVector = vector<chrono::microseconds>;
 //---------------------------------------------------------------------
 int main(int argc, char **argv)
 {
+    //grpc_init();
+    //grpc_timer_manager_set_threading(false);
+    //::grpc_core::Executor::SetThreadingDefault(false);
+    //::grpc_core::Executor::SetThreadingAll(false);
+
 #ifndef _WIN32    
     sched_param schedParam;
     schedParam.sched_priority = 95;
@@ -385,30 +389,52 @@ int main(int argc, char **argv)
     sched_setaffinity(1, sizeof(cpu_set_t), &cpuSet);
 #endif
 
-    // std::vector<thread*> threads;
-    // std::vector<string> ports;
-    // for (int x=0; x<20; ++x)
-    // {
-    //     auto port = 50051 + x;
-    //     auto portStr = string("0.0.0.0:") + to_string(port);
-    //     ports.push_back(portStr);
-    // } 
-    // for (auto port: ports)
-    // {
-    //     auto p = new string(port.c_str());
-    // 	auto t = new std::thread(RunServer, argc, argv, p->c_str());
-    //     threads.push_back(t);
-    // }
-	// std::this_thread::sleep_for(std::chrono::milliseconds(500));
+    SetPriorityClass(GetCurrentProcess(), REALTIME_PRIORITY_CLASS);
 
-	// auto client = NIPerfTestClient(_inProcServer);
-	// PerformLatencyStreamTest2(client, client, 1, "inprocess.txt");
+    std::vector<thread*> threads;
+    std::vector<string> ports;
+    for (int x=0; x<1; ++x)
+    {
+        auto port = 50051 + x;
+        auto portStr = string("0.0.0.0:") + to_string(port);
+        ports.push_back(portStr);
+    } 
+    for (auto port: ports)
+    {
+        auto p = new string(port.c_str());
+        auto t = new std::thread(RunServer, 0, argv, p->c_str());
+        threads.push_back(t);
+    }
+    std::this_thread::sleep_for(std::chrono::milliseconds(2000));
+
+    // localhost testing
+    auto target_str = std::string("localhost");
+    auto creds = grpc::InsecureChannelCredentials();
+    auto port = ":50051";
+    ::grpc::ChannelArguments args;
+    args.SetInt(GRPC_ARG_MINIMAL_STACK, 1);
+    auto client = new NIPerfTestClient(grpc::CreateCustomChannel(target_str + port, creds, args));
     
-    // for (auto t: threads)
-    // {
-    //     t->join();
-    // }
+    // inprocess server
+    //auto client = new NIPerfTestClient(_inProcServer);
 
-    RunServer(argc, argv, "0.0.0.0:50051");
+    // auto result = client->Init(42);
+    // cout << "Init result: " << result << endl;
+    // result = client->Init(43);
+    // cout << "Init result: " << result << endl;
+    // result = client->Init(44);
+    // cout << "Init result: " << result << endl;
+
+    // cout << "Start streaming tests" << endl;
+    //PerformStreamingTest(*client, 100000);
+
+    //PerformLatencyStreamTest(*client, "streamlatency1.txt");
+    //cout << "Performing streaming test" << endl;
+    //PerformStreamingTest(*client, 100000);
+    
+    for (auto t: threads)
+    {
+        t->join();
+    }
 	return 0;
 }
