@@ -22,12 +22,12 @@
 using grpc::Channel;
 using grpc::ClientContext;
 using grpc::Status;
-using namespace std;
+using std::cout;
+using std::endl;
 using namespace niPerfTest;
 
 //---------------------------------------------------------------------
 //---------------------------------------------------------------------
-//static int LatencyTestIterations = 300000;
 static int LatencyTestIterations = 300000;
 
 //---------------------------------------------------------------------

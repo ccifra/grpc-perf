@@ -30,17 +30,25 @@ using grpc::Status;
 
 //---------------------------------------------------------------------
 //---------------------------------------------------------------------
-using namespace std;
 using namespace niPerfTest;
 using namespace google::protobuf;
 
 //---------------------------------------------------------------------
 //---------------------------------------------------------------------
-static ::grpc::ServerWriter< ::niPerfTest::StreamLatencyServer>* _writers [32];
+using timeVector = vector<chrono::microseconds>;
 
 //---------------------------------------------------------------------
 //---------------------------------------------------------------------
-::grpc::Status NIPerfTestServer::StreamLatencyTestClient(::grpc::ServerContext* context, ::grpc::ServerReader<::niPerfTest::StreamLatencyClient>* reader, ::niPerfTest::StreamLatencyServer* response)
+static ::grpc::ServerWriter<niPerfTest::StreamLatencyServer>* _writers [32];
+
+//---------------------------------------------------------------------
+//---------------------------------------------------------------------
+static bool useAnyType;
+static std::shared_ptr<grpc::Channel> _inProcServer;
+
+//---------------------------------------------------------------------
+//---------------------------------------------------------------------
+grpc::Status NIPerfTestServer::StreamLatencyTestClient(grpc::ServerContext* context, grpc::ServerReader<niPerfTest::StreamLatencyClient>* reader, niPerfTest::StreamLatencyServer* response)
 {	
 	niPerfTest::StreamLatencyClient client;
 	niPerfTest::StreamLatencyServer server;
@@ -59,10 +67,8 @@ static ::grpc::ServerWriter< ::niPerfTest::StreamLatencyServer>* _writers [32];
             sched_setaffinity(0, sizeof(cpu_set_t), &cpuSet);
 #endif
         }
-        //cout << "Reader read at slot: " << slot << endl;
         if (_writers[slot] != nullptr)
         {
-            //cout << "Reader writing to slot: " << slot << endl;
             _writers[slot]->Write(server);
         }
  	}
@@ -72,16 +78,14 @@ static ::grpc::ServerWriter< ::niPerfTest::StreamLatencyServer>* _writers [32];
 
 //---------------------------------------------------------------------
 //---------------------------------------------------------------------
-::grpc::Status NIPerfTestServer::StreamLatencyTestServer(::grpc::ServerContext* context, const ::niPerfTest::StreamLatencyClient* request, ::grpc::ServerWriter< ::niPerfTest::StreamLatencyServer>* writer)
+grpc::Status NIPerfTestServer::StreamLatencyTestServer(grpc::ServerContext* context, const niPerfTest::StreamLatencyClient* request, grpc::ServerWriter<niPerfTest::StreamLatencyServer>* writer)
 {
     auto slot = request->message();
-    //cout << "Setting writer to slot: " << slot << endl;
     _writers[slot] = writer;
     while (_writers[slot] == writer)
     {
         std::this_thread::sleep_for(std::chrono::milliseconds(500));
     }
-    //cout << "Writer done at slot: " << slot << endl;
 	return Status::OK;
 }
 
@@ -128,7 +132,7 @@ Status NIPerfTestServer::TestWrite(ServerContext* context, const niPerfTest::Tes
 
 //---------------------------------------------------------------------
 //---------------------------------------------------------------------
-Status NIPerfTestServer::TestWriteContinuously(ServerContext* context, ::grpc::ServerReaderWriter<niPerfTest::TestWriteResult, niPerfTest::TestWriteParameters>* stream)
+Status NIPerfTestServer::TestWriteContinuously(ServerContext* context, grpc::ServerReaderWriter<niPerfTest::TestWriteResult, niPerfTest::TestWriteParameters>* stream)
 {
     niPerfTest::TestWriteParameters readParameters;
     niPerfTest::TestWriteResult response;    
@@ -159,11 +163,9 @@ Status NIPerfTestServer::ReadContinuously(ServerContext* context, const niPerfTe
 	return Status::OK;
 }
 
-static bool useAnyType;
-
 //---------------------------------------------------------------------
 //---------------------------------------------------------------------
-Status MonikerServer::InitiateMonikerStream(::grpc::ServerContext* context, const ::niPerfTest::MonikerList* request, ::niPerfTest::MonikerStreamId* response)
+Status MonikerServer::InitiateMonikerStream(grpc::ServerContext* context, const niPerfTest::MonikerList* request, niPerfTest::MonikerStreamId* response)
 {
     useAnyType = request->useanytype();    
     response->set_streamid(1);
@@ -172,7 +174,7 @@ Status MonikerServer::InitiateMonikerStream(::grpc::ServerContext* context, cons
 
 //---------------------------------------------------------------------
 //---------------------------------------------------------------------
-Status MonikerServer::StreamReadWrite(::grpc::ServerContext* context, ::grpc::ServerReaderWriter<MonikerReadResult, MonikerWriteRequest>* stream)
+Status MonikerServer::StreamReadWrite(grpc::ServerContext* context, grpc::ServerReaderWriter<MonikerReadResult, MonikerWriteRequest>* stream)
 {    
 	MonikerWriteRequest client;
     Arena areana;
@@ -316,16 +318,14 @@ std::shared_ptr<grpc::ServerCredentials> CreateCredentials(int argc, char **argv
 	return creds;
 }
 
-std::shared_ptr<grpc::Channel> _inProcServer;
-
 //---------------------------------------------------------------------
 //---------------------------------------------------------------------
 void RunServer(int argc, char **argv, const char* saddress)
 {
     grpc_init();
     grpc_timer_manager_set_threading(false);
-    // ::grpc_core::Executor::SetThreadingDefault(false);
-    // ::grpc_core::Executor::SetThreadingAll(false);
+    // grpc_core::Executor::SetThreadingDefault(false);
+    // grpc_core::Executor::SetThreadingAll(false);
 
 	auto server_address = saddress; //GetServerAddress(argc, argv);
 	auto creds = CreateCredentials(argc, argv);
@@ -367,16 +367,14 @@ void RunServer(int argc, char **argv, const char* saddress)
 	server->Wait();
 }
 
-using timeVector = vector<chrono::microseconds>;
-
 //---------------------------------------------------------------------
 //---------------------------------------------------------------------
 int main(int argc, char **argv)
 {
     //grpc_init();
     //grpc_timer_manager_set_threading(false);
-    //::grpc_core::Executor::SetThreadingDefault(false);
-    //::grpc_core::Executor::SetThreadingAll(false);
+    //grpc_core::Executor::SetThreadingDefault(false);
+    //grpc_core::Executor::SetThreadingAll(false);
 
 #ifndef _WIN32    
     sched_param schedParam;

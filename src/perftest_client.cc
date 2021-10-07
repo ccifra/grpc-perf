@@ -22,7 +22,8 @@
 using grpc::Channel;
 using grpc::ClientContext;
 using grpc::Status;
-using namespace std;
+using std::cout;
+using std::endl;
 using namespace niPerfTest;
 
 //---------------------------------------------------------------------
@@ -131,13 +132,169 @@ shared_ptr<grpc::ChannelCredentials> CreateCredentials(int argc, char **argv)
 
 //---------------------------------------------------------------------
 //---------------------------------------------------------------------
+void RunLatencyStreamTestSuite(NIPerfTestClient& client)
+{
+    EnableTracing();
+    PerformLatencyStreamTest(client, "streamlatency1.txt");
+    PerformLatencyStreamTest(client, "streamlatency2.txt");
+    PerformLatencyStreamTest(client, "streamlatency3.txt");
+    PerformLatencyStreamTest(client, "streamlatency4.txt");
+    PerformLatencyStreamTest(client, "streamlatency5.txt");
+    DisableTracing();
+}
+
+//---------------------------------------------------------------------
+//---------------------------------------------------------------------
+void RunMonikerLatencyReadWriteTestSuite(NIPerfTestClient& client, std::string targetStr, std::string port, std::shared_ptr<grpc::ChannelCredentials> creds, grpc::ChannelArguments& args)
+{
+    cout << "Start moniker latency read write tests" << endl;
+    auto monikerClient = new NIMonikerClient(grpc::CreateCustomChannel(targetStr + port, creds, args));
+    PerformMonikerLatencyReadWriteTest(*monikerClient, 1, false, "monikerlatency1.txt");
+    PerformMonikerLatencyReadWriteTest(*monikerClient, 2, false, "monikerlatency2.txt");
+    PerformMonikerLatencyReadWriteTest(*monikerClient, 3, false, "monikerlatency3.txt");
+    PerformMonikerLatencyReadWriteTest(*monikerClient, 4, false, "monikerlatency4.txt");
+    PerformMonikerLatencyReadWriteTest(*monikerClient, 5, false, "monikerlatency5.txt");
+    PerformMonikerLatencyReadWriteTest(*monikerClient, 5, true, "monikerlatencyany5.txt");
+}
+
+//---------------------------------------------------------------------
+//---------------------------------------------------------------------
+void RunMessageLatencyTestSuite(NIPerfTestClient& client)
+{
+    PerformMessageLatencyTest(client, "latency1.txt");
+    PerformMessageLatencyTest(client, "latency2.txt");
+    PerformMessageLatencyTest(client, "latency3.txt");
+    PerformMessageLatencyTest(client, "latency4.txt");
+    PerformMessageLatencyTest(client, "latency5.txt");
+}
+
+//---------------------------------------------------------------------
+//---------------------------------------------------------------------
+void RunLatencyPayloadWriteTestSuite(NIPerfTestClient& client)
+{
+    cout << "Start latency payload write tests" << endl;
+    PerformLatencyPayloadWriteTest(client, 1, "payloadlatency1.txt");
+    PerformLatencyPayloadWriteTest(client, 8, "payloadlatency8.txt");
+    PerformLatencyPayloadWriteTest(client, 16, "payloadlatency16.txt");
+    PerformLatencyPayloadWriteTest(client, 32, "payloadlatency32.txt");
+    PerformLatencyPayloadWriteTest(client, 64, "payloadlatency64.txt");
+    PerformLatencyPayloadWriteTest(client, 128, "payloadlatency128.txt");
+    PerformLatencyPayloadWriteTest(client, 1024, "payloadlatency1024.txt");
+    PerformLatencyPayloadWriteTest(client, 32768, "payloadlatency32768.txt");
+}
+
+//---------------------------------------------------------------------
+//---------------------------------------------------------------------
+void RunLatencyPayloadWriteStreamTestSuite(NIPerfTestClient& client)
+{
+    PerformLatencyPayloadWriteStreamTest(client, 1, "payloadstreamlatency1.txt");
+    PerformLatencyPayloadWriteStreamTest(client, 8, "payloadstreamlatency8.txt");
+    PerformLatencyPayloadWriteStreamTest(client, 16, "payloadstreamlatency16.txt");
+    PerformLatencyPayloadWriteStreamTest(client, 32, "payloadstreamlatency32.txt");
+    PerformLatencyPayloadWriteStreamTest(client, 64, "payloadstreamlatency64.txt");
+    PerformLatencyPayloadWriteStreamTest(client, 128, "payloadstreamlatency128.txt");
+    PerformLatencyPayloadWriteStreamTest(client, 1024, "payloadstreamlatency1024.txt");
+    PerformLatencyPayloadWriteStreamTest(client, 32768, "payloadstreamlatency32768.txt");
+}
+
+//---------------------------------------------------------------------
+//---------------------------------------------------------------------
+void RunParallelStreamTestSuite(NIPerfTestClient& client, std::string targetStr, std::shared_ptr<grpc::ChannelCredentials> creds)
+{
+    std::vector<NIPerfTestClient*> clients;
+    for (int x=0; x<20; ++x)
+    {
+        // Set a dummy (but distinct) channel arg on each channel so that
+        // every channel gets its own connection
+        // args.SetInt(GRPC_ARG_MINIMAL_STACK, 1);
+        auto port = 50051 + x;        
+        auto client = new NIPerfTestClient(grpc::CreateChannel(targetStr + string(":") + to_string(port), creds));
+        clients.push_back(client);
+    }
+    cout << endl << "Start 20 stream streaming tests" << endl;
+    PerformNStreamTest(clients, 1000);
+    PerformNStreamTest(clients, 10000);
+    PerformNStreamTest(clients, 100000);
+}
+
+//---------------------------------------------------------------------
+//---------------------------------------------------------------------
+void RunParallelStreamTestSuite(NIPerfTestClient& client)
+{
+    cout << "Start parallel stream latency test" << endl;
+    PerformLatencyStreamTest2(client, client, 1, "streamlatency1Stream.txt");
+    PerformLatencyStreamTest2(client, client, 2, "streamlatency1Stream.txt");
+    PerformLatencyStreamTest2(client, client, 3, "streamlatency1Stream.txt");
+    PerformLatencyStreamTest2(client, client, 4, "streamlatency4Stream.txt");
+    PerformLatencyStreamTest2(client, client, 5, "streamlatency4Stream.txt");
+}
+    
+//---------------------------------------------------------------------
+//---------------------------------------------------------------------
+void RunMessagePerformanceTestSuite(NIPerfTestClient& client)
+{
+    PerformMessagePerformanceTest(client);
+}
+    
+//---------------------------------------------------------------------
+//---------------------------------------------------------------------
+void RunSteamingTestSuite(NIPerfTestClient& client)
+{
+    cout << "Start streaming tests" << endl;
+    PerformStreamingTest(client, 10);
+    PerformStreamingTest(client, 100);
+    PerformStreamingTest(client, 1000);
+    PerformStreamingTest(client, 10000);
+    PerformStreamingTest(client, 100000);
+    PerformStreamingTest(client, 100000);
+    PerformStreamingTest(client, 100000);
+    PerformStreamingTest(client, 100000);
+     PerformStreamingTest(client, 200000);
+}
+
+//---------------------------------------------------------------------
+//---------------------------------------------------------------------
+void RunReadTestSuite(NIPerfTestClient& client)
+{
+    PerformReadTest(client, 100, 100000);
+    PerformReadTest(client, 1000, 100000);
+    PerformReadTest(client, 10000, 100000);
+    PerformReadTest(client, 100000, 100000);
+    PerformReadTest(client, 200000, 100000);
+    PerformReadTest(client, 393216, 100000);
+}
+
+//---------------------------------------------------------------------
+//---------------------------------------------------------------------
+void RunWriteTestSuite(NIPerfTestClient& client)
+{
+    PerformWriteTest(client, 100);
+    PerformWriteTest(client, 1000);
+    PerformWriteTest(client, 10000);
+    PerformWriteTest(client, 100000);
+    PerformWriteTest(client, 200000);
+    PerformWriteTest(client, 393216);
+}
+
+//---------------------------------------------------------------------
+//---------------------------------------------------------------------
+void RunScpiCompareTests(NIPerfTestClient& client)
+{
+    PerformReadTest(client, 10, 100000);
+    PerformAsyncInitTest(client, 10, 10000);
+}
+
+//---------------------------------------------------------------------
+//---------------------------------------------------------------------
 int main(int argc, char **argv)
 {
+    // Configure gRPC
     grpc_init();
     grpc_timer_manager_set_threading(false);
     ::grpc_core::Executor::SetThreadingDefault(false);
     ::grpc_core::Executor::SetThreadingAll(false);
 
+    // Configure Linux enviornment
 #ifndef _WIN32    
     sched_param schedParam;
     schedParam.sched_priority = 95;
@@ -149,135 +306,31 @@ int main(int argc, char **argv)
     sched_setaffinity(0, sizeof(cpu_set_t), &cpuSet);
 #endif
 
+    // Get server information and channel credentials
     auto target_str = GetServerAddress(argc, argv);
     auto creds = CreateCredentials(argc, argv);
     auto port = ":50051";   
 
-    //client1 = new NIScope(grpc::CreateChannel("unix:///home/chrisc/test.sock", creds));
-    //client2 = new NIScope(grpc::CreateChannel("unix:///home/chrisc/test2.sock", creds));
-    //client2 = new NIScope(grpc::CreateChannel(target_str + port, creds));
-
-    ::grpc::ChannelArguments args;
-    // Set a dummy (but distinct) channel arg on each channel so that
-    // every channel gets its own connection
-    //args.SetInt(GRPC_ARG_MINIMAL_STACK, 1);
+    // Create the connection to the server
+    grpc::ChannelArguments args;
+    args.SetInt(GRPC_ARG_MINIMAL_STACK, 1);
     args.SetMaxReceiveMessageSize(10 * 100 * 1024 * 1024);
     args.SetMaxSendMessageSize(10 * 100 * 1024 * 1024);
-    auto client1 = new NIPerfTestClient(grpc::CreateCustomChannel(target_str + port, creds, args));
-    //client2 = new NIScope(grpc::CreateCustomChannel(target_str + port, creds, args));
+    auto client = new NIPerfTestClient(grpc::CreateCustomChannel(target_str + port, creds, args));
 
-    auto result = client1->Init(42);
-    cout << "Init result: " << result << endl;
+    // Verify the client is working correctly
+    auto result = client->Init(42);
+    if (result != 42)
+    {
+        cout << "Server communication failure!" << endl;
+        return -1;
+    }
+    else
+    {
+        cout << "Init result: " << result << endl;
+    }
 
-    // EnableTracing();
-    // PerformLatencyStreamTest(*client1, "streamlatency1.txt");
-    // PerformLatencyStreamTest(*client1, "streamlatency2.txt");
-    // PerformLatencyStreamTest(*client1, "streamlatency3.txt");
-    // PerformLatencyStreamTest(*client1, "streamlatency4.txt");
-    // PerformLatencyStreamTest(*client1, "streamlatency5.txt");
-    // DisableTracing();
-
-    // cout << "Start moniker latency read write tests" << endl;
-    // auto monikerClient = new NIMonikerClient(grpc::CreateCustomChannel(target_str + port, creds, args));
-    // PerformMonikerLatencyReadWriteTest(*monikerClient, 1, false, "monikerlatency1.txt");
-    // PerformMonikerLatencyReadWriteTest(*monikerClient, 2, false, "monikerlatency2.txt");
-    // PerformMonikerLatencyReadWriteTest(*monikerClient, 3, false, "monikerlatency3.txt");
-    // PerformMonikerLatencyReadWriteTest(*monikerClient, 4, false, "monikerlatency4.txt");
-    // PerformMonikerLatencyReadWriteTest(*monikerClient, 5, false, "monikerlatency5.txt");
-    // PerformMonikerLatencyReadWriteTest(*monikerClient, 5, true, "monikerlatencyany5.txt");
-
-    // PerformMessageLatencyTest(*client1, "latency1.txt");
-    // PerformMessageLatencyTest(*client1, "latency2.txt");
-    // PerformMessageLatencyTest(*client1, "latency3.txt");
-    // PerformMessageLatencyTest(*client1, "latency4.txt");
-    // PerformMessageLatencyTest(*client1, "latency5.txt");
-
-    // cout << "Start latency payload write tests" << endl;
-    // PerformLatencyPayloadWriteTest(*client1, 1, "payloadlatency1.txt");
-    // PerformLatencyPayloadWriteTest(*client1, 8, "payloadlatency8.txt");
-    // PerformLatencyPayloadWriteTest(*client1, 16, "payloadlatency16.txt");
-    // PerformLatencyPayloadWriteTest(*client1, 32, "payloadlatency32.txt");
-    // PerformLatencyPayloadWriteTest(*client1, 64, "payloadlatency64.txt");
-    // PerformLatencyPayloadWriteTest(*client1, 128, "payloadlatency128.txt");
-    // PerformLatencyPayloadWriteTest(*client1, 1024, "payloadlatency1024.txt");
-    // PerformLatencyPayloadWriteTest(*client1, 32768, "payloadlatency32768.txt");
-
-    // PerformLatencyPayloadWriteStreamTest(*client1, 1, "payloadstreamlatency1.txt");
-    // PerformLatencyPayloadWriteStreamTest(*client1, 8, "payloadstreamlatency8.txt");
-    // PerformLatencyPayloadWriteStreamTest(*client1, 16, "payloadstreamlatency16.txt");
-    // PerformLatencyPayloadWriteStreamTest(*client1, 32, "payloadstreamlatency32.txt");
-    // PerformLatencyPayloadWriteStreamTest(*client1, 64, "payloadstreamlatency64.txt");
-    // PerformLatencyPayloadWriteStreamTest(*client1, 128, "payloadstreamlatency128.txt");
-    // PerformLatencyPayloadWriteStreamTest(*client1, 1024, "payloadstreamlatency1024.txt");
-    // PerformLatencyPayloadWriteStreamTest(*client1, 32768, "payloadstreamlatency32768.txt");
-
-    //PerformMessagePerformanceTest(*client1);
-
-    // client2 = new NIScope(grpc::CreateChannel(target_str + ":50052", creds));
-    // result = client2->Init(42);
-    // cout << endl << "Start 2 stream streaming tests" << endl;
-    // PerformTwoStreamTest(*client1, *client2, 1000);
-    // PerformTwoStreamTest(*client1, *client2, 10000);
-    // PerformTwoStreamTest(*client1, *client2, 100000);
-    // PerformTwoStreamTest(*client1, *client2, 200000);
-
-    // client3 = new NIScope(grpc::CreateChannel(target_str + ":50053", creds));
-    // client4 = new NIScope(grpc::CreateChannel(target_str + ":50054", creds));
-    // result = client3->Init(32);
-    // result = client4->Init(42);
-    // cout << endl << "Start 4 stream streaming tests" << endl;
-    // PerformFourStreamTest(*client1, *client2, *client3, *client4, 1000);
-    // PerformFourStreamTest(*client1, *client2, *client3, *client4, 10000);
-    // PerformFourStreamTest(*client1, *client2, *client3, *client4, 100000);
-    // PerformFourStreamTest(*client1, *client2, *client3, *client4, 200000);
-    
-    // std::vector<NIScope*> clients;
-    // for (int x=0; x<20; ++x)
-    // {
-    //     auto port = 50051 + x;        
-    //     auto client = new NIScope(grpc::CreateChannel(target_str + string(":") + to_string(port), creds));
-    //     clients.push_back(client);
-    // }
-    // cout << endl << "Start 20 stream streaming tests" << endl;
-    // PerformNStreamTest(clients, 1000);
-    // PerformNStreamTest(clients, 10000);
-    // PerformNStreamTest(clients, 100000);
-
-    // cout << "Start parallel stream latency test" << endl;
-    // PerformLatencyStreamTest2(*client1, *client1, 1, "streamlatency1Stream.txt");
-    // PerformLatencyStreamTest2(*client1, *client1, 2, "streamlatency1Stream.txt");
-    // PerformLatencyStreamTest2(*client1, *client1, 3, "streamlatency1Stream.txt");
-    // PerformLatencyStreamTest2(*client1, *client1, 4, "streamlatency4Stream.txt");
-    // PerformLatencyStreamTest2(*client1, *client1, 5, "streamlatency4Stream.txt");
-    
-    PerformMessagePerformanceTest(*client1);
-    
-    cout << "Start streaming tests" << endl;
-    // PerformStreamingTest(*client1, 10);
-    // PerformStreamingTest(*client1, 100);
-    // PerformStreamingTest(*client1, 1000);
-    // PerformStreamingTest(*client1, 10000);
-    // PerformStreamingTest(*client1, 100000);
-    // PerformStreamingTest(*client1, 100000);
-    //PerformStreamingTest(*client1, 100000);
-    //PerformStreamingTest(*client1, 100000);
-    // PerformStreamingTest(*client1, 200000);
-
-    // PerformReadTest(*client1, 100);
-    // PerformReadTest(*client1, 1000);
-    // PerformReadTest(*client1, 10000);
-    // PerformReadTest(*client1, 100000);
-    // PerformReadTest(*client1, 200000);
-    // PerformReadTest(*client1, 393216);
-
-    //PerformReadTest(*client1, 100 * 1024 * 1024);
-    PerformReadTest(*client1, 10, 100000);
-    PerformAsyncInitTest(*client1, 10, 10000);
-    
-    // PerformWriteTest(*client1, 100);
-    // PerformWriteTest(*client1, 1000);
-    // PerformWriteTest(*client1, 10000);
-    // PerformWriteTest(*client1, 100000);
-    // PerformWriteTest(*client1, 200000);
-    // PerformWriteTest(*client1, 393216);
+    // Run desired test suites
+    RunScpiCompareTests(*client);
+    return 0;   
 }
