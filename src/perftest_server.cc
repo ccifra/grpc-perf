@@ -320,30 +320,24 @@ std::shared_ptr<grpc::ServerCredentials> CreateCredentials(int argc, char **argv
 
 //---------------------------------------------------------------------
 //---------------------------------------------------------------------
-void RunServer(int argc, char **argv, const char* saddress)
+void RunServer(int argc, char **argv, const char* server_address)
 {
+    // Init gRPC
     grpc_init();
     grpc_timer_manager_set_threading(false);
     // grpc_core::Executor::SetThreadingDefault(false);
     // grpc_core::Executor::SetThreadingAll(false);
 
-	auto server_address = saddress; //GetServerAddress(argc, argv);
 	auto creds = CreateCredentials(argc, argv);
 
 	NIPerfTestServer service;
     MonikerServer monikerService;
-	//grpc::EnableDefaultHealthCheckService(true);
-	//grpc::reflection::InitProtoReflectionServerBuilderPlugin();
-
 	ServerBuilder builder;
-	// Listen on the given address without any authentication mechanism.
 	builder.AddListeningPort(server_address, creds);
-
     builder.AddChannelArgument(GRPC_ARG_MINIMAL_STACK, 1);
 	builder.SetDefaultCompressionAlgorithm(GRPC_COMPRESS_NONE);
 	builder.SetMaxMessageSize(1 * 1024 * 1024);
 	builder.SetMaxReceiveMessageSize(1 * 1024 * 1024);
-    
     // GRPC_ARG_ENABLE_CHANNELZ
     // GRPC_ARG_ENABLE_CENSUS
     // GRPC_ARG_DISABLE_CLIENT_AUTHORITY_FILTER
@@ -356,7 +350,6 @@ void RunServer(int argc, char **argv, const char* saddress)
     // GRPC_ARG_INHIBIT_HEALTH_CHECKING
     // GRPC_ARG_TCP_TX_ZEROCOPY_ENABLED
     // builder.AddChannelArgument();
-
 	builder.RegisterService(&service);
     builder.RegisterService(&monikerService);
 
@@ -385,9 +378,9 @@ int main(int argc, char **argv)
     CPU_ZERO(&cpuSet);
     CPU_SET(2, &cpuSet);
     sched_setaffinity(1, sizeof(cpu_set_t), &cpuSet);
-#endif
-
+#else
     SetPriorityClass(GetCurrentProcess(), REALTIME_PRIORITY_CLASS);
+#endif
 
     std::vector<thread*> threads;
     std::vector<string> ports;

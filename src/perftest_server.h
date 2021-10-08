@@ -3,28 +3,28 @@
 //---------------------------------------------------------------------
 #pragma once
 
+//---------------------------------------------------------------------
+//---------------------------------------------------------------------
 #ifdef __WIN32__
-#define WIN32_LEAN_AND_MEAN
-#include <windows.h>
+    #define WIN32_LEAN_AND_MEAN
+    #include <windows.h>
 #endif
 
+//---------------------------------------------------------------------
+//---------------------------------------------------------------------
 #include <grpcpp/grpcpp.h>
 #include <grpcpp/health_check_service_interface.h>
 #include <grpcpp/ext/proto_server_reflection_plugin.h>
 #include <perftest.grpc.pb.h>
 #include <condition_variable>
 
+//---------------------------------------------------------------------
+//---------------------------------------------------------------------
 using grpc::Server;
 using grpc::ServerBuilder;
 using grpc::ServerContext;
 using grpc::Status;
 using grpc::ServerWriter;
-
-#ifdef _WIN32
-    #define LIBRARY_EXPORT extern "C" __declspec(dllexport)
-#else
-    #define LIBRARY_EXPORT extern "C"
-#endif
 
 //---------------------------------------------------------------------
 //---------------------------------------------------------------------

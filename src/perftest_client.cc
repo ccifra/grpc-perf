@@ -13,6 +13,8 @@
 #include <src/core/lib/iomgr/executor.h>
 #include <src/core/lib/iomgr/timer_manager.h>
 
+//---------------------------------------------------------------------
+//---------------------------------------------------------------------
 #ifndef _WIN32
 #include <sched.h>
 #endif
@@ -134,6 +136,7 @@ shared_ptr<grpc::ChannelCredentials> CreateCredentials(int argc, char **argv)
 //---------------------------------------------------------------------
 void RunLatencyStreamTestSuite(NIPerfTestClient& client)
 {
+    cout << "Start Latency Stream Test Suite" << endl;
     EnableTracing();
     PerformLatencyStreamTest(client, "streamlatency1.txt");
     PerformLatencyStreamTest(client, "streamlatency2.txt");
@@ -147,7 +150,7 @@ void RunLatencyStreamTestSuite(NIPerfTestClient& client)
 //---------------------------------------------------------------------
 void RunMonikerLatencyReadWriteTestSuite(NIPerfTestClient& client, std::string targetStr, std::string port, std::shared_ptr<grpc::ChannelCredentials> creds, grpc::ChannelArguments& args)
 {
-    cout << "Start moniker latency read write tests" << endl;
+    cout << "Start Moniker Latency Read Write Test Suite" << endl;
     auto monikerClient = new NIMonikerClient(grpc::CreateCustomChannel(targetStr + port, creds, args));
     PerformMonikerLatencyReadWriteTest(*monikerClient, 1, false, "monikerlatency1.txt");
     PerformMonikerLatencyReadWriteTest(*monikerClient, 2, false, "monikerlatency2.txt");
@@ -161,6 +164,7 @@ void RunMonikerLatencyReadWriteTestSuite(NIPerfTestClient& client, std::string t
 //---------------------------------------------------------------------
 void RunMessageLatencyTestSuite(NIPerfTestClient& client)
 {
+    cout << "Start Message Latency Test Suite" << endl;
     PerformMessageLatencyTest(client, "latency1.txt");
     PerformMessageLatencyTest(client, "latency2.txt");
     PerformMessageLatencyTest(client, "latency3.txt");
@@ -172,7 +176,7 @@ void RunMessageLatencyTestSuite(NIPerfTestClient& client)
 //---------------------------------------------------------------------
 void RunLatencyPayloadWriteTestSuite(NIPerfTestClient& client)
 {
-    cout << "Start latency payload write tests" << endl;
+    cout << "Start Latency Payload Write Test Suite" << endl;
     PerformLatencyPayloadWriteTest(client, 1, "payloadlatency1.txt");
     PerformLatencyPayloadWriteTest(client, 8, "payloadlatency8.txt");
     PerformLatencyPayloadWriteTest(client, 16, "payloadlatency16.txt");
@@ -187,6 +191,7 @@ void RunLatencyPayloadWriteTestSuite(NIPerfTestClient& client)
 //---------------------------------------------------------------------
 void RunLatencyPayloadWriteStreamTestSuite(NIPerfTestClient& client)
 {
+    cout << "Start Latency Payload Write Stream Test Suite" << endl;
     PerformLatencyPayloadWriteStreamTest(client, 1, "payloadstreamlatency1.txt");
     PerformLatencyPayloadWriteStreamTest(client, 8, "payloadstreamlatency8.txt");
     PerformLatencyPayloadWriteStreamTest(client, 16, "payloadstreamlatency16.txt");
@@ -201,6 +206,7 @@ void RunLatencyPayloadWriteStreamTestSuite(NIPerfTestClient& client)
 //---------------------------------------------------------------------
 void RunParallelStreamTestSuite(NIPerfTestClient& client, std::string targetStr, std::shared_ptr<grpc::ChannelCredentials> creds)
 {
+    cout << "Start Parallel Stream Test Suite" << endl;
     std::vector<NIPerfTestClient*> clients;
     for (int x=0; x<20; ++x)
     {
@@ -221,7 +227,7 @@ void RunParallelStreamTestSuite(NIPerfTestClient& client, std::string targetStr,
 //---------------------------------------------------------------------
 void RunParallelStreamTestSuite(NIPerfTestClient& client)
 {
-    cout << "Start parallel stream latency test" << endl;
+    cout << "Start Parallel Stream Latency Test Suite" << endl;
     PerformLatencyStreamTest2(client, client, 1, "streamlatency1Stream.txt");
     PerformLatencyStreamTest2(client, client, 2, "streamlatency1Stream.txt");
     PerformLatencyStreamTest2(client, client, 3, "streamlatency1Stream.txt");
@@ -233,6 +239,7 @@ void RunParallelStreamTestSuite(NIPerfTestClient& client)
 //---------------------------------------------------------------------
 void RunMessagePerformanceTestSuite(NIPerfTestClient& client)
 {
+    cout << "Start Message Performance Test Suite" << endl;
     PerformMessagePerformanceTest(client);
 }
     
@@ -240,7 +247,7 @@ void RunMessagePerformanceTestSuite(NIPerfTestClient& client)
 //---------------------------------------------------------------------
 void RunSteamingTestSuite(NIPerfTestClient& client)
 {
-    cout << "Start streaming tests" << endl;
+    cout << "Start Streaming Test Suite" << endl;
     PerformStreamingTest(client, 10);
     PerformStreamingTest(client, 100);
     PerformStreamingTest(client, 1000);
@@ -256,6 +263,7 @@ void RunSteamingTestSuite(NIPerfTestClient& client)
 //---------------------------------------------------------------------
 void RunReadTestSuite(NIPerfTestClient& client)
 {
+    cout << "Start Read Test Suite" << endl;
     PerformReadTest(client, 100, 100000);
     PerformReadTest(client, 1000, 100000);
     PerformReadTest(client, 10000, 100000);
@@ -268,6 +276,7 @@ void RunReadTestSuite(NIPerfTestClient& client)
 //---------------------------------------------------------------------
 void RunWriteTestSuite(NIPerfTestClient& client)
 {
+    cout << "Start Write Test Suite" << endl;
     PerformWriteTest(client, 100);
     PerformWriteTest(client, 1000);
     PerformWriteTest(client, 10000);
@@ -278,8 +287,9 @@ void RunWriteTestSuite(NIPerfTestClient& client)
 
 //---------------------------------------------------------------------
 //---------------------------------------------------------------------
-void RunScpiCompareTests(NIPerfTestClient& client)
+void RunScpiCompareTestSuite(NIPerfTestClient& client)
 {
+    cout << "Start SCPI Compare Test Suite" << endl;
     PerformReadTest(client, 10, 100000);
     PerformAsyncInitTest(client, 10, 10000);
 }
@@ -294,7 +304,7 @@ int main(int argc, char **argv)
     ::grpc_core::Executor::SetThreadingDefault(false);
     ::grpc_core::Executor::SetThreadingAll(false);
 
-    // Configure Linux enviornment
+    // Configure enviornment
 #ifndef _WIN32    
     sched_param schedParam;
     schedParam.sched_priority = 95;
@@ -304,6 +314,8 @@ int main(int argc, char **argv)
     CPU_ZERO(&cpuSet);
     CPU_SET(4, &cpuSet);
     sched_setaffinity(0, sizeof(cpu_set_t), &cpuSet);
+#else
+    SetPriorityClass(GetCurrentProcess(), REALTIME_PRIORITY_CLASS);
 #endif
 
     // Get server information and channel credentials
@@ -331,6 +343,6 @@ int main(int argc, char **argv)
     }
 
     // Run desired test suites
-    RunScpiCompareTests(*client);
+    RunScpiCompareTestSuite(*client);
     return 0;   
 }

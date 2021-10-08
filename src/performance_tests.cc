@@ -36,7 +36,7 @@ void PerformAsyncInitTest(NIPerfTestClient& client, int numCommands, int numIter
 {
     cout << "Start async init test, num commands: " << numCommands << endl;
 
-    auto start = chrono::steady_clock::now();
+    auto start = chrono::high_resolution_clock::now();
     for (int i=0; i<numIterations; ++i)
     {
         AsyncInitResults* results = new AsyncInitResults[numCommands];
@@ -68,7 +68,7 @@ void PerformAsyncInitTest(NIPerfTestClient& client, int numCommands, int numIter
         }
         delete[] results;
     }
-    auto end = chrono::steady_clock::now();
+    auto end = chrono::high_resolution_clock::now();
     auto elapsed = chrono::duration_cast<chrono::microseconds>(end - start);
 
     double msgsPerSecond = (numCommands * numIterations * 1000.0 * 1000.0) / (double)elapsed.count();
@@ -82,13 +82,12 @@ void PerformMessagePerformanceTest(NIPerfTestClient& client)
 {
     cout << "Start Messages per second test" << endl;
 
-    //auto s = chrono::high_resolution_clock::now();
-    auto start = chrono::steady_clock::now();
+    auto start = chrono::high_resolution_clock::now();
     for (int x=0; x<50000; ++x)
     {
         client.Init(42);
     }
-    auto end = chrono::steady_clock::now();
+    auto end = chrono::high_resolution_clock::now();
     auto elapsed = chrono::duration_cast<chrono::microseconds>(end - start);
     double msgsPerSecond = (50000.0 * 1000.0 * 1000.0) / (double)elapsed.count();
 
@@ -121,10 +120,10 @@ void PerformLatencyStreamTest(NIPerfTestClient& client, std::string fileName)
     {
         TraceMarker("Start iteration");
         //clientData.set_message(x);
-        auto start = chrono::steady_clock::now();
+        auto start = chrono::high_resolution_clock::now();
         stream->Write(clientData);
         stream->Read(&serverData);
-        auto end = chrono::steady_clock::now();
+        auto end = chrono::high_resolution_clock::now();
         auto elapsed = chrono::duration_cast<chrono::microseconds>(end - start);
         times.emplace_back(elapsed);
         // if (elapsed.count() > 200)
@@ -233,7 +232,7 @@ void PerformMonikerLatencyReadWriteTest(NIMonikerClient& client, int numItems, b
 
     for (int x=0; x<LatencyTestIterations; ++x)
     {
-        auto start = chrono::steady_clock::now();
+        auto start = chrono::high_resolution_clock::now();
         auto writeRequest = google::protobuf::Arena::CreateMessage<MonikerWriteRequest>(&areana);
         writeRequest->set_monikerstreamid(monikerId.streamid());
         for (int i=0; i<numItems; ++i)
@@ -270,7 +269,7 @@ void PerformMonikerLatencyReadWriteTest(NIMonikerClient& client, int numItems, b
                 auto result = readResult->values()[i].doublearray().values(0);
             }
         }
-        auto end = chrono::steady_clock::now();
+        auto end = chrono::high_resolution_clock::now();
         auto elapsed = chrono::duration_cast<chrono::microseconds>(end - start);
         times.emplace_back(elapsed);
         areana.Reset();
@@ -304,10 +303,10 @@ void PerformLatencyPayloadWriteTest(NIPerfTestClient& client, int numSamples, st
     for (int x=0; x<LatencyTestIterations; ++x)
     {
         TraceMarker("Start iteration");
-        auto start = chrono::steady_clock::now();
+        auto start = chrono::high_resolution_clock::now();
         ClientContext context;
         client.m_Stub->TestWrite(&context, request, &reply);
-        auto end = chrono::steady_clock::now();
+        auto end = chrono::high_resolution_clock::now();
         auto elapsed = chrono::duration_cast<chrono::microseconds>(end - start);
         times.emplace_back(elapsed);
     }
@@ -340,10 +339,10 @@ void PerformLatencyPayloadWriteStreamTest(NIPerfTestClient& client, int numSampl
     for (int x=0; x<LatencyTestIterations; ++x)
     {
         TraceMarker("Start iteration");
-        auto start = chrono::steady_clock::now();
+        auto start = chrono::high_resolution_clock::now();
         stream->Write(request);
         stream->Read(&reply);
-        auto end = chrono::steady_clock::now();
+        auto end = chrono::high_resolution_clock::now();
         auto elapsed = chrono::duration_cast<chrono::microseconds>(end - start);
         times.emplace_back(elapsed);
     }
@@ -397,7 +396,7 @@ void PerformLatencyStreamTest2(NIPerfTestClient& client, NIPerfTestClient& clien
     }
     for (int x=0; x<LatencyTestIterations; ++x)
     {
-        auto start = chrono::steady_clock::now();
+        auto start = chrono::high_resolution_clock::now();
         for (int i=0; i<streamCount; ++i)
         {
             streamInfos[i].wstream->Write(streamInfos[i].clientData);
@@ -406,7 +405,7 @@ void PerformLatencyStreamTest2(NIPerfTestClient& client, NIPerfTestClient& clien
         {
             streamInfos[i].rstream->Read(&serverData);
         }
-        auto end = chrono::steady_clock::now();
+        auto end = chrono::high_resolution_clock::now();
         auto elapsed = chrono::duration_cast<chrono::microseconds>(end - start);
         times.emplace_back(elapsed);
     }
@@ -442,10 +441,10 @@ void PerformMessageLatencyTest(NIPerfTestClient& client, std::string fileName)
     }
     for (int x=0; x<LatencyTestIterations; ++x)
     {
-        auto start = chrono::steady_clock::now();
+        auto start = chrono::high_resolution_clock::now();
         ClientContext context;
         client.m_Stub->Init(&context, request, &reply);
-        auto end = chrono::steady_clock::now();
+        auto end = chrono::high_resolution_clock::now();
         auto elapsed = chrono::duration_cast<chrono::microseconds>(end - start);
         times.emplace_back(elapsed);
     }
@@ -461,12 +460,12 @@ void PerformReadTest(NIPerfTestClient& client, int numSamples, int numIterations
     int index = 0;
     double* samples = new double[numSamples];
 
-    auto start = chrono::steady_clock::now();
+    auto start = chrono::high_resolution_clock::now();
     for (int x=0; x<numIterations; ++x)
     {
         client.Read(1000, numSamples, samples);
     }
-    auto end = chrono::steady_clock::now();
+    auto end = chrono::high_resolution_clock::now();
     auto elapsed = chrono::duration_cast<chrono::microseconds>(end - start);
     double msgsPerSecond = (numIterations * 1000.0 * 1000.0) / (double)elapsed.count();
     double timePerMessage = elapsed.count() / numIterations;
@@ -484,7 +483,7 @@ void PerformWriteTest(NIPerfTestClient& client, int numSamples)
     int index = 0;
     double* samples = new double[numSamples];
 
-    auto start = chrono::steady_clock::now();
+    auto start = chrono::high_resolution_clock::now();
     for (int x=0; x<1000; ++x)
     {
         client.TestWrite(numSamples, samples);
@@ -498,7 +497,7 @@ void PerformWriteTest(NIPerfTestClient& client, int numSamples)
         }
     }
     cout << endl;
-    auto end = chrono::steady_clock::now();
+    auto end = chrono::high_resolution_clock::now();
     auto elapsed = chrono::duration_cast<chrono::microseconds>(end - start);
     double msgsPerSecond = (1000.0 * 1000.0 * 1000.0) / (double)elapsed.count();
 
@@ -510,9 +509,9 @@ void PerformWriteTest(NIPerfTestClient& client, int numSamples)
 //---------------------------------------------------------------------
 void PerformStreamingTest(NIPerfTestClient& client, int numSamples)
 {
-    auto start = chrono::steady_clock::now();
+    auto start = chrono::high_resolution_clock::now();
     ReadSamples(&client, numSamples);
-    auto end = chrono::steady_clock::now();
+    auto end = chrono::high_resolution_clock::now();
     ReportMBPerSecond(start, end, numSamples);
 }
 
@@ -520,7 +519,7 @@ void PerformStreamingTest(NIPerfTestClient& client, int numSamples)
 //---------------------------------------------------------------------
 void PerformTwoStreamTest(NIPerfTestClient& client, NIPerfTestClient& client2, int numSamples)
 {
-    auto start = chrono::steady_clock::now();
+    auto start = chrono::high_resolution_clock::now();
 
     auto thread1 = new thread(ReadSamples, &client, numSamples);
     auto thread2 = new thread(ReadSamples, &client2, numSamples);
@@ -528,7 +527,7 @@ void PerformTwoStreamTest(NIPerfTestClient& client, NIPerfTestClient& client2, i
     thread1->join();
     thread2->join();
 
-    auto end = chrono::steady_clock::now();
+    auto end = chrono::high_resolution_clock::now();
     ReportMBPerSecond(start, end, numSamples * 2);
 }
 
@@ -536,7 +535,7 @@ void PerformTwoStreamTest(NIPerfTestClient& client, NIPerfTestClient& client2, i
 //---------------------------------------------------------------------
 void PerformFourStreamTest(NIPerfTestClient& client, NIPerfTestClient& client2, NIPerfTestClient& client3, NIPerfTestClient& client4, int numSamples)
 {
-    auto start = chrono::steady_clock::now();
+    auto start = chrono::high_resolution_clock::now();
 
     auto thread1 = new thread(ReadSamples, &client, numSamples);
     auto thread2 = new thread(ReadSamples, &client2, numSamples);
@@ -548,7 +547,7 @@ void PerformFourStreamTest(NIPerfTestClient& client, NIPerfTestClient& client2, 
     thread3->join();
     thread4->join();
 
-    auto end = chrono::steady_clock::now();
+    auto end = chrono::high_resolution_clock::now();
     ReportMBPerSecond(start, end, numSamples * 4);
 }
 
@@ -556,7 +555,7 @@ void PerformFourStreamTest(NIPerfTestClient& client, NIPerfTestClient& client2, 
 //---------------------------------------------------------------------
 void PerformNStreamTest(std::vector<NIPerfTestClient*>& clients, int numSamples)
 {
-    auto start = chrono::steady_clock::now();
+    auto start = chrono::high_resolution_clock::now();
 
     std::vector<thread*> threads;
     threads.reserve(clients.size());
@@ -569,6 +568,6 @@ void PerformNStreamTest(std::vector<NIPerfTestClient*>& clients, int numSamples)
     {
         thread->join();
     }
-    auto end = chrono::steady_clock::now();
+    auto end = chrono::high_resolution_clock::now();
     ReportMBPerSecond(start, end, numSamples * clients.size());
 }
