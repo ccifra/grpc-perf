@@ -58,7 +58,7 @@ public:
 //---------------------------------------------------------------------
 void WriteLatencyData(timeVector times, const string& fileName);
 void ReadSamples(NIPerfTestClient* client, int numSamples);
-void ReportMBPerSecond(chrono::steady_clock::time_point start, chrono::steady_clock::time_point end, int numSamples);
+void ReportMBPerSecond(chrono::high_resolution_clock::time_point start, chrono::high_resolution_clock::time_point end, int numSamples);
 void EnableTracing();
 void DisableTracing();
 void TracingOff();

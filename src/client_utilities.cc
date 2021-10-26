@@ -2,10 +2,6 @@
 //---------------------------------------------------------------------
 #include "client_utilities.h"
 #include <fstream>
-#include <WinSock2.h>
-#include <in6addr.h>
-#include <ws2ipdef.h>
-#include <Mswsock.h>
 
 //---------------------------------------------------------------------
 //---------------------------------------------------------------------
@@ -183,7 +179,7 @@ void ReadSamples(NIPerfTestClient* client, int numSamples)
 
 //---------------------------------------------------------------------
 //---------------------------------------------------------------------
-void ReportMBPerSecond(chrono::steady_clock::time_point start, chrono::steady_clock::time_point end, int numSamples)
+void ReportMBPerSecond(chrono::high_resolution_clock::time_point start, chrono::high_resolution_clock::time_point end, int numSamples)
 {
     int64_t elapsed = chrono::duration_cast<chrono::microseconds>(end - start).count();
     double elapsedSeconds = elapsed / (1000.0 * 1000.0);
