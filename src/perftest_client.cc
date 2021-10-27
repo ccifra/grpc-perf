@@ -290,8 +290,9 @@ void RunWriteTestSuite(NIPerfTestClient& client)
 void RunScpiCompareTestSuite(NIPerfTestClient& client)
 {
     cout << "Start SCPI Compare Test Suite" << endl;
-    PerformReadTest(client, 10, 100000);
-    PerformAsyncInitTest(client, 10, 10000);
+    // PerformReadTest(client, 10, 100000);
+    // PerformAsyncInitTest(client, 10, 10000);
+    PerformScopeLikeRead(client);
 }
 
 //---------------------------------------------------------------------

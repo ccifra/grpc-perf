@@ -36,6 +36,9 @@ public:
     int Init(int id);
     int Init(int id, string command);
     int InitAsync(int id, string command, grpc::CompletionQueue& cq,  AsyncInitResults* results);
+    int ConfigureVertical(string vi, string channelList, double range, double offset, VerticalCoupling coupling, double probe_attenuation, bool enabled);
+    int ConfigureHorizontalTiming(string vi, double min_sample_rate, int min_num_pts, double ref_position, int num_records, bool enforce_realtime);
+    int InitiateAcquisition(string vi);
     int Read(double timeout, int numSamples, double* samples);
     int TestWrite(int numSamples, double* samples);
     unique_ptr<grpc::ClientReader<niPerfTest::ReadContinuouslyResult>> ReadContinuously(grpc::ClientContext* context, double timeout, int numSamples);

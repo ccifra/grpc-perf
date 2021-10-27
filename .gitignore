@@ -24,3 +24,5 @@ perftest_server
 
 *.pb.cc
 *.pb.h
+
+__pycache__

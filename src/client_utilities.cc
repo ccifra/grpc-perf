@@ -65,6 +65,68 @@ int NIPerfTestClient::InitAsync(int id, string command, grpc::CompletionQueue& c
 
 //---------------------------------------------------------------------
 //---------------------------------------------------------------------
+int NIPerfTestClient::ConfigureVertical(string vi, string channelList, double range, double offset, VerticalCoupling coupling, double probe_attenuation, bool enabled)
+{    
+    ConfigureVerticalRequest request;
+    request.set_vi(vi);
+    request.set_channel_list(channelList);
+    request.set_range(range);
+    request.set_offset(offset);
+    request.set_coupling(coupling);
+    request.set_probe_attenuation(probe_attenuation);
+    request.set_enabled(enabled);
+
+    ClientContext context;
+    ConfigureVerticalResponse reply;
+    Status status = m_Stub->ConfigureVertical(&context, request, &reply);
+    if (!status.ok())
+    {
+        cout << status.error_code() << ": " << status.error_message() << endl;
+    }
+    return reply.status();
+}
+
+//---------------------------------------------------------------------
+//---------------------------------------------------------------------
+int NIPerfTestClient::ConfigureHorizontalTiming(string vi, double min_sample_rate, int min_num_pts, double ref_position, int num_records, bool enforce_realtime)
+{    
+    ConfigureHorizontalTimingRequest request;
+    request.set_vi(vi);
+    request.set_min_sample_rate(min_sample_rate);
+    request.set_min_num_pts(min_num_pts);
+    request.set_ref_position(ref_position);
+    request.set_num_records(num_records);
+    request.set_enforce_realtime(enforce_realtime);
+
+    ClientContext context;
+    ConfigureHorizontalTimingResponse reply;
+    Status status = m_Stub->ConfigureHorizontalTiming(&context, request, &reply);
+    if (!status.ok())
+    {
+        cout << status.error_code() << ": " << status.error_message() << endl;
+    }
+    return reply.status();
+}
+
+//---------------------------------------------------------------------
+//---------------------------------------------------------------------
+int NIPerfTestClient::InitiateAcquisition(string vi)
+{    
+    InitiateAcquisitionRequest request;
+    request.set_vi(vi);
+
+    ClientContext context;
+    InitiateAcquisitionResponse reply;
+    Status status = m_Stub->InitiateAcquisition(&context, request, &reply);
+    if (!status.ok())
+    {
+        cout << status.error_code() << ": " << status.error_message() << endl;
+    }
+    return reply.status();
+}
+
+//---------------------------------------------------------------------
+//---------------------------------------------------------------------
 int NIPerfTestClient::Read(double timeout, int numSamples, double* samples)
 {
     ReadParameters request;

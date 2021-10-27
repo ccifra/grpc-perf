@@ -31,10 +31,13 @@ using grpc::ServerWriter;
 class NIPerfTestServer final : public niPerfTest::niPerfTestService::Service
 {
 public:
-    ::grpc::Status StreamLatencyTest(grpc::ServerContext* context, ::grpc::ServerReaderWriter< ::niPerfTest::StreamLatencyServer, niPerfTest::StreamLatencyClient>* stream) override;
-    ::grpc::Status StreamLatencyTestClient(grpc::ServerContext* context, ::grpc::ServerReader< ::niPerfTest::StreamLatencyClient>* reader, niPerfTest::StreamLatencyServer* response) override;
-    ::grpc::Status StreamLatencyTestServer(grpc::ServerContext* context, const ::niPerfTest::StreamLatencyClient* request, ::grpc::ServerWriter<niPerfTest::StreamLatencyServer>* writer) override;
+    grpc::Status StreamLatencyTest(grpc::ServerContext* context, ::grpc::ServerReaderWriter< ::niPerfTest::StreamLatencyServer, niPerfTest::StreamLatencyClient>* stream) override;
+    grpc::Status StreamLatencyTestClient(grpc::ServerContext* context, ::grpc::ServerReader< ::niPerfTest::StreamLatencyClient>* reader, niPerfTest::StreamLatencyServer* response) override;
+    grpc::Status StreamLatencyTestServer(grpc::ServerContext* context, const ::niPerfTest::StreamLatencyClient* request, ::grpc::ServerWriter<niPerfTest::StreamLatencyServer>* writer) override;
     Status Init(ServerContext* context, const niPerfTest::InitParameters*, niPerfTest::InitResult* response) override;
+    Status ConfigureVertical(grpc::ServerContext* context, const niPerfTest::ConfigureVerticalRequest* request, niPerfTest::ConfigureVerticalResponse* response) override;
+    Status ConfigureHorizontalTiming(grpc::ServerContext* context, const niPerfTest::ConfigureHorizontalTimingRequest* request, niPerfTest::ConfigureHorizontalTimingResponse* response) override;
+    Status InitiateAcquisition(grpc::ServerContext* context, const niPerfTest::InitiateAcquisitionRequest* request, niPerfTest::InitiateAcquisitionResponse* response) override;
     Status Read(ServerContext* context, const niPerfTest::ReadParameters* request, niPerfTest::ReadResult* response) override;
     Status ReadContinuously(ServerContext* context, const niPerfTest::ReadContinuouslyParameters* request, grpc::ServerWriter<niPerfTest::ReadContinuouslyResult>* writer) override;
     Status TestWrite(ServerContext* context, const niPerfTest::TestWriteParameters* request, niPerfTest::TestWriteResult* response) override;

@@ -78,6 +78,30 @@ void PerformAsyncInitTest(NIPerfTestClient& client, int numCommands, int numIter
 
 //---------------------------------------------------------------------
 //---------------------------------------------------------------------
+void PerformScopeLikeRead(NIPerfTestClient& client)
+{
+    int samples = 10;
+    double* buffer = new double[samples];
+
+    cout << "Start Scope Like Read test" << endl;
+    auto start = chrono::high_resolution_clock::now();
+    for (int x=0; x<10000; ++x)
+    {
+        client.ConfigureVertical("", "0",10.0, 0.0, VERTICAL_COUPLING_NISCOPE_VAL_AC, 1.0, true);
+        client.ConfigureHorizontalTiming("", 50000000, samples, 50.0, 1, true);
+        client.InitiateAcquisition("");
+        client.Read(1000, samples, buffer);
+    }
+    auto end = chrono::high_resolution_clock::now();
+    auto elapsed = chrono::duration_cast<chrono::microseconds>(end - start);
+    double timePerTest = (double)elapsed.count() / 10000.0;
+    delete [] buffer;
+
+    cout << "Result: " << timePerTest << " us Per iteration" << endl << endl;
+}
+
+//---------------------------------------------------------------------
+//---------------------------------------------------------------------
 void PerformMessagePerformanceTest(NIPerfTestClient& client)
 {
     cout << "Start Messages per second test" << endl;

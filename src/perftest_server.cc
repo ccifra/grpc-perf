@@ -114,6 +114,27 @@ Status NIPerfTestServer::Init(ServerContext* context, const niPerfTest::InitPara
 
 //---------------------------------------------------------------------
 //---------------------------------------------------------------------
+Status NIPerfTestServer::ConfigureVertical(grpc::ServerContext* context, const niPerfTest::ConfigureVerticalRequest* request, niPerfTest::ConfigureVerticalResponse* response)
+{    
+	return Status::OK;	
+}
+
+//---------------------------------------------------------------------
+//---------------------------------------------------------------------
+Status NIPerfTestServer::ConfigureHorizontalTiming(grpc::ServerContext* context, const niPerfTest::ConfigureHorizontalTimingRequest* request, niPerfTest::ConfigureHorizontalTimingResponse* response)
+{    
+	return Status::OK;	
+}
+
+//---------------------------------------------------------------------
+//---------------------------------------------------------------------
+Status NIPerfTestServer::InitiateAcquisition(grpc::ServerContext* context, const niPerfTest::InitiateAcquisitionRequest* request, niPerfTest::InitiateAcquisitionResponse* response)
+{    
+	return Status::OK;	
+}
+
+//---------------------------------------------------------------------
+//---------------------------------------------------------------------
 Status NIPerfTestServer::Read(ServerContext* context, const niPerfTest::ReadParameters* request, niPerfTest::ReadResult* response)
 {	
 	response->mutable_samples()->Reserve(request->numsamples());

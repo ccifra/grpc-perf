@@ -114,6 +114,12 @@ Start the server, perftest_server, on the server machine.
 Run the client, perftest_client.
 If you want to run the client on a different machine pass in the server to conect to: perftest_client --target={server name or ip}
 
+## Generating Python
+
+```
+python -m grpc_tools.protoc -I="..\.." --python_out=. --grpc_python_out=. perftest.proto
+```
+
 ## SSL/TLS Support
 
 You can enable SSL/TLS support on the server by passing in a path to a certificate and private key for the server.
