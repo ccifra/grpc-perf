@@ -138,7 +138,7 @@ Status NIPerfTestServer::InitiateAcquisition(grpc::ServerContext* context, const
 Status NIPerfTestServer::Read(ServerContext* context, const niPerfTest::ReadParameters* request, niPerfTest::ReadResult* response)
 {	
 	response->mutable_samples()->Reserve(request->numsamples());
-	response->mutable_samples()->Resize(request->numsamples(), 546456.45645645645);
+	response->mutable_samples()->Resize(request->numsamples(), 8.325793493);
 	response->set_status(0);
 	return Status::OK;
 }

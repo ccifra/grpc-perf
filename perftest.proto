@@ -165,11 +165,16 @@ message ConfigureVerticalResponse {
   int32 status = 1;
 }
 
-message InitiateAcquisitionRequest {
-  string vi = 1;
-}
-
 message InitiateAcquisitionResponse {
+  enum StatusCode {
+    default = 0;
+    good = 1;
+    bad = 2;
+  }
   int32 status = 1;
 }
   
+message InitiateAcquisitionRequest {
+  string vi = 1;
+  InitiateAcquisitionResponse.StatusCode code = 2;
+}
