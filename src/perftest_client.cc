@@ -345,6 +345,7 @@ int main(int argc, char **argv)
 
     // Run desired test suites
     //RunScpiCompareTestSuite(*client);
-    PerformReadTest(*client, 131072, 1000);
+    //PerformReadTest(*client, 131072, 1000);
+    PerformStreamingTest(*client, 131072);
     return 0;   
 }
