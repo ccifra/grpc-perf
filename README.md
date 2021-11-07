@@ -117,6 +117,10 @@ If you want to run the client on a different machine pass in the server to conec
 ## Generating Python
 
 ```
+pip install grpcio-tools
+```
+
+```
 python -m grpc_tools.protoc -I="..\.." --python_out=. --grpc_python_out=. perftest.proto
 ```
 
