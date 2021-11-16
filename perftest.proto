@@ -32,56 +32,6 @@ service niPerfTestService {
     rpc ReadContinuously(ReadContinuouslyParameters) returns (stream ReadContinuouslyResult) {};
 }
 
-//---------------------------------------------------------------------
-//---------------------------------------------------------------------
-service MonikerService {
-  rpc InitiateMonikerStream(MonikerList) returns (MonikerStreamId);
-  rpc StreamReadWrite(stream MonikerWriteRequest) returns (stream MonikerReadResult) {};
-  rpc StreamRead(MonikerStreamId) returns (stream MonikerReadResult) {};
-  rpc StreamWrite(stream MonikerWriteRequest) returns (stream MonikerStreamId) {};
-}
-
-message Moniker {
-  string ServiceLocation = 1;
-  string DataSource = 2;
-  string DataInstance = 3;
-}
-
-message DoubleArray {
-  repeated double values = 1;
-}
-
-message IntArray {
-  repeated sint32 values = 1;
-}
-
-message DataValue {
-  oneof value {
-    DoubleArray doubleArray = 1;
-    IntArray intArray = 2;
-    google.protobuf.Any Values = 3;
-  }
-}
-
-message MonikerWriteRequest {
-  int32 monikerStreamId = 1;
-  repeated DataValue Values = 2;
-}
-
-message MonikerReadResult {
-  repeated DataValue Values = 1;
-}
-
-message MonikerList {
-  repeated Moniker ReadMonikers = 1;
-  repeated Moniker WriteMonikers = 2;
-  bool useAnyType = 3;
-}
-
-message MonikerStreamId {
-  int32 streamId = 1;
-}
-
 message StreamLatencyClient {
   uint32 message = 1;
 }

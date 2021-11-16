@@ -48,17 +48,6 @@ public:
 
 //---------------------------------------------------------------------
 //---------------------------------------------------------------------
-class NIMonikerClient
-{
-public:
-    NIMonikerClient(shared_ptr<Channel> channel);
-public:
-    unique_ptr<MonikerService::Stub> m_Stub;
-
-};
-
-//---------------------------------------------------------------------
-//---------------------------------------------------------------------
 void WriteLatencyData(timeVector times, const string& fileName);
 void ReadSamples(NIPerfTestClient* client, int numSamples, int numIterations);
 void ReportMBPerSecond(chrono::high_resolution_clock::time_point start, chrono::high_resolution_clock::time_point end, int numSamples, int numIterations);

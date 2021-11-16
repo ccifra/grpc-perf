@@ -186,54 +186,6 @@ Status NIPerfTestServer::ReadContinuously(ServerContext* context, const niPerfTe
 
 //---------------------------------------------------------------------
 //---------------------------------------------------------------------
-Status MonikerServer::InitiateMonikerStream(grpc::ServerContext* context, const niPerfTest::MonikerList* request, niPerfTest::MonikerStreamId* response)
-{
-    useAnyType = request->useanytype();    
-    response->set_streamid(1);
-	return Status::OK;
-}
-
-//---------------------------------------------------------------------
-//---------------------------------------------------------------------
-Status MonikerServer::StreamReadWrite(grpc::ServerContext* context, grpc::ServerReaderWriter<MonikerReadResult, MonikerWriteRequest>* stream)
-{    
-	MonikerWriteRequest client;
-    Arena areana;
-	while (stream->Read(&client))
-	{
-        auto server = Arena::CreateMessage<MonikerReadResult>(&areana);
-        for (int x=0; x<client.values().size(); ++x)
-        {
-            auto newValue = server->add_values();
-            if (useAnyType)
-            {
-                auto writeValue = Arena::CreateMessage<StreamLatencyClient>(&areana);
-                client.values()[x].values().UnpackTo(writeValue);
-
-                auto readValue = Arena::CreateMessage<StreamLatencyServer>(&areana);
-                readValue->set_message(writeValue->message());
-
-                auto anyValue = Arena::CreateMessage<Any>(&areana);
-                anyValue->PackFrom(*readValue);
-                newValue->set_allocated_values(anyValue);
-            }
-            else
-            {                
-                auto doubleValue = client.values()[x].doublearray().values(0);
-
-                auto doubleArray = Arena::CreateMessage<DoubleArray>(&areana);
-                doubleArray->add_values(doubleValue);
-                newValue->set_allocated_doublearray(doubleArray);
-            }
-        }
-		stream->Write(*server);
-        areana.Reset();
-	}
-	return Status::OK;
-}
-
-//---------------------------------------------------------------------
-//---------------------------------------------------------------------
 string GetServerAddress(int argc, char** argv)
 {
     string target_str = "0.0.0.0:50051";
@@ -352,7 +304,6 @@ void RunServer(int argc, char **argv, const char* server_address)
 	auto creds = CreateCredentials(argc, argv);
 
 	NIPerfTestServer service;
-    MonikerServer monikerService;
 	ServerBuilder builder;
 	builder.AddListeningPort(server_address, creds);
     builder.AddChannelArgument(GRPC_ARG_MINIMAL_STACK, 1);
@@ -372,7 +323,6 @@ void RunServer(int argc, char **argv, const char* server_address)
     // GRPC_ARG_TCP_TX_ZEROCOPY_ENABLED
     // builder.AddChannelArgument();
 	builder.RegisterService(&service);
-    builder.RegisterService(&monikerService);
 
 	// Assemble the server.
 	auto server = builder.BuildAndStart();

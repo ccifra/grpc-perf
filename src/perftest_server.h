@@ -43,12 +43,3 @@ public:
     Status TestWrite(ServerContext* context, const niPerfTest::TestWriteParameters* request, niPerfTest::TestWriteResult* response) override;
     Status TestWriteContinuously(ServerContext* context, grpc::ServerReaderWriter<niPerfTest::TestWriteResult, niPerfTest::TestWriteParameters>* stream) override;
 };
-
-//---------------------------------------------------------------------
-//---------------------------------------------------------------------
-class MonikerServer final : public niPerfTest::MonikerService::Service
-{
-public:
-    Status InitiateMonikerStream(grpc::ServerContext* context, const niPerfTest::MonikerList* request, niPerfTest::MonikerStreamId* response) override;
-    Status StreamReadWrite(grpc::ServerContext* context, grpc::ServerReaderWriter<niPerfTest::MonikerReadResult, niPerfTest::MonikerWriteRequest>* stream) override;
-};

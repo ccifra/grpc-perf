@@ -148,20 +148,6 @@ void RunLatencyStreamTestSuite(NIPerfTestClient& client)
 
 //---------------------------------------------------------------------
 //---------------------------------------------------------------------
-void RunMonikerLatencyReadWriteTestSuite(NIPerfTestClient& client, std::string targetStr, std::string port, std::shared_ptr<grpc::ChannelCredentials> creds, grpc::ChannelArguments& args)
-{
-    cout << "Start Moniker Latency Read Write Test Suite" << endl;
-    auto monikerClient = new NIMonikerClient(grpc::CreateCustomChannel(targetStr + port, creds, args));
-    PerformMonikerLatencyReadWriteTest(*monikerClient, 1, false, "monikerlatency1.txt");
-    PerformMonikerLatencyReadWriteTest(*monikerClient, 2, false, "monikerlatency2.txt");
-    PerformMonikerLatencyReadWriteTest(*monikerClient, 3, false, "monikerlatency3.txt");
-    PerformMonikerLatencyReadWriteTest(*monikerClient, 4, false, "monikerlatency4.txt");
-    PerformMonikerLatencyReadWriteTest(*monikerClient, 5, false, "monikerlatency5.txt");
-    PerformMonikerLatencyReadWriteTest(*monikerClient, 5, true, "monikerlatencyany5.txt");
-}
-
-//---------------------------------------------------------------------
-//---------------------------------------------------------------------
 void RunMessageLatencyTestSuite(NIPerfTestClient& client)
 {
     cout << "Start Message Latency Test Suite" << endl;

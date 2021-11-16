@@ -7,7 +7,6 @@ class NIPerfTestClient;
 //---------------------------------------------------------------------
 void PerformMessagePerformanceTest(NIPerfTestClient& client);
 void PerformLatencyStreamTest(NIPerfTestClient& client, std::string fileName);
-void PerformMonikerLatencyReadWriteTest(NIMonikerClient& client, int numItems, bool useAnyValue, std::string fileName);
 void PerformLatencyPayloadWriteTest(NIPerfTestClient& client, int numSamples, std::string fileName);
 void PerformLatencyPayloadWriteStreamTest(NIPerfTestClient& client, int numSamples, std::string fileName);
 void PerformLatencyStreamTest2(NIPerfTestClient& client, NIPerfTestClient& client2, int streamCount, std::string fileName);
