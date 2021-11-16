@@ -164,11 +164,11 @@ int NIPerfTestClient::TestWrite(int numSamples, double* samples)
 
 //---------------------------------------------------------------------
 //---------------------------------------------------------------------
-unique_ptr<grpc::ClientReader<niPerfTest::ReadContinuouslyResult>> NIPerfTestClient::ReadContinuously(grpc::ClientContext* context, double timeout, int numSamples)
+unique_ptr<grpc::ClientReader<niPerfTest::ReadContinuouslyResult>> NIPerfTestClient::ReadContinuously(grpc::ClientContext* context, double timeout, int numSamples, int numIterations)
 {    
     ReadContinuouslyParameters request;
     request.set_numsamples(numSamples);
-    request.set_numiterations(10000);
+    request.set_numiterations(numIterations);
 
     return m_Stub->ReadContinuously(context, request);
 }
@@ -226,11 +226,11 @@ void WriteLatencyData(timeVector times, const string& fileName)
 
 //---------------------------------------------------------------------
 //---------------------------------------------------------------------
-void ReadSamples(NIPerfTestClient* client, int numSamples)
+void ReadSamples(NIPerfTestClient* client, int numSamples, int numIterations)
 {    
     int index = 0;
     grpc::ClientContext context;
-    auto readResult = client->ReadContinuously(&context, 5.0, numSamples);
+    auto readResult = client->ReadContinuously(&context, 5.0, numSamples, numIterations);
     ReadContinuouslyResult cresult;
     while(readResult->Read(&cresult))
     {
@@ -241,11 +241,11 @@ void ReadSamples(NIPerfTestClient* client, int numSamples)
 
 //---------------------------------------------------------------------
 //---------------------------------------------------------------------
-void ReportMBPerSecond(chrono::high_resolution_clock::time_point start, chrono::high_resolution_clock::time_point end, int numSamples)
+void ReportMBPerSecond(chrono::high_resolution_clock::time_point start, chrono::high_resolution_clock::time_point end, int numSamples, int numIterations)
 {
     int64_t elapsed = chrono::duration_cast<chrono::microseconds>(end - start).count();
     double elapsedSeconds = elapsed / (1000.0 * 1000.0);
-    double bytesPerSecond = (8.0 * (double)numSamples * 10000) / elapsedSeconds;
+    double bytesPerSecond = (8.0 * (double)numSamples * numIterations) / elapsedSeconds;
     double MBPerSecond = bytesPerSecond / (1024.0 * 1024);
 
     cout << numSamples << " Samples: " << MBPerSecond << " MB/s, " << elapsed << " total microseconds" << endl;

@@ -204,28 +204,41 @@ void RunLatencyPayloadWriteStreamTestSuite(NIPerfTestClient& client)
 
 //---------------------------------------------------------------------
 //---------------------------------------------------------------------
-void RunParallelStreamTestSuite(NIPerfTestClient& client, std::string targetStr, std::shared_ptr<grpc::ChannelCredentials> creds)
+void RunParallelStreamTest(int numClients, std::string targetStr, std::string& port, std::shared_ptr<grpc::ChannelCredentials> creds)
 {
     cout << "Start Parallel Stream Test Suite" << endl;
     std::vector<NIPerfTestClient*> clients;
-    for (int x=0; x<20; ++x)
+    for (int x=0; x<numClients; ++x)
     {
         // Set a dummy (but distinct) channel arg on each channel so that
         // every channel gets its own connection
-        // args.SetInt(GRPC_ARG_MINIMAL_STACK, 1);
-        auto port = 50051 + x;        
-        auto client = new NIPerfTestClient(grpc::CreateChannel(targetStr + string(":") + to_string(port), creds));
+        grpc::ChannelArguments args;
+        args.SetInt(GRPC_ARG_MINIMAL_STACK, 1);
+        args.SetInt("ClientIndex", x);
+        auto client = new NIPerfTestClient(grpc::CreateCustomChannel(targetStr + port, creds, args));
         clients.push_back(client);
     }
-    cout << endl << "Start 20 stream streaming tests" << endl;
+    cout << endl << "Start " << numClients << " streaming tests" << endl;
     PerformNStreamTest(clients, 1000);
     PerformNStreamTest(clients, 10000);
     PerformNStreamTest(clients, 100000);
+    PerformNStreamTest(clients, 200000);
+    PerformNStreamTest(clients, 400000);
 }
 
 //---------------------------------------------------------------------
 //---------------------------------------------------------------------
-void RunParallelStreamTestSuite(NIPerfTestClient& client)
+void RunParallelStreamTestSuite(std::string targetStr, std::string& port, std::shared_ptr<grpc::ChannelCredentials> creds)
+{
+    RunParallelStreamTest(2, targetStr, port, creds);
+    RunParallelStreamTest(4, targetStr, port, creds);
+    RunParallelStreamTest(8, targetStr, port, creds);
+    RunParallelStreamTest(16, targetStr, port, creds);
+}
+
+//---------------------------------------------------------------------
+//---------------------------------------------------------------------
+void RunParallelatencyStreamTestSuite(NIPerfTestClient& client)
 {
     cout << "Start Parallel Stream Latency Test Suite" << endl;
     PerformLatencyStreamTest2(client, client, 1, "streamlatency1Stream.txt");
@@ -253,10 +266,12 @@ void RunSteamingTestSuite(NIPerfTestClient& client)
     PerformStreamingTest(client, 1000);
     PerformStreamingTest(client, 10000);
     PerformStreamingTest(client, 100000);
-    PerformStreamingTest(client, 100000);
-    PerformStreamingTest(client, 100000);
-    PerformStreamingTest(client, 100000);
+    // PerformStreamingTest(client, 100000);
+    // PerformStreamingTest(client, 100000);
+    // PerformStreamingTest(client, 100000);
      PerformStreamingTest(client, 200000);
+     PerformStreamingTest(client, 400000);
+     PerformStreamingTest(client, 1000000);
 }
 
 //---------------------------------------------------------------------
@@ -316,13 +331,21 @@ int main(int argc, char **argv)
     CPU_SET(4, &cpuSet);
     sched_setaffinity(0, sizeof(cpu_set_t), &cpuSet);
 #else
-    SetPriorityClass(GetCurrentProcess(), REALTIME_PRIORITY_CLASS);
+    DWORD dwError, dwPriClass;
+    if(!SetPriorityClass(GetCurrentProcess(), REALTIME_PRIORITY_CLASS))
+    {
+        dwError = GetLastError();
+        if( ERROR_PROCESS_MODE_ALREADY_BACKGROUND == dwError)
+            cout << "Already in background mode" << endl;
+        else
+            cout << "Failed change priority: " << dwError << endl;
+   } 
 #endif
 
     // Get server information and channel credentials
     auto target_str = GetServerAddress(argc, argv);
     auto creds = CreateCredentials(argc, argv);
-    auto port = ":50051";   
+    std::string port = ":50051";   
 
     // Create the connection to the server
     grpc::ChannelArguments args;
@@ -344,8 +367,8 @@ int main(int argc, char **argv)
     }
 
     // Run desired test suites
-    //RunScpiCompareTestSuite(*client);
-    //PerformReadTest(*client, 131072, 1000);
-    PerformStreamingTest(*client, 131072);
+    // RunScpiCompareTestSuite(*client);
+    RunSteamingTestSuite(*client);
+    RunParallelStreamTestSuite(target_str, port, creds);
     return 0;   
 }

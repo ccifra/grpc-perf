@@ -400,7 +400,15 @@ int main(int argc, char **argv)
     CPU_SET(2, &cpuSet);
     sched_setaffinity(1, sizeof(cpu_set_t), &cpuSet);
 #else
-    SetPriorityClass(GetCurrentProcess(), REALTIME_PRIORITY_CLASS);
+    DWORD dwError, dwPriClass;
+    if(!SetPriorityClass(GetCurrentProcess(), REALTIME_PRIORITY_CLASS))
+    {
+        dwError = GetLastError();
+        if( ERROR_PROCESS_MODE_ALREADY_BACKGROUND == dwError)
+            cout << "Already in background mode" << endl;
+        else
+            cout << "Failed change priority: " << dwError << endl;
+   } 
 #endif
 
     std::vector<thread*> threads;
@@ -425,7 +433,8 @@ int main(int argc, char **argv)
     auto port = ":50051";
     ::grpc::ChannelArguments args;
     args.SetInt(GRPC_ARG_MINIMAL_STACK, 1);
-    auto client = new NIPerfTestClient(grpc::CreateCustomChannel(target_str + port, creds, args));
+    //auto client = new NIPerfTestClient(grpc::CreateCustomChannel(target_str + port, creds, args));
+    // auto client = new NIPerfTestClient(grpc::CreateCustomChannel(target_str + port, creds, args));
     
     // inprocess server
     //auto client = new NIPerfTestClient(_inProcServer);

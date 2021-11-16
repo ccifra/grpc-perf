@@ -29,6 +29,7 @@ using namespace niPerfTest;
 //---------------------------------------------------------------------
 //---------------------------------------------------------------------
 static int LatencyTestIterations = 300000;
+static int DefaultTestIterations = 5000;
 
 //---------------------------------------------------------------------
 //---------------------------------------------------------------------
@@ -534,9 +535,9 @@ void PerformWriteTest(NIPerfTestClient& client, int numSamples)
 void PerformStreamingTest(NIPerfTestClient& client, int numSamples)
 {
     auto start = chrono::high_resolution_clock::now();
-    ReadSamples(&client, numSamples);
+    ReadSamples(&client, numSamples, DefaultTestIterations);
     auto end = chrono::high_resolution_clock::now();
-    ReportMBPerSecond(start, end, numSamples);
+    ReportMBPerSecond(start, end, numSamples, DefaultTestIterations);
 }
 
 //---------------------------------------------------------------------
@@ -545,14 +546,14 @@ void PerformTwoStreamTest(NIPerfTestClient& client, NIPerfTestClient& client2, i
 {
     auto start = chrono::high_resolution_clock::now();
 
-    auto thread1 = new thread(ReadSamples, &client, numSamples);
-    auto thread2 = new thread(ReadSamples, &client2, numSamples);
+    auto thread1 = new thread(ReadSamples, &client, numSamples, DefaultTestIterations);
+    auto thread2 = new thread(ReadSamples, &client2, numSamples, DefaultTestIterations);
 
     thread1->join();
     thread2->join();
 
     auto end = chrono::high_resolution_clock::now();
-    ReportMBPerSecond(start, end, numSamples * 2);
+    ReportMBPerSecond(start, end, numSamples * 2, DefaultTestIterations);
 }
 
 //---------------------------------------------------------------------
@@ -561,10 +562,10 @@ void PerformFourStreamTest(NIPerfTestClient& client, NIPerfTestClient& client2, 
 {
     auto start = chrono::high_resolution_clock::now();
 
-    auto thread1 = new thread(ReadSamples, &client, numSamples);
-    auto thread2 = new thread(ReadSamples, &client2, numSamples);
-    auto thread3 = new thread(ReadSamples, &client3, numSamples);
-    auto thread4 = new thread(ReadSamples, &client4, numSamples);
+    auto thread1 = new thread(ReadSamples, &client, numSamples, DefaultTestIterations);
+    auto thread2 = new thread(ReadSamples, &client2, numSamples, DefaultTestIterations);
+    auto thread3 = new thread(ReadSamples, &client3, numSamples, DefaultTestIterations);
+    auto thread4 = new thread(ReadSamples, &client4, numSamples, DefaultTestIterations);
 
     thread1->join();
     thread2->join();
@@ -572,7 +573,7 @@ void PerformFourStreamTest(NIPerfTestClient& client, NIPerfTestClient& client2, 
     thread4->join();
 
     auto end = chrono::high_resolution_clock::now();
-    ReportMBPerSecond(start, end, numSamples * 4);
+    ReportMBPerSecond(start, end, numSamples * 4, DefaultTestIterations);
 }
 
 //---------------------------------------------------------------------
@@ -585,7 +586,7 @@ void PerformNStreamTest(std::vector<NIPerfTestClient*>& clients, int numSamples)
     threads.reserve(clients.size());
     for (auto client: clients)
     {
-        auto t = new thread(ReadSamples, client, numSamples);
+        auto t = new thread(ReadSamples, client, numSamples, DefaultTestIterations);
         threads.emplace_back(t);
     }
     for (auto thread: threads)
@@ -593,5 +594,5 @@ void PerformNStreamTest(std::vector<NIPerfTestClient*>& clients, int numSamples)
         thread->join();
     }
     auto end = chrono::high_resolution_clock::now();
-    ReportMBPerSecond(start, end, numSamples * clients.size());
+    ReportMBPerSecond(start, end, numSamples * clients.size(), DefaultTestIterations);
 }

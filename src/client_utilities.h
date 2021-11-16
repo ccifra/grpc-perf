@@ -41,7 +41,7 @@ public:
     int InitiateAcquisition(string vi);
     int Read(double timeout, int numSamples, double* samples);
     int TestWrite(int numSamples, double* samples);
-    unique_ptr<grpc::ClientReader<niPerfTest::ReadContinuouslyResult>> ReadContinuously(grpc::ClientContext* context, double timeout, int numSamples);
+    unique_ptr<grpc::ClientReader<niPerfTest::ReadContinuouslyResult>> ReadContinuously(grpc::ClientContext* context, double timeout, int numSamples, int numIterations);
 public:
     unique_ptr<niPerfTestService::Stub> m_Stub;
 };
@@ -60,8 +60,8 @@ public:
 //---------------------------------------------------------------------
 //---------------------------------------------------------------------
 void WriteLatencyData(timeVector times, const string& fileName);
-void ReadSamples(NIPerfTestClient* client, int numSamples);
-void ReportMBPerSecond(chrono::high_resolution_clock::time_point start, chrono::high_resolution_clock::time_point end, int numSamples);
+void ReadSamples(NIPerfTestClient* client, int numSamples, int numIterations);
+void ReportMBPerSecond(chrono::high_resolution_clock::time_point start, chrono::high_resolution_clock::time_point end, int numSamples, int numIterations);
 void EnableTracing();
 void DisableTracing();
 void TracingOff();
