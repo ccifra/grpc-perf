@@ -326,10 +326,10 @@ int main(int argc, char **argv)
     schedParam.sched_priority = 95;
     sched_setscheduler(0, SCHED_FIFO, &schedParam);
 
-    cpu_set_t cpuSet;
-    CPU_ZERO(&cpuSet);
-    CPU_SET(4, &cpuSet);
-    sched_setaffinity(0, sizeof(cpu_set_t), &cpuSet);
+    // cpu_set_t cpuSet;
+    // CPU_ZERO(&cpuSet);
+    // CPU_SET(4, &cpuSet);
+    // sched_setaffinity(0, sizeof(cpu_set_t), &cpuSet);
 #else
     DWORD dwError, dwPriClass;
     if(!SetPriorityClass(GetCurrentProcess(), REALTIME_PRIORITY_CLASS))
