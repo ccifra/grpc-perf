@@ -66,13 +66,49 @@ string GetServerAddress(int argc, char** argv)
 
 //---------------------------------------------------------------------
 //---------------------------------------------------------------------
+string GetServerPort(int argc, char** argv)
+{
+    string target_str;
+    string arg_str("--port");
+    if (argc > 2)
+    {
+        string arg_val = argv[2];
+        size_t start_pos = arg_val.find(arg_str);
+        if (start_pos != string::npos)
+        {
+            start_pos += arg_str.size();
+            if (arg_val[start_pos] == '=')
+            {
+                target_str = arg_val.substr(start_pos + 1);
+            }
+            else
+            {
+                cout << "The only correct argument syntax is --port=" << endl;
+                return 0;
+            }
+        }
+        else
+        {
+            cout << "The only acceptable argument is --port=" << endl;
+            return 0;
+        }
+    }
+    else
+    {
+        target_str = "50051";
+    }
+    return target_str;
+}
+
+//---------------------------------------------------------------------
+//---------------------------------------------------------------------
 string GetCertPath(int argc, char** argv)
 {
     string cert_str;
     string arg_str("--cert");
-    if (argc > 2)
+    if (argc > 3)
     {
-        string arg_val = argv[2];
+        string arg_val = argv[3];
         size_t start_pos = arg_val.find(arg_str);
         if (start_pos != string::npos)
         {
@@ -331,7 +367,9 @@ int main(int argc, char **argv)
     // Get server information and channel credentials
     auto target_str = GetServerAddress(argc, argv);
     auto creds = CreateCredentials(argc, argv);
-    std::string port = ":50051";   
+    std::string port = ":" + GetServerPort(argc, argv);
+
+    cout << "Target: " << target_str << " Port: " << port << endl;
 
     // Create the connection to the server
     grpc::ChannelArguments args;
@@ -354,7 +392,8 @@ int main(int argc, char **argv)
 
     // Run desired test suites
     // RunScpiCompareTestSuite(*client);
+    RunMessagePerformanceTestSuite(*client);
     RunSteamingTestSuite(*client);
-    RunParallelStreamTestSuite(target_str, port, creds);
+    //RunParallelStreamTestSuite(target_str, port, creds);
     return 0;   
 }
