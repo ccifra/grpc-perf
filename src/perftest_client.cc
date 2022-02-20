@@ -391,9 +391,6 @@ int main(int argc, char **argv)
     }
 
     // Run desired test suites
-    // RunScpiCompareTestSuite(*client);
-    RunMessagePerformanceTestSuite(*client);
-    RunSteamingTestSuite(*client);
-    //RunParallelStreamTestSuite(target_str, port, creds);
+    RunMessageLatencyTestSuite(*client);
     return 0;   
 }
